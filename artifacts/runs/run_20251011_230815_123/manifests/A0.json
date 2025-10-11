@@ -1,0 +1,17 @@
+{
+  "artifacts": {
+    "policy": "policies/A0.json"
+  },
+  "code_sha": "unknown",
+  "env_hash": "e7a28c3abb85",
+  "id": "A0",
+  "kind": "policy/random",
+  "mixing": null,
+  "notes": "Initial average: RandomPolicy",
+  "parents": [],
+  "role": "average",
+  "seeds": {
+    "seed": 123
+  },
+  "train": {}
+}

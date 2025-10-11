@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "liars-poker"
+version = "0.1.0"
+description = "Liar’s Poker research skeleton: env, policies, mixing, and FSP scaffold"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [{name = "OpenAI Codex CLI"}]
+dependencies = []
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-q"
+python_files = ["test_*.py"]
+

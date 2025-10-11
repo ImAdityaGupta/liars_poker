@@ -1,0 +1,14 @@
+{
+  "env_hash": "e7a28c3abb85",
+  "seed": 123,
+  "spec": {
+    "claim_kinds": [
+      "RankHigh",
+      "Pair"
+    ],
+    "hand_size": 2,
+    "ranks": 13,
+    "starter": "random",
+    "suits": 1
+  }
+}

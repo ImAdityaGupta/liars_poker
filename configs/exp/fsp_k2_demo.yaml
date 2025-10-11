@@ -1,0 +1,12 @@
+ranks: 13
+suits: 1
+hand_size: 2
+starter: random
+claim_kinds: [RankHigh, Pair]
+fsp:
+  eta_schedule: harmonic
+  mix: commit_once
+  max_iters: 1
+  save_root: artifacts/
+  seed: 7
+
