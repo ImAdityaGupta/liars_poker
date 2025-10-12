@@ -5,11 +5,17 @@ from typing import Any, Dict, Sequence, Tuple
 
 
 class Policy:
-    """Policy protocol: distributions and sampling on legal actions.
+    """Policy protocol: per-episode init plus distributions and sampling.
 
+    begin_episode(rng) -> None
     action_probs(infoset_key, legal_actions) -> Dict[action, prob]
-    sample(...) -> action
+    sample(..., rng) -> action
     """
+
+    def begin_episode(self, rng: random.Random | None = None) -> None:
+        """Called exactly once at the start of each episode."""
+
+        return None
 
     def action_probs(self, infoset_key: Tuple, legal_actions: Sequence[int]) -> Dict[int, float]:
         raise NotImplementedError
@@ -25,7 +31,8 @@ class Policy:
 
 
 def _sample_from_probs(probs: Dict[int, float], rng: random.Random) -> int:
-    actions, p = zip(*probs.items()) if probs else ([], [])
+    actions = sorted(probs.keys()) if probs else []
+    p = [probs[a] for a in actions]
     # Normalize just in case
     s = sum(p)
     if s <= 0:
@@ -41,6 +48,9 @@ def _sample_from_probs(probs: Dict[int, float], rng: random.Random) -> int:
 
 
 class RandomPolicy(Policy):
+    def begin_episode(self, rng: random.Random | None = None) -> None:
+        return None
+
     def action_probs(self, infoset_key: Tuple, legal_actions: Sequence[int]) -> Dict[int, float]:
         n = len(legal_actions)
         if n == 0:
@@ -65,6 +75,9 @@ class TabularPolicy(Policy):
 
     def __init__(self):
         self.probs: Dict[Tuple, Dict[int, float]] = {}
+
+    def begin_episode(self, rng: random.Random | None = None) -> None:
+        return None
 
     def set(self, infoset_key: Tuple, dist: Dict[int, float]) -> None:
         self.probs[infoset_key] = dict(dist)
@@ -113,6 +126,10 @@ class PerDecisionMixture(Policy):
         self.beta = beta
         self.w = w
 
+    def begin_episode(self, rng: random.Random | None = None) -> None:
+        self.pi.begin_episode(rng)
+        self.beta.begin_episode(rng)
+
     def action_probs(self, infoset_key: Tuple, legal_actions: Sequence[int]) -> Dict[int, float]:
         p_pi = self.pi.action_probs(infoset_key, legal_actions)
         p_be = self.beta.action_probs(infoset_key, legal_actions)
@@ -141,11 +158,7 @@ class PerDecisionMixture(Policy):
 
 
 class CommitOnceMixture(Policy):
-    """Normal-form mixture: flip once per episode and commit to one policy.
-
-    Use start_episode() at the beginning of each episode; if not called,
-    the first call to action_probs/sample will trigger a lazy flip.
-    """
+    """Normal-form mixture: flip once per episode and commit to one policy."""
 
     def __init__(self, pi: Policy, beta: Policy, w: float, rng: random.Random | None = None):
         assert 0.0 <= w <= 1.0
@@ -154,25 +167,23 @@ class CommitOnceMixture(Policy):
         self.w = w
         self._rng = rng or random.Random()
         self._choice: int | None = None  # 0 -> pi, 1 -> beta
-
-    def start_episode(self, rng: random.Random | None = None) -> None:
+ 
+    def begin_episode(self, rng: random.Random | None = None) -> None:
         if rng is not None:
             self._rng = rng
         self._choice = 1 if self._rng.random() < self.w else 0
-
-    def _ensure_choice(self) -> None:
-        if self._choice is None:
-            self.start_episode()
+        self.pi.begin_episode(rng)
+        self.beta.begin_episode(rng)
 
     def action_probs(self, infoset_key: Tuple, legal_actions: Sequence[int]) -> Dict[int, float]:
-        self._ensure_choice()
+        assert self._choice is not None, "CommitOnceMixture: call begin_episode() after env.reset()."
         if self._choice == 0:
             return self.pi.action_probs(infoset_key, legal_actions)
         else:
             return self.beta.action_probs(infoset_key, legal_actions)
 
     def sample(self, infoset_key: Tuple, legal_actions: Sequence[int], rng: random.Random) -> int:
-        self._ensure_choice()
+        assert self._choice is not None, "CommitOnceMixture: call begin_episode() after env.reset()."
         if self._choice == 0:
             return self.pi.sample(infoset_key, legal_actions, rng)
         else:

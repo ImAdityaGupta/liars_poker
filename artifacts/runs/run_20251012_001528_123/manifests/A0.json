@@ -7,16 +7,11 @@
   "id": "A0",
   "kind": "policy/random",
   "mixing": null,
-  "notes": null,
+  "notes": "Initial average: RandomPolicy",
   "parents": [],
   "role": "average",
   "seeds": {
-    "init": 7
+    "seed": 123
   },
-  "train": {
-    "algo": "FSP",
-    "eta_schedule": "harmonic",
-    "iters": 5,
-    "mix": "commit_once"
-  }
+  "train": {}
 }

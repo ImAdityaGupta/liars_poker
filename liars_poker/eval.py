@@ -10,11 +10,9 @@ def play_match(env: Env, p1, p2, episodes: int = 10, seed: int = 0) -> Dict[str,
     rng = random.Random(seed)
     wins = {"P1": 0, "P2": 0}
     for _ in range(episodes):
-        if hasattr(p1, "start_episode"):
-            p1.start_episode(rng)
-        if hasattr(p2, "start_episode"):
-            p2.start_episode(rng)
         obs = env.reset(seed=rng.randint(0, 1_000_000))
+        p1.begin_episode(rng)
+        p2.begin_episode(rng)
         # Optional: for commit-once mixers, allow manual hook
         for t in range(1000):
             if obs["terminal"]:

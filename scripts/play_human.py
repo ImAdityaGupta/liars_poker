@@ -16,9 +16,8 @@ def main() -> None:
     rng = random.Random(0)
 
     while True:
-        if hasattr(bot, "start_episode"):
-            bot.start_episode(rng)
         obs = env.reset()
+        bot.begin_episode(rng)
         print("New game. You are P1. Your hand:", obs["hand"])  # ints for now
         while not obs["terminal"]:
             player = env.current_player()

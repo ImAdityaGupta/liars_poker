@@ -33,7 +33,7 @@ def test_commit_once_flips_once_per_episode():
     pi = OneHotPolicy(5)
     be = OneHotPolicy(7)
     mix = CommitOnceMixture(pi, be, w=0.5, rng=rng)
-    mix.start_episode(rng)
+    mix.begin_episode(rng)
     la = [5, 7]
     p1 = mix.action_probs(("x",), la)
     p2 = mix.action_probs(("x",), la)
@@ -41,8 +41,7 @@ def test_commit_once_flips_once_per_episode():
     assert p1 == p2
     assert sum(p1.values()) == 1.0
     # New episode may change
-    mix.start_episode(rng)
+    mix.begin_episode(rng)
     p3 = mix.action_probs(("x",), la)
     # Not necessarily different, but is a valid dist
     assert sum(p3.values()) == 1.0
-

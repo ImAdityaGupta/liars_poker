@@ -6,6 +6,8 @@ import random
 import time
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from .core import ARTIFACTS_ROOT, GameSpec, build_deck, env_hash
 from .env import Env
@@ -129,7 +131,7 @@ class Run:
 
 
 def start_run(spec: GameSpec, save_root: str = ARTIFACTS_ROOT, seed: int = 0) -> Run:
-    timestamp = time.strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now(ZoneInfo("Europe/London")).strftime("%Y%m%d_%H%M%S")
     run_id = f"run_{timestamp}_{seed}"
     run_root = os.path.join(os.path.abspath(save_root), "runs", run_id)
     policies_dir = os.path.join(run_root, "policies")
@@ -174,9 +176,6 @@ def play_vs_bot(
 ) -> None:
     rng = random.Random()
     env = Env(spec)
-    if hasattr(policy, "start_episode"):
-        policy.start_episode(rng)
-
     hands = _prepare_hands(spec, rng, my_cards, bot_cards)
     if start not in {"me", "bot", "random"}:
         raise ValueError("start must be one of 'me', 'bot', or 'random'")
@@ -186,6 +185,7 @@ def play_vs_bot(
         "random": "random",
     }[start]
     obs = env.reset(seed=rng.randint(0, 1_000_000), hands=hands, starter=starter_override)
+    policy.begin_episode(rng)
     human_view = env.observation_for("P1")
     print("Your hand:", human_view["hand"])
 

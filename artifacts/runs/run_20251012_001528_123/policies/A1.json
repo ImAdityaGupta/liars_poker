@@ -1,0 +1,10 @@
+{
+  "beta": {
+    "class": "RandomPolicy"
+  },
+  "class": "CommitOnceMixture",
+  "pi": {
+    "class": "RandomPolicy"
+  },
+  "w": 0.05
+}

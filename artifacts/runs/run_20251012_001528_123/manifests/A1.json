@@ -5,28 +5,26 @@
   "code_sha": "unknown",
   "env_hash": "e7a28c3abb85",
   "id": "A1",
-  "kind": "policy/random",
+  "kind": "policy/mix_commit_once",
   "mixing": {
-    "eta_k": 0.5,
+    "eta_k": 0.05,
     "impl": "commit_once",
-    "schedule": "harmonic"
+    "schedule": "manual"
   },
-  "notes": null,
+  "notes": "A1 = 0.95*A0 + 0.05*B0 (commit-once)",
   "parents": [
     {
       "id": "A0",
       "role": "avg",
-      "weight": 1.0
+      "weight": 0.95
+    },
+    {
+      "id": "B0",
+      "role": "br",
+      "weight": 0.05
     }
   ],
   "role": "average",
-  "seeds": {
-    "iter0": 8
-  },
-  "train": {
-    "algo": "FSP",
-    "eta_schedule": "harmonic",
-    "iters": 5,
-    "mix": "commit_once"
-  }
+  "seeds": {},
+  "train": {}
 }
