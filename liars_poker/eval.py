@@ -9,6 +9,8 @@ from .env import Env
 def play_match(env: Env, p1, p2, episodes: int = 10, seed: int = 0) -> Dict[str, int]:
     rng = random.Random(seed)
     wins = {"P1": 0, "P2": 0}
+    p1.bind_rules(env.rules)
+    p2.bind_rules(env.rules)
     for _ in range(episodes):
         obs = env.reset(seed=rng.randint(0, 1_000_000))
         p1.begin_episode(rng)
@@ -22,7 +24,7 @@ def play_match(env: Env, p1, p2, episodes: int = 10, seed: int = 0) -> Dict[str,
             player = env.current_player()
             pi = p1 if player == "P1" else p2
             infoset = env.infoset_key(player)
-            action = pi.sample(infoset, obs["legal_actions"], rng)
+            action = pi.sample(infoset, rng)
             obs = env.step(action)
     return wins
 

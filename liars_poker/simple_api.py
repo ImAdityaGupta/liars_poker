@@ -10,7 +10,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from .core import ARTIFACTS_ROOT, GameSpec, build_deck, env_hash
-from .env import Env
+from .env import Env, rules_for_spec
 from .logging import StrategyManifest, load_json, save_json, write_strategy_manifest
 from .policy import (
     CommitOnceMixture,
@@ -127,7 +127,9 @@ class Run:
             raise RuntimeError("No average policy has been logged yet")
         policy_path = os.path.join(self.policies_dir, f"{self.current_policy_id}.json")
         data = load_json(policy_path)
-        return policy_from_json(data)
+        policy = policy_from_json(data)
+        policy.bind_rules(rules_for_spec(self.spec))
+        return policy
 
 
 def start_run(spec: GameSpec, save_root: str = ARTIFACTS_ROOT, seed: int = 0) -> Run:
@@ -176,6 +178,7 @@ def play_vs_bot(
 ) -> None:
     rng = random.Random()
     env = Env(spec)
+    policy.bind_rules(env.rules)
     hands = _prepare_hands(spec, rng, my_cards, bot_cards)
     if start not in {"me", "bot", "random"}:
         raise ValueError("start must be one of 'me', 'bot', or 'random'")
@@ -204,7 +207,7 @@ def play_vs_bot(
                 continue
         else:
             print("To play: Bot")
-            action = policy.sample(obs["infoset_key"], obs["legal_actions"], rng)
+            action = policy.sample(obs["infoset_key"], rng)
             print("Bot plays:", env.render_action(action))
         obs = env.step(action)
 

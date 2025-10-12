@@ -13,6 +13,7 @@ def main() -> None:
     env = Env(spec, seed=123)
     human = "P1"
     bot = RandomPolicy()
+    bot.bind_rules(env.rules)
     rng = random.Random(0)
 
     while True:
@@ -34,7 +35,7 @@ def main() -> None:
                     continue
             else:
                 infoset = env.infoset_key(player)
-                a = bot.sample(infoset, obs["legal_actions"], rng)
+                a = bot.sample(infoset, rng)
                 print(f"Bot plays: {env.render_action(a)}")
             obs = env.step(a)
         print("Winner:", obs["winner"])

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import random
+from functools import lru_cache
 from typing import Dict, List, Optional, Sequence, Tuple
 
 from .core import GameSpec, build_deck, card_rank
@@ -8,6 +9,110 @@ from .core import GameSpec, build_deck, card_rank
 
 # Special action id for CALL
 CALL = -1
+
+
+class Rules:
+    """Immutable action model derived from a GameSpec."""
+
+    __slots__ = ("spec", "_claims", "_next_higher_indices")
+
+    def __init__(self, spec: GameSpec):
+        self.spec = spec
+        self._claims: Tuple[Tuple[str, int], ...] = self._build_claims()
+        self._next_higher_indices: Tuple[Tuple[int, ...], ...] = tuple(
+            tuple(range(i + 1, len(self._claims))) for i in range(len(self._claims))
+        )
+
+    @property
+    def claims(self) -> Tuple[Tuple[str, int], ...]:
+        return self._claims
+
+    @property
+    def next_higher_indices(self) -> Tuple[Tuple[int, ...], ...]:
+        return self._next_higher_indices
+
+    def legal_actions_from_last(self, last_claim_idx: Optional[int]) -> Tuple[int, ...]:
+        if last_claim_idx is None:
+            candidates = range(len(self._claims))
+        else:
+            candidates = self._next_higher_indices[last_claim_idx]
+
+        raises = tuple(idx for idx in candidates if self._claim_possible(idx))
+        if last_claim_idx is None:
+            return raises
+        return (CALL,) + raises
+
+    def legal_actions_for(self, infoset_key: Tuple) -> Tuple[int, ...]:
+        if len(infoset_key) < 2:
+            raise ValueError("infoset_key must contain at least (pid, last_claim_idx, ...)")
+        last_idx = infoset_key[1]
+        last_claim_idx: Optional[int]
+        if last_idx == -2:
+            last_claim_idx = None
+        elif isinstance(last_idx, int):
+            last_claim_idx = last_idx
+        else:
+            raise ValueError(f"Invalid last claim index in infoset: {last_idx!r}")
+        return self.legal_actions_from_last(last_claim_idx)
+
+    def parse_action(self, text: str, legal: Sequence[int] | None = None) -> int:
+        text = text.strip()
+        if text.upper() == "CALL":
+            action = CALL
+        elif ":" in text:
+            kind_str, value_str = text.split(":", 1)
+            kind_norm = kind_str.strip().lower()
+            try:
+                rank_value = int(value_str.strip())
+            except ValueError as exc:
+                raise ValueError(f"Invalid rank value in action '{text}'") from exc
+            action = None
+            for idx, (kind, rank) in enumerate(self._claims):
+                if kind.lower() == kind_norm and rank == rank_value:
+                    action = idx
+                    break
+            if action is None:
+                raise ValueError(f"Unknown claim: {text}")
+        else:
+            raise ValueError(f"Unrecognized action string: {text}")
+
+        if legal is not None and action not in legal:
+            raise ValueError(f"Action {text} not in legal set {legal}")
+        return action
+
+    def render_action(self, idx: int) -> str:
+        if idx == CALL:
+            return "CALL"
+        kind, rank = self._claims[idx]
+        return f"{kind}:{rank}"
+
+    def _build_claims(self) -> Tuple[Tuple[str, int], ...]:
+        claims: List[Tuple[str, int]] = []
+        R = self.spec.ranks
+        for kind in self.spec.claim_kinds:
+            if kind == "RankHigh":
+                for r in range(1, R + 1):
+                    claims.append(("RankHigh", r))
+            elif kind == "Pair":
+                for r in range(1, R + 1):
+                    claims.append(("Pair", r))
+            else:
+                raise ValueError(f"Unsupported claim kind: {kind}")
+        return tuple(claims)
+
+    def _claim_possible(self, idx: int) -> bool:
+        kind, _ = self._claims[idx]
+        S = self.spec.suits
+        if kind == "RankHigh":
+            return S >= 1
+        if kind == "Pair":
+            return S >= 2 and (self.spec.hand_size * 2) >= 2
+        return False
+
+
+@lru_cache(maxsize=128)
+def rules_for_spec(spec: GameSpec) -> Rules:
+    return Rules(spec)
 
 
 class Env:
@@ -18,14 +123,9 @@ class Env:
 
     def __init__(self, spec: GameSpec, seed: Optional[int] = None):
         self.spec = spec
+        self.rules = rules_for_spec(spec)
         self._rng = random.Random(seed)
         self._seed = seed
-
-        # Precompute claims for this spec
-        self.claims: List[Tuple[str, int]] = self._build_claims()
-        self.next_higher_indices: List[List[int]] = [
-            list(range(i + 1, len(self.claims))) for i in range(len(self.claims))
-        ]
 
         # Mutable episode state
         self._p1_hand: Tuple[int, ...] = tuple()
@@ -83,22 +183,7 @@ class Env:
         if self._done:
             return []
 
-        actions: List[int] = []
-        # Raises (strictly higher than last claim, or any claim if none)
-        if self._last_claim_idx is None:
-            candidate_indices = range(len(self.claims))
-        else:
-            candidate_indices = self.next_higher_indices[self._last_claim_idx]
-
-        for idx in candidate_indices:
-            if self._claim_possible(idx):
-                actions.append(idx)
-
-        # CALL allowed after first move
-        if self._last_claim_idx is not None:
-            actions.insert(0, CALL)
-
-        return actions
+        return list(self.rules.legal_actions_from_last(self._last_claim_idx))
 
     def step(self, action: int) -> Dict:
         if self._done:
@@ -156,57 +241,10 @@ class Env:
         }
 
     def parse_action(self, text: str, legal: Sequence[int] | None = None) -> int:
-        text = text.strip()
-        if text.upper() == "CALL":
-            action = CALL
-        elif ":" in text:
-            kind_str, value_str = text.split(":", 1)
-            kind_norm = kind_str.strip().lower()
-            rank_value = int(value_str.strip())
-            action = None
-            for idx, (kind, rank) in enumerate(self.claims):
-                if kind.lower() == kind_norm and rank == rank_value:
-                    action = idx
-                    break
-            if action is None:
-                raise ValueError(f"Unknown claim: {text}")
-        else:
-            raise ValueError(f"Unrecognized action string: {text}")
-
-        if legal is not None and action not in legal:
-            raise ValueError(f"Action {text} not in legal set {legal}")
-        return action
+        return self.rules.parse_action(text, legal)
 
     def render_action(self, idx: int) -> str:
-        if idx == CALL:
-            return "CALL"
-        kind, rank = self.claims[idx]
-        return f"{kind}:{rank}"
-
-    # --- Internals ---
-    def _build_claims(self) -> List[Tuple[str, int]]:
-        claims: List[Tuple[str, int]] = []
-        R = self.spec.ranks
-        for kind in self.spec.claim_kinds:
-            if kind == "RankHigh":
-                for r in range(1, R + 1):
-                    claims.append(("RankHigh", r))
-            elif kind == "Pair":
-                for r in range(1, R + 1):
-                    claims.append(("Pair", r))
-            else:
-                raise ValueError(f"Unsupported claim kind: {kind}")
-        return claims
-
-    def _claim_possible(self, idx: int) -> bool:
-        kind, r = self.claims[idx]
-        S = self.spec.suits
-        if kind == "RankHigh":
-            return S >= 1
-        if kind == "Pair":
-            return S >= 2 and (self.spec.hand_size * 2) >= 2
-        # TODO: tighten feasibility checks based on remaining unseen cards.
-        return False
+        return self.rules.render_action(idx)
 
     def _joint_rank_counts(self) -> List[int]:
         R, S = self.spec.ranks, self.spec.suits
@@ -218,7 +256,7 @@ class Env:
         return counts
 
     def _satisfied(self, idx: int, joint_counts: List[int]) -> bool:
-        kind, r = self.claims[idx]
+        kind, r = self.rules.claims[idx]
         if kind == "RankHigh":
             return joint_counts[r] >= 1
         if kind == "Pair":
