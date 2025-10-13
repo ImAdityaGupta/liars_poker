@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from dataclasses import field
 from functools import lru_cache
 import hashlib
 import json
@@ -16,15 +15,13 @@ class GameSpec:
     - ranks: number of ranks (1..r)
     - suits: number of suits per rank (1..4)
     - hand_size: cards per player
-    - starter: "random" | "P1" | "P2"
     - claim_kinds: tuple of claim family names in priority order
     """
 
     ranks: int
     suits: int
     hand_size: int
-    starter: str
-    claim_kinds: Tuple[str, ...] = field(default_factory=lambda: ("RankHigh", "Pair"))
+    claim_kinds: Tuple[str, ...] = ("RankHigh", "Pair")
 
     def to_json(self) -> str:
         return json.dumps(
@@ -32,7 +29,6 @@ class GameSpec:
                 "ranks": self.ranks,
                 "suits": self.suits,
                 "hand_size": self.hand_size,
-                "starter": self.starter,
                 "claim_kinds": list(self.claim_kinds),
             },
             sort_keys=True,
@@ -75,4 +71,3 @@ def card_rank(card_id: int, suits: int) -> int:
 
 def build_deck(ranks: int, suits: int) -> Tuple[int, ...]:
     return tuple(encode_card(r, s, suits) for r in range(1, ranks + 1) for s in range(suits))
-

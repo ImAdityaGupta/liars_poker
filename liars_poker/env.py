@@ -5,14 +5,11 @@ from functools import lru_cache
 from typing import Dict, List, Optional, Sequence, Tuple
 
 from .core import GameSpec, build_deck, card_rank
-
-
-# Special action id for CALL
-CALL = -1
+from .infoset import CALL, NO_CLAIM, InfoSet
 
 
 class Rules:
-    """Immutable action model derived from a GameSpec."""
+    """Immutable action ordering and legality."""
 
     __slots__ = ("spec", "_claims", "_next_higher_indices")
 
@@ -27,10 +24,6 @@ class Rules:
     def claims(self) -> Tuple[Tuple[str, int], ...]:
         return self._claims
 
-    @property
-    def next_higher_indices(self) -> Tuple[Tuple[int, ...], ...]:
-        return self._next_higher_indices
-
     def legal_actions_from_last(self, last_claim_idx: Optional[int]) -> Tuple[int, ...]:
         if last_claim_idx is None:
             candidates = range(len(self._claims))
@@ -42,18 +35,12 @@ class Rules:
             return raises
         return (CALL,) + raises
 
-    def legal_actions_for(self, infoset_key: Tuple) -> Tuple[int, ...]:
-        if len(infoset_key) < 2:
-            raise ValueError("infoset_key must contain at least (pid, last_claim_idx, ...)")
-        last_idx = infoset_key[1]
-        last_claim_idx: Optional[int]
-        if last_idx == -2:
-            last_claim_idx = None
-        elif isinstance(last_idx, int):
-            last_claim_idx = last_idx
+    def legal_actions_for(self, infoset: InfoSet) -> Tuple[int, ...]:
+        if infoset.last_idx == NO_CLAIM:
+            last_idx = None
         else:
-            raise ValueError(f"Invalid last claim index in infoset: {last_idx!r}")
-        return self.legal_actions_from_last(last_claim_idx)
+            last_idx = infoset.last_idx
+        return self.legal_actions_from_last(last_idx)
 
     def parse_action(self, text: str, legal: Sequence[int] | None = None) -> int:
         text = text.strip()
@@ -116,10 +103,7 @@ def rules_for_spec(spec: GameSpec) -> Rules:
 
 
 class Env:
-    """Minimal Liar's Poker environment.
-
-    Hot path uses ints/tuples; precomputes claim order and next-higher map.
-    """
+    """Minimal Liar's Poker environment with deterministic starting seat (P1)."""
 
     def __init__(self, spec: GameSpec, seed: Optional[int] = None):
         self.spec = spec
@@ -127,21 +111,18 @@ class Env:
         self._rng = random.Random(seed)
         self._seed = seed
 
-        # Mutable episode state
         self._p1_hand: Tuple[int, ...] = tuple()
         self._p2_hand: Tuple[int, ...] = tuple()
-        self._to_play: int = 0  # 0 -> P1, 1 -> P2
+        self._to_play: int = 0
         self._last_claim_idx: Optional[int] = None
         self._history: List[int] = []
         self._done: bool = False
         self._winner: Optional[int] = None
 
-    # --- Core API ---
     def reset(
         self,
         seed: Optional[int] = None,
         hands: Optional[Tuple[Tuple[int, ...], Tuple[int, ...]]] = None,
-        starter: Optional[str] = None,
     ) -> Dict:
         if seed is not None:
             self._rng = random.Random(seed)
@@ -159,16 +140,7 @@ class Env:
             self._p1_hand = tuple(sorted(hands[0]))
             self._p2_hand = tuple(sorted(hands[1]))
 
-        starter_choice = starter if starter is not None else self.spec.starter
-        if starter_choice == "random":
-            self._to_play = self._rng.choice([0, 1])
-        elif starter_choice == "P1":
-            self._to_play = 0
-        elif starter_choice == "P2":
-            self._to_play = 1
-        else:
-            raise ValueError(f"Invalid starter: {starter_choice}")
-
+        self._to_play = 0  # P1 always starts
         self._last_claim_idx = None
         self._history = []
         self._done = False
@@ -182,48 +154,34 @@ class Env:
     def legal_actions(self) -> List[int]:
         if self._done:
             return []
-
         return list(self.rules.legal_actions_from_last(self._last_claim_idx))
 
     def step(self, action: int) -> Dict:
         if self._done:
             raise RuntimeError("Episode already done")
-        la = self.legal_actions()
-        if action not in la:
-            raise ValueError(f"Illegal action {action}; legal={la}")
+        legal = self.legal_actions()
+        if action not in legal:
+            raise ValueError(f"Illegal action {action}; legal={legal}")
 
         if action == CALL:
-            # Resolve winner
-            assert self._last_claim_idx is not None, "CALL cannot occur on first move"
-            joint_counts = self._joint_rank_counts()
-            last_true = self._satisfied(self._last_claim_idx, joint_counts)
-            caller = self._to_play
-            if last_true:
-                # Caller loses
-                self._winner = 1 - caller
-            else:
-                self._winner = caller
+            self._resolve_call()
             self._history.append(CALL)
             self._done = True
             return self.observation_for(self.current_player())
 
-        # Raise with claim index
         self._last_claim_idx = action
         self._history.append(action)
         self._to_play = 1 - self._to_play
         return self.observation_for(self.current_player())
 
-    # --- Infosets ---
-    def infoset_key(self, for_player: str) -> Tuple:
+    def infoset_key(self, for_player: str) -> InfoSet:
         pid = 0 if for_player == "P1" else 1
         hand = self._p1_hand if pid == 0 else self._p2_hand
-        last_idx = -2 if self._last_claim_idx is None else self._last_claim_idx
-        return (
-            pid,
-            last_idx,
-            hand,
-            tuple(self._history),
-        )
+        if self._last_claim_idx is None:
+            last_idx = NO_CLAIM
+        else:
+            last_idx = self._last_claim_idx
+        return InfoSet(pid=pid, last_idx=last_idx, hand=hand, history=tuple(self._history))
 
     def observation_for(self, player: str) -> Dict:
         pid = 0 if player == "P1" else 1
@@ -246,13 +204,23 @@ class Env:
     def render_action(self, idx: int) -> str:
         return self.rules.render_action(idx)
 
+    def _resolve_call(self) -> None:
+        assert self._last_claim_idx is not None, "CALL cannot occur on first move"
+        joint_counts = self._joint_rank_counts()
+        last_true = self._satisfied(self._last_claim_idx, joint_counts)
+        caller = self._to_play
+        if last_true:
+            self._winner = 1 - caller
+        else:
+            self._winner = caller
+
     def _joint_rank_counts(self) -> List[int]:
         R, S = self.spec.ranks, self.spec.suits
-        counts = [0] * (R + 1)  # 1-based ranks
-        for c in self._p1_hand:
-            counts[card_rank(c, S)] += 1
-        for c in self._p2_hand:
-            counts[card_rank(c, S)] += 1
+        counts = [0] * (R + 1)
+        for card in self._p1_hand:
+            counts[card_rank(card, S)] += 1
+        for card in self._p2_hand:
+            counts[card_rank(card, S)] += 1
         return counts
 
     def _satisfied(self, idx: int, joint_counts: List[int]) -> bool:

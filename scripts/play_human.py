@@ -5,11 +5,11 @@ import random
 
 from liars_poker.core import GameSpec
 from liars_poker.env import Env
-from liars_poker.policy import RandomPolicy
+from liars_poker.policies.random import RandomPolicy
 
 
 def main() -> None:
-    spec = GameSpec(ranks=13, suits=1, hand_size=2, starter="random", claim_kinds=("RankHigh", "Pair"))
+    spec = GameSpec(ranks=13, suits=1, hand_size=2, claim_kinds=("RankHigh", "Pair"))
     env = Env(spec, seed=123)
     human = "P1"
     bot = RandomPolicy()
