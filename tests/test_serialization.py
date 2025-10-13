@@ -10,7 +10,7 @@ from liars_poker.policy import (
     TabularPolicy,
     policy_from_json,
 )
-from liars_poker.simple_api import mix_policies, start_run
+from liars_poker.simple_api import mix_policies, start_run, load_policy
 
 
 def test_policy_serialization_roundtrip():
@@ -31,15 +31,20 @@ def test_policy_serialization_roundtrip():
     probs = tab_loaded.action_probs(key)
     assert abs(probs[1] - 0.6) < 1e-9
 
-    mix = PerDecisionMixture(RandomPolicy(), RandomPolicy(), 0.3)
+    rand_a = RandomPolicy()
+    rand_b = RandomPolicy()
+    rand_c = RandomPolicy()
+
+    mix = PerDecisionMixture(rand_a, rand_b, 0.3)
     mix_loaded = policy_from_json(mix.to_json())
     assert isinstance(mix_loaded, PerDecisionMixture)
     assert abs(mix_loaded.w - 0.3) < 1e-9
 
-    commit = CommitOnceMixture(RandomPolicy(), RandomPolicy(), 0.1)
+    commit = CommitOnceMixture([rand_a, rand_b, rand_c], [0.7, 0.2, 0.1])
     commit_loaded = policy_from_json(commit.to_json())
     assert isinstance(commit_loaded, CommitOnceMixture)
-    assert abs(commit_loaded.w - 0.1) < 1e-9
+    assert len(commit_loaded.weights) == 3
+    assert abs(sum(commit_loaded.weights) - 1.0) < 1e-9
 
 
 def test_simple_api_run_logging(tmp_path):
@@ -50,6 +55,8 @@ def test_simple_api_run_logging(tmp_path):
     assert run.current_policy_id == pid0
     current = run.current_policy()
     assert isinstance(current, RandomPolicy)
+    loaded = load_policy(run.run_dir, pid0)
+    assert isinstance(loaded, RandomPolicy)
 
     mix = mix_policies(current, RandomPolicy(), {"impl": "commit_once", "w": 0.2})
     pid1 = run.log_policy(

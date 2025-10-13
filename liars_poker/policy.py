@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import random
-from typing import TYPE_CHECKING, Any, Dict, Sequence, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Sequence, Tuple, List
 
 if TYPE_CHECKING:
     from .env import Rules
@@ -193,29 +193,52 @@ class PerDecisionMixture(Policy):
 class CommitOnceMixture(Policy):
     """Normal-form mixture: flip once per episode and commit to one policy."""
 
-    def __init__(self, pi: Policy, beta: Policy, w: float, rng: random.Random | None = None):
+    def __init__(
+        self,
+        policies: Sequence[Policy],
+        weights: Sequence[float],
+        rng: random.Random | None = None,
+    ):
         super().__init__()
-        assert 0.0 <= w <= 1.0
-        self.pi = pi
-        self.beta = beta
-        self.w = w
+        if len(policies) != len(weights):
+            raise ValueError("Policies and weights must have the same length.")
+        filtered: List[Tuple[Policy, float]] = []
+        total = 0.0
+        for policy, weight in zip(policies, weights):
+            if weight < 0:
+                raise ValueError("CommitOnceMixture weights must be non-negative.")
+            if weight > 0:
+                filtered.append((policy, weight))
+                total += weight
+        if not filtered or total <= 0:
+            raise ValueError("At least one positive weight is required.")
+
+        self.policies: List[Policy] = [p for p, _ in filtered]
+        self.weights: List[float] = [w / total for _, w in filtered]
         self._rng = rng or random.Random()
-        self._choice: int | None = None  # 0 -> pi, 1 -> beta
- 
+        self._choice: int | None = None
+
     def begin_episode(self, rng: random.Random | None = None) -> None:
         if rng is not None:
             self._rng = rng
-        self._choice = 1 if self._rng.random() < self.w else 0
-        self.pi.begin_episode(rng)
-        self.beta.begin_episode(rng)
+        self._choice = self._weighted_choice()
+        for policy in self.policies:
+            policy.begin_episode(self._rng)
+
+    def _weighted_choice(self) -> int:
+        r = self._rng.random()
+        cumulative = 0.0
+        choice = len(self.weights) - 1
+        for idx, w in enumerate(self.weights):
+            cumulative += w
+            if r < cumulative:
+                choice = idx
+                break
+        return choice
 
     def action_probs(self, infoset_key: Tuple) -> Dict[int, float]:
-        legal = self._legal(infoset_key)
         assert self._choice is not None, "CommitOnceMixture: call begin_episode() after env.reset()."
-        if self._choice == 0:
-            return self.pi.action_probs(infoset_key)
-        else:
-            return self.beta.action_probs(infoset_key)
+        return self.policies[self._choice].action_probs(infoset_key)
 
     def sample(
         self,
@@ -225,30 +248,34 @@ class CommitOnceMixture(Policy):
         if rng is None:
             raise ValueError("Policy.sample requires an RNG instance.")
         assert self._choice is not None, "CommitOnceMixture: call begin_episode() after env.reset()."
-        if self._choice == 0:
-            return self.pi.sample(infoset_key, rng)
-        else:
-            return self.beta.sample(infoset_key, rng)
+        return self.policies[self._choice].sample(infoset_key, rng)
 
     def to_json(self) -> Dict[str, Any]:
         return {
             "class": "CommitOnceMixture",
-            "pi": self.pi.to_json(),
-            "beta": self.beta.to_json(),
-            "w": self.w,
+            "weights": self.weights,
+            "policies": [policy.to_json() for policy in self.policies],
         }
 
     @classmethod
     def from_json(cls, payload: Dict[str, Any]) -> "CommitOnceMixture":
-        pi = policy_from_json(payload["pi"])
-        beta = policy_from_json(payload["beta"])
-        w = float(payload.get("w", 0.0))
-        return cls(pi, beta, w)
+        policies_payload = payload.get("policies")
+        weights = payload.get("weights")
+        if policies_payload is None or weights is None:
+            # Backward compatibility for old format
+            pi = policy_from_json(payload["pi"])
+            beta = policy_from_json(payload["beta"])
+            w = float(payload.get("w", 0.0))
+            policies = [pi, beta]
+            weights = [1.0 - w, w]
+        else:
+            policies = [policy_from_json(p) for p in policies_payload]
+        return cls(policies, [float(w) for w in weights])
 
     def bind_rules(self, rules: Rules) -> None:
         super().bind_rules(rules)
-        self.pi.bind_rules(rules)
-        self.beta.bind_rules(rules)
+        for policy in self.policies:
+            policy.bind_rules(rules)
 
 
 def _pack_structure(value: Any) -> Any:

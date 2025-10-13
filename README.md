@@ -27,7 +27,7 @@ assert -1 in obs["legal_actions"] or len(obs["legal_actions"]) > 0
 pi = RandomPolicy()
 beta = RandomPolicy()
 mixA = PerDecisionMixture(pi, beta, w=0.1)
-mixB = CommitOnceMixture(pi, beta, w=0.1)
+mixB = CommitOnceMixture([pi, beta], [0.9, 0.1])
 
 run_info = train_fsp(spec, eta_schedule="harmonic", mix="commit_once", max_iters=1, seed=7)
 print("Run dir:", run_info["run_dir"])

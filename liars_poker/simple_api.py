@@ -10,6 +10,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from .core import ARTIFACTS_ROOT, GameSpec, build_deck, env_hash
+from .core import decode_card
 from .env import Env, rules_for_spec
 from .logging import StrategyManifest, load_json, save_json, write_strategy_manifest
 from .policy import (
@@ -165,8 +166,59 @@ def mix_policies(pi: Policy, beta: Policy, mix_params: Dict) -> Policy:
         return PerDecisionMixture(pi, beta, w)
     if impl == "commit_once":
         rng = mix_params.get("rng")
-        return CommitOnceMixture(pi, beta, w, rng=rng)
+
+        def _flatten(policy: Policy) -> Tuple[List[Policy], List[float]]:
+            if isinstance(policy, CommitOnceMixture):
+                return list(policy.policies), list(policy.weights)
+            return [policy], [1.0]
+
+        left_policies, left_weights = _flatten(pi)
+        right_policies, right_weights = _flatten(beta)
+
+        combined_policies: List[Policy] = []
+        combined_weights: List[float] = []
+
+        scale_left = 1.0 - w
+        scale_right = w
+
+        for policy, weight in zip(left_policies, left_weights):
+            scaled = scale_left * weight
+            if scaled > 0.0:
+                combined_policies.append(policy)
+                combined_weights.append(scaled)
+
+        for policy, weight in zip(right_policies, right_weights):
+            scaled = scale_right * weight
+            if scaled > 0.0:
+                combined_policies.append(policy)
+                combined_weights.append(scaled)
+
+        return CommitOnceMixture(combined_policies, combined_weights, rng=rng)
     raise ValueError(f"Unknown mix impl: {impl}")
+
+
+def _load_spec(run_dir: str) -> GameSpec:
+    env_spec_path = os.path.join(run_dir, "env_spec.json")
+    env_payload = load_json(env_spec_path)
+    spec_payload = env_payload.get("spec")
+    if spec_payload is None:
+        raise ValueError(f"env_spec.json missing 'spec' section in {run_dir!r}")
+    return GameSpec(
+        ranks=spec_payload["ranks"],
+        suits=spec_payload["suits"],
+        hand_size=spec_payload["hand_size"],
+        starter=spec_payload["starter"],
+        claim_kinds=tuple(spec_payload.get("claim_kinds", ("RankHigh", "Pair"))),
+    )
+
+
+def load_policy(run_dir: str, policy_id: str) -> Policy:
+    policy_path = os.path.join(run_dir, "policies", f"{policy_id}.json")
+    data = load_json(policy_path)
+    policy = policy_from_json(data)
+    spec = _load_spec(run_dir)
+    policy.bind_rules(rules_for_spec(spec))
+    return policy
 
 
 def play_vs_bot(
@@ -212,6 +264,24 @@ def play_vs_bot(
         obs = env.step(action)
 
     print("Winner:", obs["winner"])
+    # Print both players' hands at the end of the game
+    def _render_hand(hand: Tuple[int, ...]) -> List[str]:
+        # represent suits as letters A, B, C, ... for readability
+        S = spec.suits
+        def _suit_letter(s: int) -> str:
+            return chr(ord("A") + s) if 0 <= s < 26 else str(s)
+
+        rendered: List[str] = []
+        for c in hand:
+            r, s = decode_card(c, S)
+            rendered.append(f"{r}{_suit_letter(s)}")
+        return rendered
+
+    # obs might be terminal; get final observations for each player
+    p1_obs = env.observation_for("P1")
+    p2_obs = env.observation_for("P2")
+    print("P1 hand:", _render_hand(tuple(p1_obs["hand"])))
+    print("P2 hand:", _render_hand(tuple(p2_obs["hand"])))
 
 
 def _prepare_hands(

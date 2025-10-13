@@ -1,8 +1,11 @@
 import random
 
+import pytest
+
 from liars_poker.core import GameSpec
 from liars_poker.env import rules_for_spec
 from liars_poker.policy import CommitOnceMixture, PerDecisionMixture, Policy
+from liars_poker.simple_api import mix_policies
 
 
 class OneHotPolicy(Policy):
@@ -44,7 +47,7 @@ def test_commit_once_flips_once_per_episode():
     infoset = (0, -2, tuple(), tuple())
     pi = OneHotPolicy(0)
     be = OneHotPolicy(1)
-    mix = CommitOnceMixture(pi, be, w=0.5, rng=rng)
+    mix = CommitOnceMixture([pi, be], [0.5, 0.5], rng=rng)
     mix.bind_rules(rules)
     mix.begin_episode(rng)
     la = rules.legal_actions_for(infoset)
@@ -58,3 +61,21 @@ def test_commit_once_flips_once_per_episode():
     p3 = mix.action_probs(infoset)
     # Not necessarily different, but is a valid dist
     assert sum(p3.values()) == 1.0
+
+
+def test_commit_once_mix_accumulates_weights():
+    spec = GameSpec(ranks=3, suits=1, hand_size=1, starter="random", claim_kinds=("RankHigh",))
+    rules = rules_for_spec(spec)
+    base = OneHotPolicy(0)
+    challenger0 = OneHotPolicy(1)
+    challenger1 = OneHotPolicy(2)
+
+    mix1 = mix_policies(base, challenger0, {"impl": "commit_once", "w": 0.1})
+    assert isinstance(mix1, CommitOnceMixture)
+    mix1.bind_rules(rules)
+    assert mix1.weights == pytest.approx([0.9, 0.1], rel=1e-9)
+
+    mix2 = mix_policies(mix1, challenger1, {"impl": "commit_once", "w": 0.1})
+    assert isinstance(mix2, CommitOnceMixture)
+    mix2.bind_rules(rules)
+    assert mix2.weights == pytest.approx([0.81, 0.09, 0.1], rel=1e-9)
