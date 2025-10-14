@@ -11,7 +11,7 @@ def test_infoset_type_and_history() -> None:
     iset_p1 = env.infoset_key("P1")
     assert isinstance(iset_p1, InfoSet)
     assert iset_p1.pid == 0
-    assert iset_p1.last_idx == NO_CLAIM
+    assert InfoSet.last_claim_idx(iset_p1.history) == NO_CLAIM
     assert iset_p1.history == ()
 
     first_action = env.legal_actions()[0]

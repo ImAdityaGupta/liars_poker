@@ -1,14 +1,19 @@
 from __future__ import annotations
 
+import os
+import pickle
 import random
-from typing import Dict, List, Sequence, Tuple
+from typing import Any, Dict, List, Sequence, Tuple
 
+from liars_poker.core import GameSpec
+from liars_poker.env import rules_for_spec
 from liars_poker.infoset import CALL, NO_CLAIM, InfoSet
 
 from .base import Policy
 
 
 class CommitOnceMixture(Policy):
+    POLICY_KIND = "CommitOnceMixture"
     """Commit-once mixture that can expose posterior-aware distributions."""
 
     def __init__(
@@ -52,8 +57,7 @@ class CommitOnceMixture(Policy):
 
     def action_probs(self, infoset: InfoSet) -> Dict[int, float]:
         if self._choice is None:
-            # If begin_episode not yet called, fall back to posterior-aware mixture.
-            return self.prob_dist_at_infoset(infoset)
+            raise RuntimeError("CommitOnceMixture: begin_epsiode not yet called, call prob_dist_at_infoset for posterior-weighted mixture.")
         return self.policies[self._choice].action_probs(infoset)
 
     def sample(self, infoset: InfoSet, rng: random.Random) -> int:
@@ -110,7 +114,6 @@ class CommitOnceMixture(Policy):
             prefix = history[:turn]
             partial_iset = InfoSet(
                 pid=pid,
-                last_idx=self._last_claim_idx_before(prefix),
                 hand=infoset.hand,
                 history=prefix,
             )
@@ -120,10 +123,46 @@ class CommitOnceMixture(Policy):
                 break
         return likelihood
 
-    @staticmethod
-    def _last_claim_idx_before(history: Tuple[int, ...]) -> int:
-        for action in reversed(history):
-            if action == CALL:
-                continue
-            return action
-        return NO_CLAIM
+    def store_efficiently(self, directory: str) -> None:
+        os.makedirs(directory, exist_ok=True)
+        spec = self._require_rules().spec
+        child_entries = []
+        for idx, child in enumerate(self.policies):
+            child_dir_name = f"child_{idx}"
+            child_dir = os.path.join(directory, child_dir_name)
+            child.store_efficiently(child_dir)
+            child_entries.append({"dir": child_dir_name, "kind": child.__class__.__name__})
+
+        payload = {
+            "kind": self.POLICY_KIND,
+            "spec": spec,
+            "weights": list(self.weights),
+            "children": child_entries,
+        }
+        path = os.path.join(directory, self.POLICY_BINARY_FILENAME)
+        with open(path, "wb") as handle:
+            pickle.dump(payload, handle)
+
+    @classmethod
+    def load_efficiently(cls, directory: str) -> Tuple["CommitOnceMixture", GameSpec]:
+        path = os.path.join(directory, cls.POLICY_BINARY_FILENAME)
+        with open(path, "rb") as handle:
+            payload = pickle.load(handle)
+        policy, spec = cls._from_serialized(payload, directory)
+        policy.bind_rules(rules_for_spec(spec))
+        return policy, spec
+
+    @classmethod
+    def _from_serialized(cls, payload, directory: str) -> Tuple["CommitOnceMixture", GameSpec]:
+        spec: GameSpec = payload["spec"]
+        children_meta: List[Dict[str, Any]] = payload.get("children", [])
+        weights: List[float] = list(payload.get("weights", []))
+        children: List[Policy] = []
+        for entry in children_meta:
+            child_dir = os.path.join(directory, entry["dir"])
+            child_policy, child_spec = Policy.load_policy(child_dir)
+            if child_spec != spec:
+                child_policy.bind_rules(rules_for_spec(spec))
+            children.append(child_policy)
+        policy = cls(children, weights, rng=random.Random())
+        return policy, spec

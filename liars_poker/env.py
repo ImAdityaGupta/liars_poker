@@ -36,11 +36,12 @@ class Rules:
         return (CALL,) + raises
 
     def legal_actions_for(self, infoset: InfoSet) -> Tuple[int, ...]:
-        if infoset.last_idx == NO_CLAIM:
-            last_idx = None
+        last_idx = InfoSet.last_claim_idx(infoset.history)
+        if last_idx == NO_CLAIM:
+            ref = None
         else:
-            last_idx = infoset.last_idx
-        return self.legal_actions_from_last(last_idx)
+            ref = last_idx
+        return self.legal_actions_from_last(ref)
 
     def parse_action(self, text: str, legal: Sequence[int] | None = None) -> int:
         text = text.strip()
@@ -177,11 +178,7 @@ class Env:
     def infoset_key(self, for_player: str) -> InfoSet:
         pid = 0 if for_player == "P1" else 1
         hand = self._p1_hand if pid == 0 else self._p2_hand
-        if self._last_claim_idx is None:
-            last_idx = NO_CLAIM
-        else:
-            last_idx = self._last_claim_idx
-        return InfoSet(pid=pid, last_idx=last_idx, hand=hand, history=tuple(self._history))
+        return InfoSet(pid=pid, hand=hand, history=tuple(self._history))
 
     def observation_for(self, player: str) -> Dict:
         pid = 0 if player == "P1" else 1

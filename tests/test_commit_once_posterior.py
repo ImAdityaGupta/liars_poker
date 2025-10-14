@@ -23,8 +23,8 @@ def test_commit_once_posterior_updates_with_history() -> None:
     spec = GameSpec(ranks=3, suits=1, hand_size=1)
     rules = rules_for_spec(spec)
 
-    base_infoset = InfoSet(pid=0, last_idx=NO_CLAIM, hand=(0,), history=())
-    observed_infoset = InfoSet(pid=0, last_idx=NO_CLAIM, hand=(0,), history=(0,))
+    base_infoset = InfoSet(pid=0, hand=(0,), history=())
+    observed_infoset = InfoSet(pid=0, hand=(0,), history=(0,))
 
     policy_a = OneHotPolicy(0)
     policy_b = OneHotPolicy(1)

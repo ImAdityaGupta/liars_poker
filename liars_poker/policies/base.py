@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import os
+import pickle
 import random
-from typing import Dict, Tuple
+from typing import ClassVar, Dict, Optional, Tuple, Type
 
+from liars_poker.core import GameSpec
+from liars_poker.env import rules_for_spec
 from liars_poker.infoset import InfoSet
 
 if False:  # pragma: nocover - import guard for type checkers without runtime cost
@@ -10,7 +14,17 @@ if False:  # pragma: nocover - import guard for type checkers without runtime co
 
 
 class Policy:
+    POLICY_BINARY_FILENAME: ClassVar[str] = "policy.bin"
+    POLICY_KIND: ClassVar[Optional[str]] = None
+    _registry: ClassVar[Dict[str, Type["Policy"]]] = {}
+
     """Policy abstraction queried only on its own turn."""
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        kind = getattr(cls, "POLICY_KIND", None)
+        if kind:
+            Policy._registry[kind] = cls
 
     def __init__(self) -> None:
         self._rules: "Rules | None" = None
@@ -66,3 +80,32 @@ class Policy:
     def _legal_actions(self, infoset: InfoSet) -> Tuple[int, ...]:
         return self._require_rules().legal_actions_for(infoset)
 
+    def store_efficiently(self, directory: str) -> None:
+        """Persist the policy and associated spec to `directory` using a binary format."""
+
+        raise NotImplementedError
+
+    @classmethod
+    def load_efficiently(cls, directory: str) -> Tuple["Policy", GameSpec]:
+        """Load a policy and spec from `directory`."""
+
+        raise NotImplementedError
+
+    @classmethod
+    def _from_serialized(cls, payload: Dict, directory: str) -> Tuple["Policy", GameSpec]:  # pragma: nocover - abstract helper
+        raise NotImplementedError
+
+    @staticmethod
+    def load_policy(directory: str) -> Tuple["Policy", GameSpec]:
+        path = os.path.join(directory, Policy.POLICY_BINARY_FILENAME)
+        with open(path, "rb") as handle:
+            payload = pickle.load(handle)
+        kind = payload.get("kind")
+        if kind is None:
+            raise ValueError("Serialized policy missing 'kind'")
+        policy_cls = Policy._registry.get(kind)
+        if policy_cls is None:
+            raise ValueError(f"Unknown policy kind: {kind}")
+        policy, spec = policy_cls._from_serialized(payload, directory)
+        policy.bind_rules(rules_for_spec(spec))
+        return policy, spec
