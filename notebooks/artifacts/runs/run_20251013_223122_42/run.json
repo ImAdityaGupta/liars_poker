@@ -1,0 +1,15 @@
+{
+  "code_sha": null,
+  "created_at": "2025-10-13T22:31:22.446111+00:00",
+  "env_hash": "71c373abb12e",
+  "seed": 42,
+  "spec": {
+    "claim_kinds": [
+      "RankHigh",
+      "Pair"
+    ],
+    "hand_size": 1,
+    "ranks": 3,
+    "suits": 4
+  }
+}

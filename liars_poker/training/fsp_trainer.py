@@ -22,7 +22,7 @@ class FSPTrainer:
         self._rng = random.Random(config.seed)
 
     def step(self, opponent_policy: Policy, iter_index: int):
-        if iter_index >= self.config.max_iters:
+        if iter_index > self.config.max_iters:
             raise ValueError("Iteration index exceeds configured max_iters.")
 
         avg_id = self.run.current_policy_id()

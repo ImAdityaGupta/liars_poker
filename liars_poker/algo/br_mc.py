@@ -70,9 +70,6 @@ def best_response_mc(
 
             state = env.infoset_key(me)
             legal = tuple(env.legal_actions())
-            if not legal:
-                break
-
             action = pick_action(state, legal)
             obs = env.step(action)
 
