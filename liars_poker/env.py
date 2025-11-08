@@ -4,7 +4,7 @@ import random
 from functools import lru_cache
 from typing import Dict, List, Optional, Sequence, Tuple
 
-from .core import GameSpec, build_deck, card_rank
+from .core import GameSpec, generate_deck, card_rank
 from .infoset import CALL, NO_CLAIM, InfoSet
 
 
@@ -130,7 +130,7 @@ class Env:
             self._seed = seed
 
         if hands is None:
-            deck = list(build_deck(self.spec.ranks, self.spec.suits))
+            deck = list(generate_deck(self.spec))
             self._rng.shuffle(deck)
             k = self.spec.hand_size
             self._p1_hand = tuple(sorted(deck[:k]))
@@ -212,12 +212,12 @@ class Env:
             self._winner = caller
 
     def _joint_rank_counts(self) -> List[int]:
-        R, S = self.spec.ranks, self.spec.suits
+        R = self.spec.ranks
         counts = [0] * (R + 1)
         for card in self._p1_hand:
-            counts[card_rank(card, S)] += 1
+            counts[card_rank(card, self.spec)] += 1
         for card in self._p2_hand:
-            counts[card_rank(card, S)] += 1
+            counts[card_rank(card, self.spec)] += 1
         return counts
 
     def _satisfied(self, idx: int, joint_counts: List[int]) -> bool:

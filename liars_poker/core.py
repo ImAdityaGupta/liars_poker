@@ -16,12 +16,14 @@ class GameSpec:
     - suits: number of suits per rank (1..4)
     - hand_size: cards per player
     - claim_kinds: tuple of claim family names in priority order
+    - suit_symmetry: if True, suits are interchangeable; hands are rank multisets
     """
 
     ranks: int
     suits: int
     hand_size: int
     claim_kinds: Tuple[str, ...] = ("RankHigh", "Pair")
+    suit_symmetry: bool = False
 
     def to_json(self) -> str:
         return json.dumps(
@@ -30,6 +32,7 @@ class GameSpec:
                 "suits": self.suits,
                 "hand_size": self.hand_size,
                 "claim_kinds": list(self.claim_kinds),
+                "suit_symmetry": self.suit_symmetry,
             },
             sort_keys=True,
         )
@@ -51,23 +54,41 @@ def repo_root() -> str:
 ARTIFACTS_ROOT = os.path.join(repo_root(), "artifacts")
 
 
-# --- Card helpers (ints) ---
+# --- Card helpers ---
 
-def encode_card(rank: int, suit: int, suits: int) -> int:
-    """Encode card to int id. rank in [1..R], suit in [0..S-1]."""
-    return (rank - 1) * suits + suit
+def generate_deck(spec: GameSpec) -> Tuple[int, ...]:
+    """Return the canonical deck for the spec.
+
+    - suit_symmetry False: cards are encoded rank/suit pairs as ints (legacy behaviour).
+    - suit_symmetry True and suits > 1: deck is a multiset of ranks, one entry per suit copy.
+    """
+
+    if spec.suit_symmetry and spec.suits > 1:
+        deck = []
+        for rank in range(1, spec.ranks + 1):
+            deck.extend([rank] * spec.suits)
+        return tuple(deck)
+
+    deck = []
+    for rank in range(1, spec.ranks + 1):
+        for suit in range(spec.suits):
+            card_id = (rank - 1) * spec.suits + suit
+            deck.append(card_id)
+    return tuple(deck)
 
 
-def decode_card(card_id: int, suits: int) -> Tuple[int, int]:
-    """Decode int id to (rank, suit)."""
-    rank = card_id // suits + 1
-    suit = card_id % suits
-    return rank, suit
+def card_rank(card: int, spec: GameSpec) -> int:
+    if spec.suit_symmetry and spec.suits > 1:
+        return card
+    return card // spec.suits + 1
 
 
-def card_rank(card_id: int, suits: int) -> int:
-    return card_id // suits + 1
-
-
-def build_deck(ranks: int, suits: int) -> Tuple[int, ...]:
-    return tuple(encode_card(r, s, suits) for r in range(1, ranks + 1) for s in range(suits))
+def card_display(card: int, spec: GameSpec) -> str:
+    if spec.suit_symmetry and spec.suits > 1:
+        return str(card)
+    rank = card_rank(card, spec)
+    suit = card % spec.suits
+    if spec.suits <= 1:
+        return str(rank)
+    suffix = chr(ord("A") + suit)
+    return f"{rank}{suffix}"

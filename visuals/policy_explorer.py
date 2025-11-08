@@ -13,7 +13,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
-from liars_poker.core import build_deck, decode_card
+from liars_poker.core import card_display, generate_deck
 from liars_poker.env import rules_for_spec
 from liars_poker.infoset import CALL, InfoSet
 from liars_poker.policies.base import Policy
@@ -80,20 +80,13 @@ if st.session_state["call_flag"]:
 history_tuple = tuple(history)
 pid = len(history_tuple) % 2
 
-cards = build_deck(spec.ranks, spec.suits)
+cards = generate_deck(spec)
 hand_size = spec.hand_size
-hand_rows: List[Tuple[int, ...]] = [tuple(sorted(hand)) for hand in itertools.combinations(cards, hand_size)]
+hand_rows = sorted({tuple(sorted(hand)) for hand in itertools.combinations(cards, hand_size)})
 
 
 def format_hand(hand: Tuple[int, ...]) -> str:
-    parts = []
-    for card in hand:
-        rank, suit = decode_card(card, spec.suits)
-        if spec.suits <= 1:
-            parts.append(str(rank))
-        else:
-            parts.append(f"{rank}{chr(ord('A') + suit)}")
-    return "-".join(parts)
+    return "-".join(card_display(card, spec) for card in hand)
 
 
 hand_labels = {hand: format_hand(hand) for hand in hand_rows}

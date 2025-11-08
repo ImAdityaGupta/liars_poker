@@ -8,7 +8,7 @@ CALL = -1
 NO_CLAIM = -2
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class InfoSet:
     """Hashable state supplied to policies when it is their turn."""
 

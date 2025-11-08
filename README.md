@@ -3,7 +3,7 @@ Liar’s Poker — Research Skeleton
 The repository focuses on a compact core for two-player Liar’s Poker:
 
 1. **Engine** – `core.py`, `infoset.py`, `env.py`
-   - `GameSpec` defines the deck / claim structure (P1 always opens).
+   - `GameSpec` defines the deck / claim structure (P1 always opens). `suit_symmetry=True` treats suits as interchangeable and deals rank multisets without replacement.
    - `InfoSet` is a frozen dataclass describing the player’s perspective (`pid`, `hand`, `history`).
 2. **Policies** – `policies/`
    - `Policy` base class with `action_probs`, `prob_dist_at_infoset`, sampling, and efficient persistence hooks.
@@ -16,7 +16,7 @@ The repository focuses on a compact core for two-player Liar’s Poker:
 ```python
 from liars_poker import GameSpec, Env, RandomPolicy, best_response_mc, eval_both_seats
 
-spec = GameSpec(ranks=13, suits=1, hand_size=2)
+spec = GameSpec(ranks=13, suits=1, hand_size=2, suit_symmetry=False)
 env = Env(spec, seed=123)
 obs = env.reset()
 assert env.current_player() == "P1"
