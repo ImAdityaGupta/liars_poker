@@ -1,2 +1,17 @@
+# Python bytecode / caches
 __pycache__/
+*.py[cod]
+*.pyo
 .pytest_cache/
+
+# Local environments & tools
+.venv/
+env/
+.vscode/
+
+# Generated artifacts and logs
+artifacts/
+*.bin
+*.pkl
+*.npy
+*.log
