@@ -5,7 +5,8 @@ from functools import lru_cache
 import hashlib
 import json
 import os
-from typing import Tuple
+from itertools import combinations
+from typing import List, Tuple
 
 
 @dataclass(slots=True, frozen=True)
@@ -92,3 +93,14 @@ def card_display(card: int, spec: GameSpec) -> str:
         return str(rank)
     suffix = chr(ord("A") + suit)
     return f"{rank}{suffix}"
+
+
+def possible_starting_hands(spec: GameSpec) -> List[Tuple[int, ...]]:
+    """Enumerate all unique starting hands consistent with the spec."""
+
+    deck = generate_deck(spec)
+    hands = {
+        tuple(sorted(hand))
+        for hand in combinations(deck, spec.hand_size)
+    }
+    return sorted(hands)

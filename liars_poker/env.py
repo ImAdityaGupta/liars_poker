@@ -227,3 +227,43 @@ class Env:
         if kind == "Pair":
             return joint_counts[r] >= 2
         return False
+
+
+def resolve_call_winner(
+    spec: GameSpec,
+    history: Tuple[int, ...],
+    p1_hand: Tuple[int, ...],
+    p2_hand: Tuple[int, ...],
+) -> str:
+    """Return the winner label ('P1' or 'P2') when a CALL terminates the history."""
+
+    if not history or history[-1] != CALL:
+        raise ValueError("History must end with CALL to resolve a winner.")
+
+    last_claim_idx = InfoSet.last_claim_idx(history[:-1])
+    if last_claim_idx == NO_CLAIM:
+        raise ValueError("CALL cannot resolve without a preceding claim.")
+
+    rules = rules_for_spec(spec)
+    ranks = spec.ranks
+    counts = [0] * (ranks + 1)
+
+    for card in p1_hand:
+        counts[card_rank(card, spec)] += 1
+    for card in p2_hand:
+        counts[card_rank(card, spec)] += 1
+
+    kind, rank_value = rules.claims[last_claim_idx]
+    if kind == "RankHigh":
+        satisfied = counts[rank_value] >= 1
+    elif kind == "Pair":
+        satisfied = counts[rank_value] >= 2
+    else:
+        raise ValueError(f"Unsupported claim kind: {kind}")
+
+    caller_idx = (len(history) - 1) % 2
+    if satisfied:
+        winner_idx = 1 - caller_idx
+    else:
+        winner_idx = caller_idx
+    return "P1" if winner_idx == 0 else "P2"
