@@ -46,23 +46,26 @@ def eval_vs(spec: GameSpec, opponent: Policy, candidate: Policy, episodes: int =
     return play_match(env, candidate, opponent, episodes=episodes, seed=seed)
 
 
-def eval_both_seats(spec: GameSpec, A: Policy, B: Policy, episodes: int = 2000, seed: int = 0) -> Dict[str, int]:
+def eval_both_seats(spec: GameSpec, p1: Policy, p2: Policy, episodes: int = 2000, seed: int = 0) -> Dict[str, int]:
     rng = random.Random(seed)
     env = Env(spec)
-    A.bind_rules(env.rules)
-    B.bind_rules(env.rules)
+    p1.bind_rules(env.rules)
+    p2.bind_rules(env.rules)
 
     first_half = episodes // 2
     second_half = episodes - first_half
 
-    wins_ab = play_match(env, A, B, episodes=first_half, seed=rng.randint(0, 2_147_483_647))
-    wins_ba = play_match(env, B, A, episodes=second_half, seed=rng.randint(0, 2_147_483_647))
+    wins_ab = play_match(env, p1, p2, episodes=first_half, seed=rng.randint(0, 2_147_483_647))
+    wins_ba = play_match(env, p2, p1, episodes=second_half, seed=rng.randint(0, 2_147_483_647))
 
-    return {
-        "A": wins_ab["P1"] + wins_ba["P2"],
-        "B": wins_ab["P2"] + wins_ba["P1"],
-        "total": (wins_ab["P1"] + wins_ba["P2"]) + (wins_ab["P2"] + wins_ba["P1"]),
-    }
+    a_wins = wins_ab["P1"] + wins_ba["P2"]
+    b_wins = wins_ab["P2"] + wins_ba["P1"]
+    total = a_wins + b_wins
+
+    if total == 0:
+        return {"P1": 0.0, "P2": 0.0}
+
+    return {"P1": a_wins / total, "P2": b_wins / total}
 
 
 def exact_eval_tabular(spec: GameSpec, p1: TabularPolicy, p2: TabularPolicy) -> Dict[str, float]:
