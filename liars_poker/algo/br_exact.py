@@ -81,6 +81,55 @@ class BestResponseComputer:
     def _weighted_mass(self, history: Tuple[int, ...], our_hand: Tuple[int, ...]) -> float:
         return sum(self._weighted_probabilities(history, our_hand).values())
 
+    def exploitability(self) -> Tuple[float, float]:
+        def hand_weight(hand: Tuple[int, ...]) -> float:
+            return adjustment_factor(self.spec, (), hand)
+
+        root_values = self.state_card_values.get((), {})
+        num_first = 0.0
+        den_first = 0.0
+        for hand, value in root_values.items():
+            w = hand_weight(hand)
+            num_first += value * w
+            den_first += w
+        p_first = 0.0 if den_first == 0 else num_first / den_first
+
+        actions = self.rules.legal_actions_from_last(None)
+        num_second = 0.0
+        den_second = 0.0
+
+        for hand in self.hands:
+            hand_weight_value = hand_weight(hand)
+            if hand_weight_value <= 0:
+                continue
+
+            weighted_masses = []
+            total_mass = 0.0
+            for action in actions:
+                mass = 0.0
+                for opp_hand, base_prob in self.prob_vectors.get((action,), {}).items():
+                    mass += base_prob * adjustment_factor(self.spec, hand, opp_hand)
+                weighted_masses.append((action, mass))
+                total_mass += mass
+
+            if total_mass <= 0:
+                continue
+
+            for action, mass in weighted_masses:
+                if mass <= 0:
+                    continue
+                action_prob = mass / total_mass
+                value = self.state_card_values.get((action,), {}).get(hand)
+                if value is None:
+                    continue
+                w = hand_weight_value * action_prob
+                num_second += value * w
+                den_second += w
+
+        p_second = 0.0 if den_second == 0 else num_second / den_second
+
+        return p_first, p_second
+
 
     def _record_history_prob(self, history: Tuple[int, ...], opp_hand: Tuple[int, ...], prob: float) -> None:
         bucket = self.prob_vectors.setdefault(history, {})
@@ -112,7 +161,7 @@ class BestResponseComputer:
 
     def _percolate_opponent_openings(self, opp_policy: Policy, init_prob: float = 1.0) -> None:
         for opp_hand in self.hands:
-            opp_root = InfoSet(1, opp_hand, ())
+            opp_root = InfoSet(0, opp_hand, ())
             response_vector = opp_policy.prob_dist_at_infoset(opp_root)
             for opp_action, prob in response_vector.items():
                 history = (opp_action,)

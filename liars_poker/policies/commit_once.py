@@ -5,11 +5,12 @@ import pickle
 import random
 from typing import Any, Dict, List, Sequence, Tuple
 
-from liars_poker.core import GameSpec
+from liars_poker.core import GameSpec, possible_starting_hands
 from liars_poker.env import rules_for_spec
 from liars_poker.infoset import CALL, NO_CLAIM, InfoSet
 
 from .base import Policy
+from .tabular import TabularPolicy
 
 
 class CommitOnceMixture(Policy):
@@ -166,3 +167,42 @@ class CommitOnceMixture(Policy):
             children.append(child_policy)
         policy = cls(children, weights, rng=random.Random())
         return policy, spec
+
+    def to_tabular(self) -> TabularPolicy:
+        """Materialize this mixture as a TabularPolicy by enumerating all infosets."""
+
+        rules = self._require_rules()
+        spec = rules.spec
+        tab = TabularPolicy()
+        tab.bind_rules(rules)
+
+        hands = possible_starting_hands(spec)
+
+        def histories(history: Tuple[int, ...]) -> List[Tuple[int, ...]]:
+            yield history
+            if history and history[-1] == CALL:
+                return
+            last_claim = InfoSet.last_claim_idx(history)
+            last_idx = None if last_claim == NO_CLAIM else last_claim
+            for action in rules.legal_actions_from_last(last_idx):
+                new_history = history + (action,)
+                if action == CALL:
+                    yield new_history
+                else:
+                    yield from histories(new_history)
+
+        seen: set[InfoSet] = set()
+        for history in histories(tuple()):
+            if history and history[-1] == CALL:
+                continue
+            pid = len(history) % 2
+            for hand in hands:
+                infoset = InfoSet(pid=pid, hand=hand, history=history)
+                if infoset in seen:
+                    continue
+                seen.add(infoset)
+                dist = self.prob_dist_at_infoset(infoset)
+                if dist:
+                    tab.set(infoset, dist)
+
+        return tab
