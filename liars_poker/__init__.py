@@ -14,7 +14,7 @@ __all__ = [
     "GameSpec",
     "env_hash",
     "Env",
-    "Rules"
+    "Rules",
     "InfoSet",
     "CALL",
     "NO_CLAIM",

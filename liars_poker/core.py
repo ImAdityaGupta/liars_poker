@@ -60,7 +60,7 @@ ARTIFACTS_ROOT = os.path.join(repo_root(), "artifacts")
 def generate_deck(spec: GameSpec) -> Tuple[int, ...]:
     """Return the canonical deck for the spec.
 
-    - suit_symmetry False: cards are encoded rank/suit pairs as ints (legacy behaviour).
+    - suit_symmetry False: cards are encoded rank/suit pairs as ints.
     - suit_symmetry True and suits > 1: deck is a multiset of ranks, one entry per suit copy.
     """
 
