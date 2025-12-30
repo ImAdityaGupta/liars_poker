@@ -1,12 +1,8 @@
 from __future__ import annotations
 
-import os
-import pickle
 import random
-from typing import ClassVar, Dict, Optional, Tuple, Type
+from typing import ClassVar, Dict, Iterable, Optional, Tuple
 
-from liars_poker.core import GameSpec
-from liars_poker.env import rules_for_spec
 from liars_poker.infoset import InfoSet
 
 if False:  # pragma: nocover - import guard for type checkers without runtime cost
@@ -14,20 +10,15 @@ if False:  # pragma: nocover - import guard for type checkers without runtime co
 
 
 class Policy:
-    POLICY_BINARY_FILENAME: ClassVar[str] = "policy.bin"
-    POLICY_KIND: ClassVar[Optional[str]] = None
-    _registry: ClassVar[Dict[str, Type["Policy"]]] = {}
-
     """Policy abstraction queried only on its own turn."""
 
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        kind = getattr(cls, "POLICY_KIND", None)
-        if kind:
-            Policy._registry[kind] = cls
+    POLICY_KIND: ClassVar[str]  # subclasses must set
+    POLICY_VERSION: ClassVar[int] = 1
 
     def __init__(self) -> None:
         self._rules: "Rules | None" = None
+
+    # --- Core gameplay API ---
 
     def bind_rules(self, rules: "Rules") -> None:
         """Associate the policy with static game rules."""
@@ -80,32 +71,48 @@ class Policy:
     def _legal_actions(self, infoset: InfoSet) -> Tuple[int, ...]:
         return self._require_rules().legal_actions_for(infoset)
 
-    def store_efficiently(self, directory: str) -> None:
-        """Persist the policy and associated spec to `directory` using a binary format."""
+    # --- Serialization hooks (to be consumed by liars_poker.serialization) ---
+
+    def to_payload(self) -> Tuple[Dict, Dict[str, "object"]]:
+        """Return (data_payload, blobs) for this policy.
+
+        - data_payload: JSON-serializable structure describing the policy.
+        - blobs: mapping of local blob names -> numpy arrays / binary-friendly buffers.
+        """
 
         raise NotImplementedError
 
     @classmethod
-    def load_efficiently(cls, directory: str) -> Tuple["Policy", GameSpec]:
-        """Load a policy and spec from `directory`."""
+    def from_payload(
+        cls,
+        payload: Dict,
+        *,
+        blob_prefix: str,
+        blobs: Dict[str, "object"],
+        children: Iterable["Policy"],
+    ) -> "Policy":
+        """Rehydrate a policy from its payload, scoped blobs, and already-instantiated children."""
 
         raise NotImplementedError
 
-    @classmethod
-    def _from_serialized(cls, payload: Dict, directory: str) -> Tuple["Policy", GameSpec]:  # pragma: nocover - abstract helper
-        raise NotImplementedError
+    def iter_children(self) -> Iterable["Policy | Tuple[str, \"Policy\"]"]:
+        """Return any child policies (for composites like mixtures).
+
+        Each entry may be either a Policy or a (label, Policy) tuple to influence blob-prefix naming.
+        Default is no children.
+        """
+
+        return ()
+
+    # --- Convenience persistence wrappers ---
+
+    def save(self, directory: str) -> None:
+        from liars_poker.serialization import save_policy
+
+        save_policy(self, directory)
 
     @staticmethod
-    def load_policy(directory: str) -> Tuple["Policy", GameSpec]:
-        path = os.path.join(directory, Policy.POLICY_BINARY_FILENAME)
-        with open(path, "rb") as handle:
-            payload = pickle.load(handle)
-        kind = payload.get("kind")
-        if kind is None:
-            raise ValueError("Serialized policy missing 'kind'")
-        policy_cls = Policy._registry.get(kind)
-        if policy_cls is None:
-            raise ValueError(f"Unknown policy kind: {kind}")
-        policy, spec = policy_cls._from_serialized(payload, directory)
-        policy.bind_rules(rules_for_spec(spec))
-        return policy, spec
+    def load(directory: str) -> Tuple["Policy", "object"]:
+        from liars_poker.serialization import load_policy
+
+        return load_policy(directory)

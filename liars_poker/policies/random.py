@@ -1,11 +1,7 @@
 from __future__ import annotations
 
-import os
-import pickle
 from typing import Dict, Tuple
 
-from liars_poker.core import GameSpec
-from liars_poker.env import rules_for_spec
 from liars_poker.infoset import InfoSet
 
 from .base import Policy
@@ -24,25 +20,16 @@ class RandomPolicy(Policy):
         prob = 1.0 / n
         return {action: prob for action in legal}
 
-    def store_efficiently(self, directory: str) -> None:
-        os.makedirs(directory, exist_ok=True)
-        spec = self._require_rules().spec
-        payload = {"kind": self.POLICY_KIND, "spec": spec}
-        path = os.path.join(directory, self.POLICY_BINARY_FILENAME)
-        with open(path, "wb") as handle:
-            pickle.dump(payload, handle)
+    # --- Serialization ---
+
+    def to_payload(self) -> Tuple[Dict, Dict[str, object]]:
+        # Stateless; only identifier matters.
+        return {"kind": self.POLICY_KIND, "version": self.POLICY_VERSION}, {}
 
     @classmethod
-    def load_efficiently(cls, directory: str) -> Tuple["RandomPolicy", GameSpec]:
-        path = os.path.join(directory, cls.POLICY_BINARY_FILENAME)
-        with open(path, "rb") as handle:
-            payload = pickle.load(handle)
-        policy, spec = cls._from_serialized(payload, directory)
-        policy.bind_rules(rules_for_spec(spec))
-        return policy, spec
+    def from_payload(cls, payload, *, blob_prefix, blobs, children) -> "RandomPolicy":
+        _ = (payload, blob_prefix, blobs, children)
+        return cls()
 
-    @classmethod
-    def _from_serialized(cls, payload, directory: str) -> Tuple["RandomPolicy", GameSpec]:
-        spec: GameSpec = payload["spec"]
-        policy = cls()
-        return policy, spec
+    def iter_children(self):
+        return ()

@@ -1,14 +1,11 @@
 from __future__ import annotations
 
-import os
-import pickle
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple, List
 
-from liars_poker.core import GameSpec
-from liars_poker.env import rules_for_spec
 from liars_poker.infoset import InfoSet
 
 from .base import Policy
+import numpy as np
 
 
 class TabularPolicy(Policy):
@@ -62,35 +59,97 @@ class TabularPolicy(Policy):
         if visits is not None:
             self._state_visits = dict(visits)
 
-    def store_efficiently(self, directory: str) -> None:
-        os.makedirs(directory, exist_ok=True)
-        spec = self._require_rules().spec
+    # --- Serialization ---
+
+    def _encode_infoset(self, iset: InfoSet) -> Tuple[int, Tuple[int, ...], Tuple[int, ...]]:
+        return (iset.pid, tuple(iset.hand), tuple(iset.history))
+
+    def _decode_infoset(self, tup: Tuple[int, Tuple[int, ...], Tuple[int, ...]]) -> InfoSet:
+        pid, hand, history = tup
+        return InfoSet(pid=pid, hand=tuple(hand), history=tuple(history))
+
+    def to_payload(self) -> Tuple[Dict, Dict[str, object]]:
+        # Sort infosets deterministically by string representation of encoded key
+        encoded_keys = [(self._encode_infoset(k), k) for k in self.probs.keys()]
+        encoded_keys = sorted(encoded_keys, key=lambda kv: str(kv[0]))
+        keys_only = [ek for ek, _ in encoded_keys]
+
+        # Flatten actions/probs
+        flat_actions: List[int] = []
+        flat_probs: List[float] = []
+        offsets = [0]
+        for enc, orig in encoded_keys:
+            dist = self.probs.get(orig, {})
+            for action, prob in sorted(dist.items(), key=lambda kv: kv[0]):
+                flat_actions.append(int(action))
+                flat_probs.append(float(prob))
+            offsets.append(len(flat_actions))
+
+        # Values/visits aligned with keys (sentinel for missing)
+        values_arr = np.full(len(keys_only), np.nan, dtype=float)
+        visits_arr = np.full(len(keys_only), -1, dtype=int)
+        for idx, (_, orig) in enumerate(encoded_keys):
+            if orig in self._state_value:
+                values_arr[idx] = float(self._state_value[orig])
+            if orig in self._state_visits:
+                visits_arr[idx] = int(self._state_visits[orig])
+
+        blobs: Dict[str, object] = {
+            "keys": np.array(keys_only, dtype=object),
+            "actions": np.asarray(flat_actions, dtype=int),
+            "probs": np.asarray(flat_probs, dtype=float),
+            "offsets": np.asarray(offsets, dtype=int),
+            "values": values_arr,
+            "visits": visits_arr,
+        }
+
         payload = {
             "kind": self.POLICY_KIND,
-            "spec": spec,
-            "probs": self.probs,
-            "values": self._state_value,
-            "visits": self._state_visits,
+            "version": self.POLICY_VERSION,
+            "counts": {"n_infosets": len(keys_only)},
         }
-        path = os.path.join(directory, self.POLICY_BINARY_FILENAME)
-        with open(path, "wb") as handle:
-            pickle.dump(payload, handle)
+        return payload, blobs
 
     @classmethod
-    def load_efficiently(cls, directory: str) -> Tuple["TabularPolicy", GameSpec]:
-        path = os.path.join(directory, cls.POLICY_BINARY_FILENAME)
-        with open(path, "rb") as handle:
-            payload = pickle.load(handle)
-        policy, spec = cls._from_serialized(payload, directory)
-        policy.bind_rules(rules_for_spec(spec))
-        return policy, spec
-
-    @classmethod
-    def _from_serialized(cls, payload, directory: str) -> Tuple["TabularPolicy", GameSpec]:
-        spec: GameSpec = payload["spec"]
+    def from_payload(
+        cls,
+        payload: Dict,
+        *,
+        blob_prefix: str,
+        blobs: Dict[str, object],
+        children,
+    ) -> "TabularPolicy":
+        _ = (blob_prefix, children)
         policy = cls()
-        probs = payload.get("probs", {})
-        policy.probs = {iset: dict(dist) for iset, dist in probs.items()}
-        policy._state_value = dict(payload.get("values", {}))
-        policy._state_visits = dict(payload.get("visits", {}))
-        return policy, spec
+
+        keys_arr = blobs.get("keys")
+        actions = np.asarray(blobs.get("actions", []), dtype=int)
+        probs = np.asarray(blobs.get("probs", []), dtype=float)
+        offsets = np.asarray(blobs.get("offsets", []), dtype=int)
+        values_arr = np.asarray(blobs.get("values", []), dtype=float)
+        visits_arr = np.asarray(blobs.get("visits", []), dtype=int)
+
+        if keys_arr is None or offsets is None:
+            raise ValueError("Missing keys/offsets blobs for TabularPolicy.")
+
+        n = len(keys_arr)
+        for idx in range(n):
+            enc = tuple(keys_arr[idx].tolist() if hasattr(keys_arr[idx], "tolist") else keys_arr[idx])  # type: ignore[assignment]
+            iset = policy._decode_infoset(enc)  # type: ignore[arg-type]
+            start = offsets[idx]
+            end = offsets[idx + 1]
+            slice_actions = actions[start:end] if end > start else []
+            slice_probs = probs[start:end] if end > start else []
+            dist = {int(a): float(p) for a, p in zip(slice_actions, slice_probs)}
+            if dist:
+                policy.probs[iset] = dist
+
+            if idx < len(values_arr) and not np.isnan(values_arr[idx]):
+                policy._state_value[iset] = float(values_arr[idx])
+            if idx < len(visits_arr) and visits_arr[idx] >= 0:
+                policy._state_visits[iset] = int(visits_arr[idx])
+
+        return policy
+
+    def iter_children(self):
+        return ()

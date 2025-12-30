@@ -1,12 +1,9 @@
 from __future__ import annotations
 
-import os
-import pickle
 import random
-from typing import Any, Dict, List, Sequence, Tuple
+from typing import Any, Dict, List, Sequence, Tuple, Iterable
 
-from liars_poker.core import GameSpec, possible_starting_hands
-from liars_poker.env import rules_for_spec
+from liars_poker.core import possible_starting_hands
 from liars_poker.infoset import CALL, NO_CLAIM, InfoSet
 
 from .base import Policy
@@ -124,49 +121,34 @@ class CommitOnceMixture(Policy):
                 break
         return likelihood
 
-    def store_efficiently(self, directory: str) -> None:
-        os.makedirs(directory, exist_ok=True)
-        spec = self._require_rules().spec
-        child_entries = []
-        for idx, child in enumerate(self.policies):
-            child_dir_name = f"child_{idx}"
-            child_dir = os.path.join(directory, child_dir_name)
-            child.store_efficiently(child_dir)
-            child_entries.append({"dir": child_dir_name, "kind": child.__class__.__name__})
+    # --- Serialization ---
 
-        payload = {
+    def to_payload(self) -> Tuple[Dict, Dict[str, object]]:
+        return {
             "kind": self.POLICY_KIND,
-            "spec": spec,
+            "version": self.POLICY_VERSION,
             "weights": list(self.weights),
-            "children": child_entries,
-        }
-        path = os.path.join(directory, self.POLICY_BINARY_FILENAME)
-        with open(path, "wb") as handle:
-            pickle.dump(payload, handle)
+        }, {}
 
     @classmethod
-    def load_efficiently(cls, directory: str) -> Tuple["CommitOnceMixture", GameSpec]:
-        path = os.path.join(directory, cls.POLICY_BINARY_FILENAME)
-        with open(path, "rb") as handle:
-            payload = pickle.load(handle)
-        policy, spec = cls._from_serialized(payload, directory)
-        policy.bind_rules(rules_for_spec(spec))
-        return policy, spec
+    def from_payload(
+        cls,
+        payload: Dict,
+        *,
+        blob_prefix: str,
+        blobs: Dict[str, object],
+        children: Iterable[Policy],
+    ) -> "CommitOnceMixture":
+        _ = (blob_prefix, blobs)
+        weights = list(payload.get("weights", []))
+        children_list = list(children)
+        if len(children_list) != len(weights):
+            raise ValueError("CommitOnceMixture payload children/weights length mismatch.")
+        return cls(children_list, weights, rng=random.Random())
 
-    @classmethod
-    def _from_serialized(cls, payload, directory: str) -> Tuple["CommitOnceMixture", GameSpec]:
-        spec: GameSpec = payload["spec"]
-        children_meta: List[Dict[str, Any]] = payload.get("children", [])
-        weights: List[float] = list(payload.get("weights", []))
-        children: List[Policy] = []
-        for entry in children_meta:
-            child_dir = os.path.join(directory, entry["dir"])
-            child_policy, child_spec = Policy.load_policy(child_dir)
-            if child_spec != spec:
-                child_policy.bind_rules(rules_for_spec(spec))
-            children.append(child_policy)
-        policy = cls(children, weights, rng=random.Random())
-        return policy, spec
+    def iter_children(self):
+        for idx, child in enumerate(self.policies):
+            yield f"child_{idx}", child
 
     def to_tabular(self) -> TabularPolicy:
         """Materialize this mixture as a TabularPolicy by enumerating all infosets."""
