@@ -94,6 +94,8 @@ def card_display(card: int, spec: GameSpec) -> str:
     suffix = chr(ord("A") + suit)
     return f"{rank}{suffix}"
 
+def hand_display(hand: list[int] | tuple[int, ...], spec: GameSpec) -> list[str]:
+    return [card_display(c, spec) for c in hand]
 
 def possible_starting_hands(spec: GameSpec) -> List[Tuple[int, ...]]:
     """Enumerate all unique starting hands consistent with the spec."""

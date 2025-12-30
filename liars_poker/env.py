@@ -203,30 +203,15 @@ class Env:
 
     def _resolve_call(self) -> None:
         assert self._last_claim_idx is not None, "CALL cannot occur on first move"
-        joint_counts = self._joint_rank_counts()
-        last_true = self._satisfied(self._last_claim_idx, joint_counts)
-        caller = self._to_play
-        if last_true:
-            self._winner = 1 - caller
-        else:
-            self._winner = caller
-
-    def _joint_rank_counts(self) -> List[int]:
-        R = self.spec.ranks
-        counts = [0] * (R + 1)
-        for card in self._p1_hand:
-            counts[card_rank(card, self.spec)] += 1
-        for card in self._p2_hand:
-            counts[card_rank(card, self.spec)] += 1
-        return counts
-
-    def _satisfied(self, idx: int, joint_counts: List[int]) -> bool:
-        kind, r = self.rules.claims[idx]
-        if kind == "RankHigh":
-            return joint_counts[r] >= 1
-        if kind == "Pair":
-            return joint_counts[r] >= 2
-        return False
+        # Build a history that ends with CALL to reuse the shared helper
+        history_with_call = tuple(self._history + [CALL])
+        winner_label = resolve_call_winner(
+            self.spec,
+            history_with_call,
+            self._p1_hand,
+            self._p2_hand,
+        )
+        self._winner = 0 if winner_label == "P1" else 1
 
 
 def resolve_call_winner(

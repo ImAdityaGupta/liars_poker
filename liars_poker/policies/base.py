@@ -4,9 +4,7 @@ import random
 from typing import ClassVar, Dict, Iterable, Optional, Tuple
 
 from liars_poker.infoset import InfoSet
-
-if False:  # pragma: nocover - import guard for type checkers without runtime cost
-    from liars_poker.env import Rules
+from liars_poker.env import Rules
 
 
 class Policy:
