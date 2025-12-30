@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import os, sys
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 import random
 
 from liars_poker.core import GameSpec
