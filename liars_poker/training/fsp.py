@@ -60,6 +60,9 @@ def fsp_loop(
     if eta_control is None:
         eta_control = basic_eta_control
 
+    if episodes_test is None:
+        episodes_test = 100
+
     rules = Rules(spec)
     initial_pol.bind_rules(rules)
 
