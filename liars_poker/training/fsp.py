@@ -8,7 +8,7 @@ from liars_poker.env import resolve_call_winner, Rules
 from liars_poker import eval_both_seats
 
 
-from typing import Dict, Tuple, List, Callable, Optional
+from typing import Dict, Tuple, List, Callable, Optional, Iterable
 import random
 import scipy.stats as stats
 
@@ -44,15 +44,15 @@ def basic_eta_control(episodes: int) -> float:
 
 def fsp_loop(
     spec: GameSpec, 
-    initial_pol: Policy | None, 
     br_fn: Callable[[GameSpec, Policy, Optional[bool]], Policy],
     episodes: int,
     *,
+    initial_pol: Optional[Policy | None] = None, 
     eta_control: Optional[Callable[[int], float]] | None = None,
     episodes_test: Optional[int] = 10_000,
     debug: bool = False
 
-) -> TabularPolicy:
+) -> Tuple[TabularPolicy, Dict]:
 
     if initial_pol is None:
         initial_pol = RandomPolicy()
@@ -68,9 +68,7 @@ def fsp_loop(
 
     curr_av = initial_pol
 
-
-
-    last_exploitability = 1
+    exploitability_series, p_values = [], []
     for i in range(episodes):
         if debug:
             print(i)
@@ -95,8 +93,9 @@ def fsp_loop(
 
 
         all_brs.append(b_i)
+        exploitability_series.append({'P1': p_first, 'P2': p_second})
+        p_values.append(p_value)
 
-        last_exploitablity = observed_rate
         print(f"Predicted exploitability: avg={predicted:.4f} (first={p_first:.4f}, second={p_second:.4f})")
         print(f"Sampled exploitability: avg={observed_rate:.4f}, chi2 p-value={p_value:.4g}")
         print()
@@ -104,5 +103,64 @@ def fsp_loop(
         curr_av = mix_policies(curr_av, b_i, eta)
     all_averages.append(curr_av)
 
-    return curr_av
+    return curr_av, {'exploitability_series': exploitability_series, 'p_values': p_values}
+
+
+def plot_exploitability_series(
+    info: Dict | Iterable[Dict],
+    *,
+    average: bool = True,
+    figsize: tuple[int, int] = (12, 6),
+    transform: bool = False,
+):
+    """
+    Plot exploitability series. 
+    If transform=True, plots (2*t - 1) on a log-log scale.
+    """
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    if transform and not average:
+        raise ValueError("transform=True requires average=True")
+
+    infos = list(info) if isinstance(info, Iterable) and not isinstance(info, Dict) else [info]
+    fig, ax = plt.subplots(figsize=figsize)
+
+    # 1. Set Axes to Log-Log if transform is requested
+    if transform:
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+
+    for idx, entry in enumerate(infos, start=1):
+        series = entry.get('exploitability_series', [])
+        if not series:
+            continue
+
+        label_prefix = f'run {idx}'
+        
+        # Extract values
+        if average:
+            vals = [0.5 * (pt.get('P1', 0.0) + pt.get('P2', 0.0)) for pt in series]
+        else:
+            # Note: This branch is unreachable if transform=True due to the check above
+            vals = [pt.get('P1', 0.0) for pt in series] 
+            # (If you needed P2 here, the logic would repeat, but we are simplifying)
+
+        # 2. Apply Transformation: y -> 2t - 1
+        if transform:
+            # Clip at epsilon to avoid log(0) errors if values are exactly 0.5
+            vals = [max(1e-10, 2 * v - 1) for v in vals]
+
+        ax.plot(range(1, len(vals) + 1), vals, marker='o', label=f'{label_prefix}')
+
+    ax.set_xlabel('Episode')
+    ax.set_ylabel('Exploitability (Transformed)' if transform else 'Exploitability')
+    ax.set_title('Exploitability over FSP iterations')
+    ax.grid(True, alpha=0.3, which='both') # 'both' ensures log grid lines show up
+    
+    if ax.lines:
+        ax.legend()
+    fig.tight_layout()
+    return ax
+
 
