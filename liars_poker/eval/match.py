@@ -134,3 +134,50 @@ def exact_eval_tabular_both_seats(spec: GameSpec, p1: TabularPolicy, p2: Tabular
 
     avg_p1 = 0.5 * (first["P1"] + (1.0 - second["P1"]))
     return {"P1": avg_p1, "P2": 1.0 - avg_p1}
+
+
+def eval_seats_split(
+    spec: GameSpec,
+    policy_a: Policy,
+    policy_b: Policy,
+    episodes: int = 2000,
+    seed: int = 0,
+) -> Dict[str, float]:
+    """Run half the episodes with A as P1 vs B, half with B as P1 vs A.
+
+    Returns:
+        {
+            "A_seat1": win rate of A when seated as P1,
+            "A_seat2": win rate of A when seated as P2,
+            "B_seat1": win rate of B when seated as P1,
+            "B_seat2": win rate of B when seated as P2,
+        }
+    """
+
+    rng = random.Random(seed)
+    env = Env(spec)
+
+    policy_a.bind_rules(env.rules)
+    policy_b.bind_rules(env.rules)
+
+    half = episodes // 2
+    rem = episodes - half
+
+    wins_ab = play_match(env, policy_a, policy_b, episodes=half, seed=rng.randint(0, 2_147_483_647))
+    wins_ba = play_match(env, policy_b, policy_a, episodes=rem, seed=rng.randint(0, 2_147_483_647))
+
+    total_ab = wins_ab["P1"] + wins_ab["P2"]
+    total_ba = wins_ba["P1"] + wins_ba["P2"]
+
+    a_seat1 = wins_ab["P1"] / total_ab if total_ab else 0.0
+    b_seat2 = wins_ab["P2"] / total_ab if total_ab else 0.0
+
+    b_seat1 = wins_ba["P1"] / total_ba if total_ba else 0.0
+    a_seat2 = wins_ba["P2"] / total_ba if total_ba else 0.0
+
+    return {
+        "A_seat1": a_seat1,
+        "A_seat2": a_seat2,
+        "B_seat1": b_seat1,
+        "B_seat2": b_seat2,
+    }

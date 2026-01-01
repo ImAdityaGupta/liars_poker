@@ -19,7 +19,7 @@ _TERM = object()
 
 def best_response_mc(
     spec: GameSpec,
-    opponent: Policy,
+    policy: Policy,
     *,
     episodes: int = 10_000,
     epsilon: float = 0.1,
@@ -27,12 +27,13 @@ def best_response_mc(
     alternate_seats: bool = True,
     seed: int = 0,
     annotate: str = "memory",
+    debug: bool = False
 ) -> TabularPolicy:
     """Monte-Carlo best response against a black-box opponent."""
 
     rng = random.Random(seed)
     rules = rules_for_spec(spec)
-    opponent.bind_rules(rules)
+    policy.bind_rules(rules)
     env = Env(spec)
 
     # Empirical model containers
@@ -60,13 +61,13 @@ def best_response_mc(
         me = seat_for_episode(ep)
         opp = "P2" if me == "P1" else "P1"
 
-        opponent.begin_episode(rng)
+        policy.begin_episode(rng)
 
         while not obs["terminal"]:
             current = env.current_player()
             if current != me:
                 opp_infoset = env.infoset_key(current)
-                action = opponent.sample(opp_infoset, rng)
+                action = policy.sample(opp_infoset, rng)
                 obs = env.step(action)
                 continue
 
@@ -85,7 +86,7 @@ def best_response_mc(
 
             # Opponent acts once
             opp_infoset = env.infoset_key(opp)
-            opp_action = opponent.sample(opp_infoset, rng)
+            opp_action = policy.sample(opp_infoset, rng)
             obs = env.step(opp_action)
 
             if obs["terminal"]:
@@ -146,17 +147,19 @@ def best_response_mc(
             state_values[state] = best_val
             best_action[state] = chosen_action
 
-    policy = TabularPolicy()
-    policy.bind_rules(rules)
+    new_policy = TabularPolicy()
+    new_policy.bind_rules(rules)
     for state, action in best_action.items():
-        policy.set(state, {action: 1.0})
+        new_policy.set(state, {action: 1.0})
 
     if annotate == "memory":
-        policy.set_annotations(values=state_values, visits=state_visit_totals)
+        new_policy.set_annotations(values=state_values, visits=state_visit_totals)
     elif annotate != "none":
         raise ValueError(f"Unknown annotate mode: {annotate}")
+    
+    dict_log = {"computes_exploitability": False, "computer": None}
 
-    return policy
+    return new_policy, dict_log
 
 
 def efficient_best_response_mc(

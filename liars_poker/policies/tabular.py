@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Dict, Optional, Tuple, List
+
+import numpy as np
 
 from liars_poker.infoset import InfoSet
 
 from .base import Policy
-import numpy as np
 
 
 class TabularPolicy(Policy):

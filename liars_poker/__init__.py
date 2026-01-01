@@ -8,7 +8,7 @@ from .policies.random import RandomPolicy
 from .policies.tabular import TabularPolicy
 from .policies.commit_once import CommitOnceMixture
 from .algo.br_mc import best_response_mc
-from .eval.match import play_match, eval_vs, eval_both_seats
+from .eval.match import play_match, eval_vs, eval_both_seats, eval_seats_split
 
 __all__ = [
     "GameSpec",
@@ -26,4 +26,5 @@ __all__ = [
     "play_match",
     "eval_vs",
     "eval_both_seats",
+    "eval_seats_split",
 ]

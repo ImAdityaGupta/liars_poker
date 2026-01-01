@@ -1,49 +1,63 @@
-Liar’s Poker — Research Skeleton
+Liar's Poker – Core, Policies, and Best Responses
+=================================================
 
-The repository focuses on a compact core for two-player Liar’s Poker:
+This repo is a two-player Liar's Poker playground with:
+- A minimal engine (`core.py`, `infoset.py`, `env.py`)
+- Multiple policy representations (tabular, dense, mixtures)
+- Exact and approximate best responses (tabular and dense)
+- Simple evaluation and FSP-style training utilities
 
-1. **Engine** – `core.py`, `infoset.py`, `env.py`
-   - `GameSpec` defines the deck / claim structure (P1 always opens). `suit_symmetry=True` treats suits as interchangeable and deals rank multisets without replacement.
-   - `InfoSet` is a frozen dataclass describing the player’s perspective (`pid`, `hand`, `history`).
-2. **Policies** – `policies/`
-   - `Policy` base class with `action_probs`, `prob_dist_at_infoset`, sampling, and efficient persistence hooks.
-   - Implementations: `RandomPolicy`, `TabularPolicy`, and a posterior-aware `CommitOnceMixture`.
-3. **Algorithms** – `algo/br_mc.py` for Monte-Carlo best responses.
-4. **Evaluation** – `eval/match.py` provides simple match/evaluation helpers.
+Core
+----------------
+- **Engine**: `GameSpec` describes ranks/suits/hand_size/claim_kinds. `Rules` drives legality and call resolution. `Env` steps games (P1 always opens).
+- **Policies**:
+  - `TabularPolicy`: sparse dict over `InfoSet -> action dist`, persisted via JSON + NPZ blobs.
+  - `DenseTabularPolicy`: canonical `(hid, hand, action)` tensor with likelihood tables for posterior-aware mixing; serializable; fast to query.
+  - `RandomPolicy`, `CommitOnceMixture` (posterior-aware mixture).
+- **Best responses**:
+  - `algo/br_exact.py`: exact BR for tabular opponents.
+  - `algo/br_exact_dense_to_dense.py`: exact BR for dense opponents (no prob_dist calls).
+  - `algo/br_mc.py`: Monte Carlo BR against a black-box opponent.
+- **Evaluation**: `eval/match.py` (`play_match`, `eval_seats_split`, exact eval for tabular).
+- **Training**:
+  - `training/fsp.py`: tabular FSP loop (BR function injected).
+  - `training/dense_fsp.py`: dense FSP loop for `DenseTabularPolicy`.
+- **Serialization**: `serialization.py` registers all policies and saves/loads to `metadata.json` + `blobs.npz`. Works for tabular, dense, mixtures.
 
-## Quickstart
-
+Quickstart
+----------
+Sample a policy, compute a BR, evaluate both seats, and save:
 ```python
-from liars_poker import GameSpec, Env, RandomPolicy, best_response_mc, eval_both_seats
+from liars_poker import GameSpec, Env
+from liars_poker.policies import RandomPolicy
+from liars_poker.eval.match import eval_seats_split
+from liars_poker.algo.br_mc import best_response_mc
+from liars_poker.serialization import save_policy, load_policy
+from liars_poker.infoset import InfoSet
+from liars_poker.core import possible_starting_hands
 
-spec = GameSpec(ranks=13, suits=1, hand_size=2, suit_symmetry=False)
+spec = GameSpec(ranks=6, suits=1, hand_size=1, claim_kinds=("RankHigh",))
 env = Env(spec, seed=123)
-obs = env.reset()
-assert env.current_player() == "P1"
+base = RandomPolicy(); base.bind_rules(env.rules)
 
-candidate = RandomPolicy()
-candidate.bind_rules(env.rules)
+br, info = best_response_mc(spec, base, episodes=2000, epsilon=0.1)
+seat_split = eval_seats_split(spec, base, br, episodes=500)
+print("Seat-wise win rates vs BR:", seat_split)
 
-opponent = best_response_mc(spec, candidate, episodes=1000, epsilon=0.1)
-results = eval_both_seats(spec, candidate, opponent, episodes=500)
-print(results)
+# Save/load
+save_policy(base, "artifacts/demo_random")
+loaded, loaded_spec = load_policy("artifacts/demo_random")
+opening = InfoSet(pid=0, hand=possible_starting_hands(loaded_spec)[0], history=())
+print("Loaded opening dist:", loaded.action_probs(opening))
 ```
 
-Policies can persist themselves using the efficient binary helpers:
+Dense policy workflow
+---------------------
+- Build a `DenseTabularPolicy` for fast querying/mixing.
+- Exact dense BR: `best_response_dense(spec, dense_policy)` (returns a dense BR + metadata with `computer.exploitability()`).
+- Dense FSP loop: `training.dense_fsp.dense_fsp_loop` (logs exploitability, uses `eval_seats_split`).
+- Plot/save runs: `training.fsp_utils.plot_exploitability_series`, `training.fsp_utils.save_fsp_run`.
 
-```python
-directory = "artifacts/random_policy"
-candidate.store_efficiently(directory)
-from liars_poker.policies.base import Policy
-loaded_policy, loaded_spec = Policy.load_policy(directory)
-```
-
-## Tests
-
-Key regression tests live under `tests/`:
-
-- `tests/test_p1_always_starts.py`
-- `tests/test_infoset_basics.py`
-- `tests/test_commit_once_posterior.py`
-- `tests/test_br_annotations.py`
-- `tests/test_policy_storage.py`
+Notebooks
+---------
+Under `notebooks/` you'll find correctness/benchmark harnesses (e.g., BR correctness, serialization tests, small-spec benchmarks). These mirror the current dense/tabular endpoints.

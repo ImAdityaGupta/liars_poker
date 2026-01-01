@@ -57,7 +57,6 @@ class BestResponseComputer:
         self.prob_vectors = {}
         self.state_card_values = {}
 
-
         # This is for eventually returning a tabular policy.
         self.probs = {}
 
@@ -342,7 +341,7 @@ class BestResponseComputer:
 
 
 
-def best_response_exact(spec: GameSpec, policy: Policy, debug=False) -> Tuple[TabularPolicy, BestResponseComputer]:
+def best_response_exact(spec: GameSpec, policy: Policy, debug=False) -> Tuple[TabularPolicy, Dict]:
     br = BestResponseComputer(spec)
     if debug:
         print('Percolating started.')
@@ -365,4 +364,6 @@ def best_response_exact(spec: GameSpec, policy: Policy, debug=False) -> Tuple[Ta
     to_return = TabularPolicy()
     to_return.probs = br.probs
 
-    return to_return, br
+    dict_log = {"computes_exploitability": True, "computer": br}
+
+    return to_return, dict_log

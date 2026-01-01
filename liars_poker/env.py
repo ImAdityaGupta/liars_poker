@@ -84,6 +84,9 @@ class Rules:
             elif kind == "Pair":
                 for r in range(1, R + 1):
                     claims.append(("Pair", r))
+            elif kind == "Trips":
+                for r in range(1, R + 1):
+                    claims.append(("Trips", r))
             else:
                 raise ValueError(f"Unsupported claim kind: {kind}")
         return tuple(claims)
@@ -95,6 +98,8 @@ class Rules:
             return S >= 1
         if kind == "Pair":
             return S >= 2 and (self.spec.hand_size * 2) >= 2
+        if kind == "Trips":
+            return S >= 3 and (self.spec.hand_size * 2) >= 3
         return False
 
 
@@ -243,6 +248,8 @@ def resolve_call_winner(
         satisfied = counts[rank_value] >= 1
     elif kind == "Pair":
         satisfied = counts[rank_value] >= 2
+    elif kind == "Trips":
+        satisfied = counts[rank_value] >= 3
     else:
         raise ValueError(f"Unsupported claim kind: {kind}")
 

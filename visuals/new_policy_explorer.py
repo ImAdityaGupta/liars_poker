@@ -23,7 +23,7 @@ from liars_poker.serialization import load_policy
 
 st.set_page_config(page_title="Liar's Poker Explorer", layout="wide")
 
-# --- CSS HACK FOR FULL WIDTH ---
+# --- CSS HACK ---
 st.markdown("""
     <style>
     .block-container {padding-top: 1rem; padding-bottom: 1rem;}
@@ -32,26 +32,18 @@ st.markdown("""
 
 st.title("Liar's Poker Policy Explorer")
 
-# --- SESSION STATE SETUP ---
+# --- SESSION STATE ---
 if "policy_dir" not in st.session_state:
     st.session_state["policy_dir"] = ""
     st.session_state["policy_bundle"] = None
     st.session_state["history_flags"] = {}
     st.session_state["call_flag"] = False
 
-# !!! UPDATED: REMOVED `st.columns` FROM ROOT LAYOUT !!!
-# We are no longer splitting the main app horizontally into main/controls.
-# The controls are moving to the native sidebar.
-
-# --- SIDEBAR (Controls & History) ---
-# !!! UPDATED: USE `st.sidebar` !!!
-# Everything that was in `control_panel` is now in `st.sidebar`.
-# Streamlit's native sidebar collapses automatically on mobile/portrait.
-
+# --- SIDEBAR CONTROLS ---
 with st.sidebar:
     st.header("Controls")
     
-    default_dir = os.path.join(ROOT, "artifacts", "policy_latest")
+    default_dir = os.path.join(ROOT, "artifacts", "my_dense_policy")
     policy_dir_input = st.text_input("Policy directory", value=default_dir)
     load_clicked = st.button("Load policy", use_container_width=True)
 
@@ -71,14 +63,9 @@ with st.sidebar:
 
     bundle = st.session_state.get("policy_bundle")
 
-    # !!! UPDATED: Changed `st.stop()` to conditional content !!!
-    # If no policy is loaded, just show a prompt in the main body, not `st.stop()`
-    # which can prevent the sidebar from rendering sometimes.
-
     if not bundle:
         with st.sidebar:
             st.info("Load a policy to begin.")
-        # Display in main body as well
         st.info("Please load a Liar's Poker policy from the sidebar.")
         st.stop()
 
@@ -88,7 +75,7 @@ with st.sidebar:
     st.divider()
     st.markdown(f"**Ranks:** {spec.ranks} <br> **Hand Size:** {spec.hand_size}", unsafe_allow_html=True)
 
-    # --- HISTORY BUILDER (in sidebar) ---
+    # --- HISTORY BUILDER ---
     st.subheader("History")
     history_flags = st.session_state.get("history_flags", {})
     updated_flags = {}
@@ -103,17 +90,17 @@ with st.sidebar:
     st.session_state["history_flags"] = updated_flags
     st.session_state["call_flag"] = st.checkbox("CALL", value=st.session_state.get("call_flag", False), key="history-call")
 
-    # !!! UPDATED: Add Layout Mode Toggle !!!
+    # --- LAYOUT MODE ---
     st.divider()
-    st.subheader("Chart Settings")
+    st.subheader("View Settings")
     layout_mode = st.radio(
         "Layout Mode",
-        options=["Side-by-Side (Landscape)", "Stacked (Portrait)"],
-        index=0, # Default to landscape view
-        help="Choose 'Stacked' for better visibility on narrow screens."
+        options=["Landscape (Side-by-Side)", "Portrait (Stacked)"],
+        index=0,
+        help="Use 'Portrait' for mobile or narrow screens."
     )
 
-# --- MAIN LOGIC (Now in Main Body) ---
+# --- MAIN LOGIC ---
 
 # 1. Reconstruct History
 selected_indices = sorted(idx for idx, flag in st.session_state["history_flags"].items() if flag)
@@ -121,12 +108,15 @@ history_list = list(selected_indices)
 if st.session_state["call_flag"]:
     history_list.append(CALL)
 history_tuple = tuple(history_list)
+is_terminal = CALL in history_tuple
 
 pid = len(history_tuple) % 2
 player_name = f"P{pid + 1}"
 
 st.subheader(f"Analysis: {player_name}")
-st.caption(f"Current History Trace: {history_tuple}")
+st.caption(f"History: {history_tuple}")
+if is_terminal:
+    st.warning("History ends with CALL.")
 
 # 2. Hands and Labels
 cards = generate_deck(spec)
@@ -141,8 +131,10 @@ all_action_labels = claim_labels + ["CALL"]
 idx_to_label = {i: l for i, l in enumerate(claim_labels)}
 idx_to_label[CALL] = "CALL"
 
-# 3. HELPER: Calculate Actor's Range (Bayesian Update)
+# 3. HELPER: Range Calculation
 def get_actor_range(policy, spec, pid, history, hands):
+    if CALL in history:
+        return {h: 0.0 for h in hands}
     weights = {h: 1.0 for h in hands}
     current_history = []
     for action in history:
@@ -171,10 +163,13 @@ range_records = []
 
 for hand_tuple, hand_str in zip(hand_combinations, hand_labels):
     infoset = InfoSet(pid=pid, hand=hand_tuple, history=history_tuple)
-    try:
-        dist = policy.prob_dist_at_infoset(infoset)
-    except:
+    if is_terminal:
         dist = {}
+    else:
+        try:
+            dist = policy.prob_dist_at_infoset(infoset)
+        except Exception:
+            dist = {}
 
     for action_idx in range(len(rules.claims)):
         strategy_records.append({
@@ -197,66 +192,52 @@ for hand_tuple, hand_str in zip(hand_combinations, hand_labels):
 df_strategy = pd.DataFrame(strategy_records)
 df_range = pd.DataFrame(range_records)
 
-# --- RESPONSIVE RENDERING LOGIC !!! ---
+# --- UNIFIED ALTAIR VISUALIZATION ---
 
-# Calculate height dynamically
 chart_height = max(400, len(hand_labels) * 30)
+is_stacked_mode = "Portrait" in layout_mode
 
-# CHART 1: RANGE (Posterior)
-chart_range = (
+# 1. Base Range Chart (Left)
+base_range = (
     alt.Chart(df_range)
     .mark_rect()
     .encode(
+        # Hide X-axis completely since it's just a single column
         x=alt.X("Type:N", title=None, axis=alt.Axis(labels=False, ticks=False)),
         y=alt.Y("Hand:N", sort=hand_labels, title="Hand"),
         color=alt.Color("Probability:Q", scale=alt.Scale(scheme="magma", domain=[0, 1]), title="Belief"),
         tooltip=["Hand", alt.Tooltip("Probability:Q", format=".1%")]
     )
-    .properties(height=chart_height) 
+    .properties(height=chart_height, title="Range")
 )
 
-# CHART 2: STRATEGY (Heatmap)
-# !!! UPDATED: Condition on Y-Axis Labels !!!
+# 2. Base Strategy Chart (Right)
+# Conditional Y-Axis: Only show labels if stacked (Portrait)
+y_axis_config = alt.Axis(labels=True) if is_stacked_mode else alt.Axis(labels=False)
 
-is_stacked_mode = "Stacked" in layout_mode
-
-# Y-axis config changes based on layout
-y_axis_config = None # None means show default labels
-if not is_stacked_mode:
-    # Hide labels for Side-by-Side view (Shared Y-alignment aesthetic)
-    y_axis_config = alt.Axis(labels=False)
-
-chart_strategy = (
+base_strategy = (
     alt.Chart(df_strategy)
     .mark_rect()
     .encode(
-        x=alt.X("Action:N", sort=all_action_labels, title="Action"),
-        # !!! Use the conditional config here !!!
-        y=alt.Y("Hand:N", sort=hand_labels, title=None, axis=y_axis_config), 
-        color=alt.Color("Probability:Q", scale=alt.Scale(scheme="viridis", domain=[0, 1]), title="Prob"),
+        x=alt.X("Action:N", sort=all_action_labels, title="Next Action"),
+        y=alt.Y("Hand:N", sort=hand_labels, title=None, axis=y_axis_config),
+        color=alt.Color("Probability:Q", scale=alt.Scale(scheme="viridis", domain=[0, 1]), title="Policy"),
         tooltip=["Hand", "Action", alt.Tooltip("Probability:Q", format=".1%")]
     )
-    .properties(height=chart_height)
+    .properties(height=chart_height, title="Strategy")
 )
 
-# Render based on layout choice
-if not is_stacked_mode:
-    # LANDSCAPE VIEW (Side-by-Side, using columns)
-    col_range, col_strategy = st.columns([1, 6], gap="small")
-    
-    with col_range:
-        st.altair_chart(chart_range, use_container_width=True)
-        
-    with col_strategy:
-        st.altair_chart(chart_strategy, use_container_width=True)
+# 3. Concatenation Logic
+# We join them into a single Altair object. 
+# resolve_scale(color='independent') ensures Belief (Magma) and Strategy (Viridis) 
+# keep separate legends.
 
+if is_stacked_mode:
+    # Portrait: Stack vertical
+    final_chart = alt.vconcat(base_range, base_strategy).resolve_scale(color='independent')
 else:
-    # PORTRAIT VIEW (Stacked vertically, no columns, Strategy labels enabled)
-    # This fixes the 'squished' look from image_2.png
-    st.subheader("Actor's Range (Belief)")
-    st.altair_chart(chart_range, use_container_width=True)
-    
-    st.divider()
-    
-    st.subheader("Actor's Strategy Heatmap")
-    st.altair_chart(chart_strategy, use_container_width=True)
+    # Landscape: Side-by-Side (hconcat aligns the grids perfectly)
+    final_chart = alt.hconcat(base_range, base_strategy).resolve_scale(color='independent')
+
+# 4. Render
+st.altair_chart(final_chart, use_container_width=True)
