@@ -21,6 +21,7 @@ def dense_fsp_loop(
     initial_pol: Optional[Policy | None] = None,
     eta_control: Optional[Callable[[int], float]] | None = None,
     episodes_test: Optional[int] = 10_000,
+    efficient: bool = False,
     debug: bool = False,
 ) -> Tuple[Policy, Dict]:
     if initial_pol is None:
@@ -48,10 +49,18 @@ def dense_fsp_loop(
 
         eta = eta_control(i)
 
-        b_i, meta = best_response_dense(spec=spec, policy=curr_av, debug=debug)
+        b_i, meta = best_response_dense(
+            spec=spec,
+            policy=curr_av,
+            debug=debug,
+            store_state_values=not efficient,
+        )
         br_computer = meta["computer"] if isinstance(meta, dict) else None
         p_first, p_second = br_computer.exploitability() if br_computer is not None else (None, None)
         predicted = 0.5 * (p_first + p_second) if p_first is not None else None
+        if efficient:
+            br_computer = None
+            meta = None
 
         seat_results = eval_seats_split(
             spec, b_i, curr_av,
@@ -73,7 +82,7 @@ def dense_fsp_loop(
 
         logs["p_values"].append(p_value)
 
-        print(f"Predicted exploitability: avg={predicted:.4f} (first={p_first:.4f}, second={p_second:.4f})")
+        print(f"Predicted exploitability: avg={predicted:.9f} (first={p_first:.4f}, second={p_second:.4f})")
         print(
             f"Sampled exploitability: avg={observed_avg:.4f} "
             f"(BR as P1={obs_seat1:.4f}, BR as P2={obs_seat2:.4f}), "
@@ -93,5 +102,7 @@ def dense_fsp_loop(
         )
 
         curr_av = mix_dense(b_i, curr_av, eta)
+        if efficient:
+            b_i = None
 
     return curr_av, logs

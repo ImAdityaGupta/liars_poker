@@ -73,7 +73,7 @@ with st.sidebar:
     rules = rules_for_spec(spec)
     
     st.divider()
-    st.markdown(f"**Ranks:** {spec.ranks} <br> **Hand Size:** {spec.hand_size}", unsafe_allow_html=True)
+    st.markdown(f"**Ranks:** {spec.ranks} <br> **Suits:** {spec.suits} <br> **Hand Size:** {spec.hand_size} <br> **Valid Claims:** {spec.claim_kinds}", unsafe_allow_html=True)
 
     # --- HISTORY BUILDER ---
     st.subheader("History")
@@ -89,6 +89,11 @@ with st.sidebar:
         
     st.session_state["history_flags"] = updated_flags
     st.session_state["call_flag"] = st.checkbox("CALL", value=st.session_state.get("call_flag", False), key="history-call")
+
+    # --- LAYOUT MODE ---
+    st.divider()
+    st.subheader("Range Settings")
+    switch_seats = st.checkbox("Switch Seats", value=False, key="switch-seats")
 
     # --- LAYOUT MODE ---
     st.divider()
@@ -155,7 +160,8 @@ def get_actor_range(policy, spec, pid, history, hands):
             weights[h] /= total
     return weights
 
-range_weights = get_actor_range(policy, spec, pid, history_tuple, hand_combinations)
+range_pid = 1 - pid if switch_seats else pid
+range_weights = get_actor_range(policy, spec, range_pid, history_tuple, hand_combinations)
 
 # 4. Build DataFrames
 strategy_records = []

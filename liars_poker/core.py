@@ -38,6 +38,14 @@ class GameSpec:
             sort_keys=True,
         )
 
+    def to_short_str(self) -> str:
+        kinds = ""
+        kinds += "h" if "RankHigh" in self.claim_kinds else ""
+        kinds += "p" if "Pair" in self.claim_kinds else ""
+        kinds += "t" if "Trips" in self.claim_kinds else ""
+        sym = "ss" if self.suit_symmetry else "nss"
+        return f"r{self.ranks}_s{self.suits}_h{self.hand_size}_{kinds}_{sym}"
+
 
 def env_hash(spec: GameSpec) -> str:
     """Deterministic short fingerprint for the environment spec."""

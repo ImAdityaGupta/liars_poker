@@ -25,7 +25,7 @@ def plot_exploitability_series(logs: Dict | Iterable[Dict], *, figsize: tuple[in
         if not series:
             continue
         vals = [
-            pt.get("rollout_avg", pt.get("predicted_avg", 0.0))
+            (2*pt.get("predicted_avg", pt.get("rollout_avg", 0.0)))-1
             for pt in series
         ]
         ax.plot(range(1, len(vals) + 1), vals, marker="o", label=f"run {idx}")
@@ -37,6 +37,8 @@ def plot_exploitability_series(logs: Dict | Iterable[Dict], *, figsize: tuple[in
     if ax.lines:
         ax.legend()
     fig.tight_layout()
+    plt.xscale('log')
+    plt.yscale('log')
     return ax
 
 

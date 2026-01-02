@@ -44,7 +44,7 @@ class _ClaimReq:
 class BestResponseComputerDense:
     """Exact best response against a DenseTabularPolicy using dense tensors only."""
 
-    def __init__(self, spec: GameSpec, opponent: DenseTabularPolicy):
+    def __init__(self, spec: GameSpec, opponent: DenseTabularPolicy, *, store_state_values: bool = True):
         if not isinstance(opponent, DenseTabularPolicy):
             raise TypeError("BestResponseComputerDense requires a DenseTabularPolicy opponent.")
         if opponent.spec != spec:
@@ -53,6 +53,7 @@ class BestResponseComputerDense:
         self.spec = spec
         self.rules: Rules = rules_for_spec(spec)
         self.opponent = opponent
+        self.store_state_values = store_state_values
 
         self.k = opponent.k
         self.hands = opponent.hands
@@ -129,7 +130,7 @@ class BestResponseComputerDense:
         else:
             WM = M - sat_mass
 
-        if caller != my_id:
+        if caller != my_id and self.store_state_values:
             values = np.where(M > 0.0, WM / M, 0.0)
             terminal_hist = self._history_by_hid[hid] + (CALL,)
             self.state_card_values[terminal_hist] = {self.hands[i]: float(values[i]) for i in range(self.n_hands)}
@@ -189,9 +190,10 @@ class BestResponseComputerDense:
         best_wm = wm_mat[best_idx, arange]
         best_m = m_mat[best_idx, arange]
 
-        values = np.where(best_m > 0.0, best_wm / best_m, 0.0)
-        hist = self._history_by_hid[hid]
-        self.state_card_values[hist] = {self.hands[i]: float(values[i]) for i in range(self.n_hands)}
+        if self.store_state_values:
+            values = np.where(best_m > 0.0, best_wm / best_m, 0.0)
+            hist = self._history_by_hid[hid]
+            self.state_card_values[hist] = {self.hands[i]: float(values[i]) for i in range(self.n_hands)}
 
         for i, a_idx in enumerate(best_idx):
             action = actions[int(a_idx)]
@@ -230,10 +232,12 @@ def best_response_exact(
     spec: GameSpec,
     policy: DenseTabularPolicy,
     debug: bool = False,
+    *,
+    store_state_values: bool = True,
 ) -> Tuple[DenseTabularPolicy, BestResponseComputerDense]:
     """Dense exact best response against a DenseTabularPolicy opponent."""
 
-    br = BestResponseComputerDense(spec, policy)
+    br = BestResponseComputerDense(spec, policy, store_state_values=store_state_values)
     if debug:
         print("Solving (dense-to-dense exact BR)...")
     br.solve()
