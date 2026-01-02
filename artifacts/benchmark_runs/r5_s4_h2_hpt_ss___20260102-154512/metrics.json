@@ -1,0 +1,17 @@
+{
+  "spec": "{\"claim_kinds\": [\"RankHigh\", \"Pair\", \"Trips\"], \"hand_size\": 2, \"ranks\": 5, \"suit_symmetry\": true, \"suits\": 4}",
+  "exploitability_series": [
+    {
+      "predicted_avg": 0.9525753801574466,
+      "p_first": 0.9563716035464854,
+      "p_second": 0.9487791567684078,
+      "rollout_avg": 0.0,
+      "rollout_seat1": 0.0,
+      "rollout_seat2": 0.0
+    }
+  ],
+  "p_values": [
+    null
+  ],
+  "timestamp": "2026-01-02T15:45:20.260692Z"
+}
