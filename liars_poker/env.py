@@ -122,8 +122,17 @@ class Env:
         self._to_play: int = 0
         self._last_claim_idx: Optional[int] = None
         self._history: List[int] = []
+        self._history_tuple: Tuple[int, ...] = ()
+        self._legal_cached: Tuple[int, ...] = ()
         self._done: bool = False
         self._winner: Optional[int] = None
+        self._refresh_legal()
+
+    def _refresh_legal(self) -> None:
+        if self._done:
+            self._legal_cached = ()
+        else:
+            self._legal_cached = self.rules.legal_actions_from_last(self._last_claim_idx)
 
     def reset(
         self,
@@ -149,10 +158,41 @@ class Env:
         self._to_play = 0  # P1 always starts
         self._last_claim_idx = None
         self._history = []
+        self._history_tuple = ()
         self._done = False
         self._winner = None
+        self._refresh_legal()
 
         return self.observation_for(self.current_player())
+
+    def reset_fast(
+        self,
+        seed: Optional[int] = None,
+        hands: Optional[Tuple[Tuple[int, ...], Tuple[int, ...]]] = None,
+    ) -> None:
+        if seed is not None:
+            self._rng = random.Random(seed)
+            self._seed = seed
+
+        if hands is None:
+            deck = list(generate_deck(self.spec))
+            self._rng.shuffle(deck)
+            k = self.spec.hand_size
+            self._p1_hand = tuple(sorted(deck[:k]))
+            self._p2_hand = tuple(sorted(deck[k : 2 * k]))
+        else:
+            if len(hands) != 2:
+                raise ValueError("hands must be a tuple of (p1_hand, p2_hand)")
+            self._p1_hand = tuple(sorted(hands[0]))
+            self._p2_hand = tuple(sorted(hands[1]))
+
+        self._to_play = 0
+        self._last_claim_idx = None
+        self._history = []
+        self._history_tuple = ()
+        self._done = False
+        self._winner = None
+        self._refresh_legal()
 
     def current_player(self) -> str:
         return "P1" if self._to_play == 0 else "P2"
@@ -160,30 +200,54 @@ class Env:
     def legal_actions(self) -> List[int]:
         if self._done:
             return []
-        return list(self.rules.legal_actions_from_last(self._last_claim_idx))
+        return list(self._legal_cached)
 
     def step(self, action: int) -> Dict:
         if self._done:
             raise RuntimeError("Episode already done")
-        legal = self.legal_actions()
-        if action not in legal:
-            raise ValueError(f"Illegal action {action}; legal={legal}")
+        if action not in self._legal_cached:
+            raise ValueError(f"Illegal action {action}; legal={list(self._legal_cached)}")
 
         if action == CALL:
             self._resolve_call()
             self._history.append(CALL)
+            self._history_tuple = self._history_tuple + (CALL,)
             self._done = True
+            self._refresh_legal()
             return self.observation_for(self.current_player())
 
         self._last_claim_idx = action
         self._history.append(action)
+        self._history_tuple = self._history_tuple + (action,)
         self._to_play = 1 - self._to_play
+        self._refresh_legal()
         return self.observation_for(self.current_player())
+
+    def step_fast(self, action: int) -> Tuple[bool, Optional[int]]:
+        if self._done:
+            raise RuntimeError("Episode already done")
+        if action not in self._legal_cached:
+            raise ValueError(f"Illegal action {action}; legal={list(self._legal_cached)}")
+
+        if action == CALL:
+            self._resolve_call()
+            self._history.append(CALL)
+            self._history_tuple = self._history_tuple + (CALL,)
+            self._done = True
+            self._refresh_legal()
+            return True, self._winner
+
+        self._last_claim_idx = action
+        self._history.append(action)
+        self._history_tuple = self._history_tuple + (action,)
+        self._to_play = 1 - self._to_play
+        self._refresh_legal()
+        return False, None
 
     def infoset_key(self, for_player: str) -> InfoSet:
         pid = 0 if for_player == "P1" else 1
         hand = self._p1_hand if pid == 0 else self._p2_hand
-        return InfoSet(pid=pid, hand=hand, history=tuple(self._history))
+        return InfoSet(pid=pid, hand=hand, history=self._history_tuple)
 
     def observation_for(self, player: str) -> Dict:
         pid = 0 if player == "P1" else 1
@@ -194,7 +258,7 @@ class Env:
             "hand": hand,
             "last_claim_idx": self._last_claim_idx,
             "legal_actions": legal,
-            "history": tuple(self._history),
+            "history": self._history_tuple,
             "terminal": self._done,
             "winner": None if self._winner is None else ("P1" if self._winner == 0 else "P2"),
             "infoset_key": self.infoset_key(player),

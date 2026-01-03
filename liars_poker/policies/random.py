@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import random
 from typing import Dict, Tuple
 
 from liars_poker.infoset import InfoSet
@@ -19,6 +20,20 @@ class RandomPolicy(Policy):
             return {}
         prob = 1.0 / n
         return {action: prob for action in legal}
+
+    def sample_action_fast(
+        self,
+        *,
+        pid: int,
+        hand: Tuple[int, ...],
+        history: Tuple[int, ...],
+        legal: Tuple[int, ...],
+        rng: random.Random,
+    ) -> int:
+        _ = (pid, hand, history)
+        if not legal:
+            raise ValueError("Cannot sample from empty policy distribution.")
+        return legal[rng.randrange(len(legal))]
 
     # --- Serialization ---
 

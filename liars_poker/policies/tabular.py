@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import random
 from dataclasses import dataclass
 from typing import Dict, Optional, Tuple, List
 
@@ -38,6 +39,38 @@ class TabularPolicy(Policy):
             prob = 1.0 / len(legal)
             return {action: prob for action in legal}
         return {action: value / total for action, value in dist.items()}
+
+    def sample_action_fast(
+        self,
+        *,
+        pid: int,
+        hand: Tuple[int, ...],
+        history: Tuple[int, ...],
+        legal: Tuple[int, ...],
+        rng: random.Random,
+    ) -> int:
+        if not legal:
+            raise ValueError("Cannot sample from empty policy distribution.")
+
+        infoset = InfoSet(pid=pid, hand=hand, history=history)
+        row = self.probs.get(infoset)
+        if not row:
+            return legal[rng.randrange(len(legal))]
+
+        total = 0.0
+        for action in legal:
+            total += row.get(action, 0.0)
+        if total <= 0.0:
+            return legal[rng.randrange(len(legal))]
+
+        pick = rng.random() * total
+        cumulative = 0.0
+        last_action = legal[-1]
+        for action in legal:
+            cumulative += row.get(action, 0.0)
+            if pick <= cumulative:
+                return action
+        return last_action
 
     def get_value(self, infoset: InfoSet) -> Optional[float]:
         return self._state_value.get(infoset)

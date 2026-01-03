@@ -19,22 +19,28 @@ def play_match(env: Env, p1: Policy, p2: Policy, episodes: int = 10, seed: int =
     p2.bind_rules(env.rules)
 
     for _ in range(episodes):
-        obs = env.reset(seed=rng.randint(0, 2_147_483_647))
+        env.reset_fast(seed=rng.randint(0, 2_147_483_647))
         p1.begin_episode(rng)
         p2.begin_episode(rng)
 
         while True:
-            if obs["terminal"]:
-                winner = obs["winner"]
-                if winner in wins:
-                    wins[winner] += 1
+            pid = env._to_play
+            policy = p1 if pid == 0 else p2
+            hand = env._p1_hand if pid == 0 else env._p2_hand
+            action = policy.sample_action_fast(
+                pid=pid,
+                hand=hand,
+                history=env._history_tuple,
+                legal=env._legal_cached,
+                rng=rng,
+            )
+            done, winner_idx = env.step_fast(action)
+            if done:
+                if winner_idx == 0:
+                    wins["P1"] += 1
+                elif winner_idx == 1:
+                    wins["P2"] += 1
                 break
-
-            player = env.current_player()
-            policy = p1 if player == "P1" else p2
-            infoset = env.infoset_key(player)
-            action = policy.sample(infoset, rng)
-            obs = env.step(action)
 
     return wins
 

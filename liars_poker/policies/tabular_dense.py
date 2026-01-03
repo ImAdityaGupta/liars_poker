@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import random
 from dataclasses import dataclass
 from typing import Dict, List, Tuple
 
@@ -142,6 +143,42 @@ class DenseTabularPolicy(Policy):
 
         row = self.S[hid, hand_idx]
         return {action: float(row[0 if action == CALL else action + 1]) for action in legal}
+
+    def sample_action_fast(
+        self,
+        *,
+        pid: int,
+        hand: Tuple[int, ...],
+        history: Tuple[int, ...],
+        legal: Tuple[int, ...],
+        rng: random.Random,
+    ) -> int:
+        _ = pid
+        if not legal:
+            raise ValueError("Cannot sample from empty policy distribution.")
+
+        hid = _history_to_hid(history, self.k)
+        hand_idx = self.hand_to_idx.get(hand)
+        if hand_idx is None:
+            raise ValueError(f"Unknown hand in infoset: {hand}")
+
+        row = self.S[hid, hand_idx]
+        total = 0.0
+        for action in legal:
+            col = 0 if action == CALL else action + 1
+            total += float(row[col])
+        if total <= 0.0:
+            return legal[rng.randrange(len(legal))]
+
+        pick = rng.random() * total
+        cumulative = 0.0
+        last_action = legal[-1]
+        for action in legal:
+            col = 0 if action == CALL else action + 1
+            cumulative += float(row[col])
+            if pick <= cumulative:
+                return action
+        return last_action
 
     def __repr__(self) -> str:
         return f"DenseTabularPolicy(spec={self.spec}, k={self.k}, hands={len(self.hands)})"

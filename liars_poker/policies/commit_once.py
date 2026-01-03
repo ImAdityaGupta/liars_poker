@@ -55,7 +55,7 @@ class CommitOnceMixture(Policy):
 
     def action_probs(self, infoset: InfoSet) -> Dict[int, float]:
         if self._choice is None:
-            raise RuntimeError("CommitOnceMixture: begin_epsiode not yet called, call prob_dist_at_infoset for posterior-weighted mixture.")
+            raise RuntimeError("CommitOnceMixture: begin_episode not yet called, call prob_dist_at_infoset for posterior-weighted mixture.")
         return self.policies[self._choice].action_probs(infoset)
 
     def sample(self, infoset: InfoSet, rng: random.Random) -> int:

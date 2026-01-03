@@ -60,6 +60,19 @@ class Policy:
                 return action
         return actions[-1]
 
+    def sample_action_fast(
+        self,
+        *,
+        pid: int,
+        hand: Tuple[int, ...],
+        history: Tuple[int, ...],
+        legal: Tuple[int, ...],
+        rng: random.Random,
+    ) -> int:
+        _ = legal
+        infoset = InfoSet(pid=pid, hand=hand, history=history)
+        return self.sample(infoset, rng)
+
     def _require_rules(self) -> "Rules":
         rules = self._rules
         if rules is None:
