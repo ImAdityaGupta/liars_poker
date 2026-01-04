@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Sequence
 
 import numpy as np
 
@@ -298,6 +298,61 @@ def mix_dense(a: DenseTabularPolicy, b: DenseTabularPolicy, w_a: float) -> Dense
         alpha_b = np.divide(alpha_b, denom, out=np.zeros_like(alpha_b), where=denom > 0)
 
     mix_S = alpha_a[:, :, None] * a.S + alpha_b[:, :, None] * b.S
+    use_mix = denom > 0
+    mix.S = np.where(use_mix[:, :, None], mix_S, mix.S)
+    mix.recompute_likelihoods()
+    return mix
+
+
+def mix_dense_multiple(
+    policies: Sequence[DenseTabularPolicy],
+    weights: Sequence[float],
+) -> DenseTabularPolicy:
+    if len(policies) != len(weights):
+        raise ValueError("Policies and weights must have the same length.")
+    if not policies:
+        raise ValueError("mix_dense_multiple requires at least one policy.")
+
+    w = np.asarray(weights, dtype=float)
+    if np.any(w < 0):
+        raise ValueError("mix_dense_multiple weights must be non-negative.")
+    total = float(w.sum())
+    if not np.isclose(total, 1.0):
+        raise ValueError("mix_dense_multiple weights must sum to 1.")
+
+    spec = policies[0].spec
+    for pol in policies:
+        if pol.spec != spec:
+            raise ValueError("DenseTabularPolicy spec mismatch.")
+        if pol.k != policies[0].k or pol.hands != policies[0].hands:
+            raise ValueError("DenseTabularPolicy action/hand space mismatch.")
+        if pol.S.shape != policies[0].S.shape:
+            raise ValueError("DenseTabularPolicy tensor shape mismatch.")
+
+    if len(policies) == 1:
+        base = DenseTabularPolicy(spec)
+        base.S = policies[0].S.copy()
+        base.recompute_likelihoods()
+        return base
+
+    mix = DenseTabularPolicy(spec)
+    pid_act = (mix.popcount & 1).astype(np.int8)
+
+    denom = np.zeros((mix.S.shape[0], mix.S.shape[1]), dtype=float)
+    L_tables: List[np.ndarray] = []
+    for pol, w_i in zip(policies, w):
+        pick_a = pid_act[:, None] == 0
+        L_i = np.where(pick_a, pol.L_pid0, pol.L_pid1)
+        L_tables.append(L_i)
+        denom += float(w_i) * L_i
+
+    mix_S = np.zeros_like(mix.S, dtype=float)
+    for pol, w_i, L_i in zip(policies, w, L_tables):
+        weight = float(w_i) * L_i
+        with np.errstate(divide="ignore", invalid="ignore"):
+            alpha = np.divide(weight, denom, out=np.zeros_like(weight), where=denom > 0)
+        mix_S += alpha[:, :, None] * pol.S
+
     use_mix = denom > 0
     mix.S = np.where(use_mix[:, :, None], mix_S, mix.S)
     mix.recompute_likelihoods()

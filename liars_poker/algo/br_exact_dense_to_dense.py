@@ -243,7 +243,7 @@ def best_response_exact(
     br.solve()
     if debug:
         p1, p2 = br.exploitability()
-        print(f"Done. exploitability(first={p1:.6f}, second={p2:.6f})")
+        print(f"Done. exploitability(first={p1:.6f}, second={p2:.6f}, avg={(p1+p2)/2:.6f})")
 
     dict_log = {"computes_exploitability": True, "computer": br}
 
