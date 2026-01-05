@@ -11,7 +11,7 @@ from .infoset import CALL, NO_CLAIM, InfoSet
 class Rules:
     """Immutable action ordering and legality."""
 
-    __slots__ = ("spec", "_claims", "_next_higher_indices")
+    __slots__ = ("spec", "_claims", "_next_higher_indices", "_two_pair_ranks", "_two_pair_index")
 
     def __init__(self, spec: GameSpec):
         self.spec = spec
@@ -23,6 +23,10 @@ class Rules:
     @property
     def claims(self) -> Tuple[Tuple[str, int], ...]:
         return self._claims
+
+    @property
+    def two_pair_ranks(self) -> Tuple[Tuple[int, int], ...]:
+        return self._two_pair_ranks
 
     def legal_actions_from_last(self, last_claim_idx: Optional[int]) -> Tuple[int, ...]:
         if last_claim_idx is None:
@@ -50,10 +54,24 @@ class Rules:
         elif ":" in text:
             kind_str, value_str = text.split(":", 1)
             kind_norm = kind_str.strip().lower()
-            try:
-                rank_value = int(value_str.strip())
-            except ValueError as exc:
-                raise ValueError(f"Invalid rank value in action '{text}'") from exc
+            if kind_norm == "twopair":
+                parts = [p.strip() for p in value_str.split(",")]
+                if len(parts) != 2:
+                    raise ValueError(f"Invalid TwoPair action '{text}' (expected TwoPair:a,b).")
+                try:
+                    r1 = int(parts[0])
+                    r2 = int(parts[1])
+                except ValueError as exc:
+                    raise ValueError(f"Invalid TwoPair ranks in action '{text}'") from exc
+                low, high = sorted((r1, r2))
+                rank_value = self._two_pair_index.get((low, high))
+                if rank_value is None:
+                    raise ValueError(f"Unknown TwoPair ranks in action '{text}'")
+            else:
+                try:
+                    rank_value = int(value_str.strip())
+                except ValueError as exc:
+                    raise ValueError(f"Invalid rank value in action '{text}'") from exc
             action = None
             for idx, (kind, rank) in enumerate(self._claims):
                 if kind.lower() == kind_norm and rank == rank_value:
@@ -72,10 +90,15 @@ class Rules:
         if idx == CALL:
             return "CALL"
         kind, rank = self._claims[idx]
+        if kind == "TwoPair":
+            low, high = self._two_pair_ranks[rank]
+            return f"{kind}:{high},{low}"
         return f"{kind}:{rank}"
 
     def _build_claims(self) -> Tuple[Tuple[str, int], ...]:
         claims: List[Tuple[str, int]] = []
+        self._two_pair_ranks = tuple()
+        self._two_pair_index = {}
         R = self.spec.ranks
         for kind in self.spec.claim_kinds:
             if kind == "RankHigh":
@@ -84,6 +107,15 @@ class Rules:
             elif kind == "Pair":
                 for r in range(1, R + 1):
                     claims.append(("Pair", r))
+            elif kind == "TwoPair":
+                pairs: List[Tuple[int, int]] = []
+                for high in range(2, R + 1):
+                    for low in range(1, high):
+                        pairs.append((low, high))
+                self._two_pair_ranks = tuple(pairs)
+                self._two_pair_index = {pair: idx for idx, pair in enumerate(self._two_pair_ranks)}
+                for idx in range(len(self._two_pair_ranks)):
+                    claims.append(("TwoPair", idx))
             elif kind == "Trips":
                 for r in range(1, R + 1):
                     claims.append(("Trips", r))
@@ -98,6 +130,8 @@ class Rules:
             return S >= 1
         if kind == "Pair":
             return S >= 2 and (self.spec.hand_size * 2) >= 2
+        if kind == "TwoPair":
+            return self.spec.ranks >= 2 and S >= 2 and (self.spec.hand_size * 2) >= 4
         if kind == "Trips":
             return S >= 3 and (self.spec.hand_size * 2) >= 3
         return False
@@ -312,6 +346,9 @@ def resolve_call_winner(
         satisfied = counts[rank_value] >= 1
     elif kind == "Pair":
         satisfied = counts[rank_value] >= 2
+    elif kind == "TwoPair":
+        low, high = rules.two_pair_ranks[rank_value]
+        satisfied = counts[low] >= 2 and counts[high] >= 2
     elif kind == "Trips":
         satisfied = counts[rank_value] >= 3
     else:

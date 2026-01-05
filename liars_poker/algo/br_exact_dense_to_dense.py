@@ -37,7 +37,9 @@ def adjustment_factor(spec: GameSpec, my_hand: Tuple[int, ...], opp_hand: Tuple[
 
 @dataclass(slots=True)
 class _ClaimReq:
-    rank: int
+    kind: str
+    rank1: int
+    rank2: int
     need: int
 
 
@@ -58,6 +60,7 @@ class BestResponseComputerDense:
         self.k = opponent.k
         self.hands = opponent.hands
         self.n_hands = len(self.hands)
+        self._two_pair_ranks = self.rules.two_pair_ranks
 
         self.card_removal_mat = self._build_card_removal_matrix()
         self.hand_weights = np.asarray([adjustment_factor(spec, tuple(), h) for h in self.hands], dtype=float)
@@ -70,18 +73,20 @@ class BestResponseComputerDense:
         self._history_by_hid = self._build_histories()
         self._claim_reqs = self._build_claim_requirements()
 
-    def _build_claim_requirements(self) -> Dict[int, _ClaimReq]:
-        reqs: Dict[int, _ClaimReq] = {}
+    def _build_claim_requirements(self) -> List[_ClaimReq]:
+        reqs: List[_ClaimReq] = []
         for idx, (kind, rank_value) in enumerate(self.rules.claims):
             if kind == "RankHigh":
-                need = 1
+                reqs.append(_ClaimReq(kind=kind, rank1=rank_value, rank2=0, need=1))
             elif kind == "Pair":
-                need = 2
+                reqs.append(_ClaimReq(kind=kind, rank1=rank_value, rank2=0, need=2))
             elif kind == "Trips":
-                need = 3
+                reqs.append(_ClaimReq(kind=kind, rank1=rank_value, rank2=0, need=3))
+            elif kind == "TwoPair":
+                low, high = self._two_pair_ranks[rank_value]
+                reqs.append(_ClaimReq(kind=kind, rank1=low, rank2=high, need=2))
             else:
                 raise ValueError(f"Unsupported claim kind: {kind}")
-            reqs[idx] = _ClaimReq(rank=rank_value, need=need)
         return reqs
 
     def _build_histories(self) -> List[Tuple[int, ...]]:
@@ -116,11 +121,13 @@ class BestResponseComputerDense:
 
         last_claim_idx = int(self.opponent.last_claim[hid])
         req = self._claim_reqs[last_claim_idx]
-        r = req.rank
-        need = req.need
-
-        c = self.hand_rank_counts[:, r]
-        T = (c[:, None] + c[None, :]) >= need
+        if req.kind == "TwoPair":
+            c1 = self.hand_rank_counts[:, req.rank1]
+            c2 = self.hand_rank_counts[:, req.rank2]
+            T = (c1[:, None] + c1[None, :] >= req.need) & (c2[:, None] + c2[None, :] >= req.need)
+        else:
+            c = self.hand_rank_counts[:, req.rank1]
+            T = (c[:, None] + c[None, :]) >= req.need
 
         M = self.card_removal_mat @ opp_reach
         sat_mass = (self.card_removal_mat * T) @ opp_reach
