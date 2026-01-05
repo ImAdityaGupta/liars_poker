@@ -116,7 +116,7 @@ class PopulationTracker:
         if drop_candidates:
             drop_candidates = sorted(
                 drop_candidates,
-                key=lambda pid: self.birth_iter.get(pid, iter_idx),
+                key=lambda pid: self.last_active_iter.get(pid, iter_idx),
             )
             for pid in drop_candidates:
                 if len(keep_ids) <= min_size:

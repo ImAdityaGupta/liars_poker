@@ -37,6 +37,7 @@ print(f"Artifacts   : {ARTIFACTS_ROOT}")
 
 from liars_poker import GameSpec
 from liars_poker.training.dense_fsp import dense_fsp_loop
+from liars_poker.serialization import load_policy
 from liars_poker.training.fsp_utils import save_fsp_run, dense_fsp_resume
 
 # -----------------------------------------------------------------------------
@@ -47,13 +48,13 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description="Run Dense FSP Loop for Liar's Poker.")
     
     # Spec arguments
-    parser.add_argument("--ranks", type=int, required=True, help="Number of ranks in the deck.")
-    parser.add_argument("--suits", type=int, required=True, help="Number of suits in the deck.")
-    parser.add_argument("--hand_size", type=int, required=True, help="Number of cards per player.")
+    parser.add_argument("--ranks", type=int, required=False, help="Number of ranks in the deck.")
+    parser.add_argument("--suits", type=int, required=False, help="Number of suits in the deck.")
+    parser.add_argument("--hand_size", type=int, required=False, help="Number of cards per player.")
     parser.add_argument(
-        "--claim_kinds", 
-        nargs='+', 
-        required=True, 
+        "--claim_kinds",
+        nargs='+',
+        required=False,
         help="List of allowed claim kinds (e.g. RankHigh Pair Trips)"
     )
     
@@ -65,6 +66,12 @@ def parse_arguments():
         default=None,
         help="Checkpoint every N episodes (default: run all episodes in one chunk).",
     )
+    parser.add_argument(
+        "--run_dir",
+        type=str,
+        default=None,
+        help="Resume an existing run directory under artifacts/benchmark_runs.",
+    )
     
     return parser.parse_args()
 
@@ -72,37 +79,54 @@ def main():
     args = parse_arguments()
 
     print("\n--- Configuration ---")
-    print(f"Ranks       : {args.ranks}")
-    print(f"Suits       : {args.suits}")
-    print(f"Hand Size   : {args.hand_size}")
-    print(f"Claim Kinds : {args.claim_kinds}")
     print(f"Episodes    : {args.episodes}")
     if args.save_every is not None:
         print(f"Save Every  : {args.save_every}")
+    if args.run_dir is not None:
+        print(f"Run Dir     : {args.run_dir}")
+    else:
+        print(f"Ranks       : {args.ranks}")
+        print(f"Suits       : {args.suits}")
+        print(f"Hand Size   : {args.hand_size}")
+        print(f"Claim Kinds : {args.claim_kinds}")
     print("---------------------\n")
 
-    # Construct the GameSpec based on arguments
-    # Note: suit_symmetry is assumed True as per instructions
-    spec = GameSpec(
-        ranks=args.ranks,
-        suits=args.suits,
-        hand_size=args.hand_size,
-        claim_kinds=tuple(args.claim_kinds),
-        suit_symmetry=True
-    )
+    if args.run_dir is None:
+        if args.ranks is None or args.suits is None or args.hand_size is None or not args.claim_kinds:
+            raise ValueError("Spec args (--ranks/--suits/--hand_size/--claim_kinds) are required unless --run_dir is provided.")
+        # Construct the GameSpec based on arguments
+        # Note: suit_symmetry is assumed True as per instructions
+        spec = GameSpec(
+            ranks=args.ranks,
+            suits=args.suits,
+            hand_size=args.hand_size,
+            claim_kinds=tuple(args.claim_kinds),
+            suit_symmetry=True
+        )
+        print(f"Initialized Spec: {spec}\nStarting Training...")
 
-    print(f"Initialized Spec: {spec}\nStarting Training...")
-
-    time_right_now_string = datetime.now().strftime("%Y%m%d-%H%M%S")
-    short_form = spec.to_short_str() + '___' + time_right_now_string
-    run_dir = os.path.join(ARTIFACTS_ROOT, "benchmark_runs", short_form)
+    if args.run_dir is None:
+        time_right_now_string = datetime.now().strftime("%Y%m%d-%H%M%S")
+        short_form = spec.to_short_str() + '___' + time_right_now_string
+        run_dir = os.path.join(ARTIFACTS_ROOT, "benchmark_runs", short_form)
+    else:
+        run_dir = args.run_dir
+        if not os.path.isabs(run_dir):
+            candidate = os.path.join(ARTIFACTS_ROOT, "benchmark_runs", run_dir)
+            if os.path.exists(candidate):
+                run_dir = candidate
+        if not os.path.exists(run_dir):
+            raise FileNotFoundError(f"Run dir not found: {run_dir}")
+        short_form = os.path.basename(run_dir)
+        policy_dir = os.path.join(run_dir, "policy")
+        _, spec = load_policy(policy_dir)
 
     save_every = args.save_every
     if save_every is None or save_every <= 0:
         save_every = args.episodes
 
     remaining = args.episodes
-    first_chunk = True
+    first_chunk = args.run_dir is None
     pol = None
     info = None
     while remaining > 0:
