@@ -72,7 +72,6 @@ class BestResponseComputerDenseIter:
         self.br_policy = DenseTabularPolicy(spec)
         self._history_by_hid = self._build_histories() if store_state_values else []
         self._claim_reqs = self._build_claim_requirements()
-
         self._hids_by_popcount = self._group_hids_by_popcount()
 
     def _build_claim_requirements(self) -> List[_ClaimReq]:
@@ -121,87 +120,140 @@ class BestResponseComputerDenseIter:
     def _opp_reach_table(self, my_id: int) -> np.ndarray:
         return self.opponent.L_pid1 if my_id == 0 else self.opponent.L_pid0
 
-    def _solve_terminal(
-        self,
-        hid: int,
-        opp_reach: np.ndarray,
-        *,
-        caller: int,
-        my_id: int,
-    ) -> Tuple[np.ndarray, np.ndarray]:
-        if hid == 0:
-            raise ValueError("CALL cannot occur without a preceding claim.")
-
-        last_claim_idx = int(self.opponent.last_claim[hid])
-        req = self._claim_reqs[last_claim_idx]
-
+    def _build_truth_matrix(self, req: _ClaimReq) -> np.ndarray:
         if req.kind == "TwoPair":
             c1 = self.hand_rank_counts[:, req.rank1]
             c2 = self.hand_rank_counts[:, req.rank2]
-            T = (c1[:, None] + c1[None, :] >= req.need) & (c2[:, None] + c2[None, :] >= req.need)
-        else:
-            c = self.hand_rank_counts[:, req.rank1]
-            T = (c[:, None] + c[None, :] >= req.need)
+            return (c1[:, None] + c1[None, :] >= req.need) & (c2[:, None] + c2[None, :] >= req.need)
+        c = self.hand_rank_counts[:, req.rank1]
+        return (c[:, None] + c[None, :] >= req.need)
 
-        M = self.card_removal_mat @ opp_reach
-        sat_mass = (self.card_removal_mat * T) @ opp_reach
+    def _compute_call_layer(
+        self,
+        curr_hids: List[int],
+        *,
+        to_play: int,
+        my_id: int,
+        opp_reach_table: np.ndarray,
+        S: np.ndarray,
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        n = len(curr_hids)
+        call_wm = np.zeros((n, self.n_hands), dtype=float)
+        call_m = np.zeros((n, self.n_hands), dtype=float)
+        if to_play == 0 and 0 in curr_hids:
+            pass
+        if to_play == 0 and len(curr_hids) == 1 and curr_hids[0] == 0:
+            return call_wm, call_m
 
-        if caller != my_id:
-            WM = sat_mass
-        else:
-            WM = M - sat_mass
+        caller = to_play
+        store_terminal = self.store_state_values and caller != my_id
 
-        if caller != my_id and self.store_state_values:
-            values = np.where(M > 0.0, WM / M, 0.0)
-            terminal_hist = self._history_by_hid[hid] + (CALL,)
-            self.state_card_values[terminal_hist] = {self.hands[i]: float(values[i]) for i in range(self.n_hands)}
+        by_claim: Dict[int, List[int]] = {}
+        last_claim = self.opponent.last_claim
+        for pos, hid in enumerate(curr_hids):
+            if hid == 0:
+                continue
+            claim = int(last_claim[hid])
+            by_claim.setdefault(claim, []).append(pos)
 
-        return WM, M
+        for claim_idx, positions in by_claim.items():
+            req = self._claim_reqs[claim_idx]
+            T = self._build_truth_matrix(req)
+
+            hids = [curr_hids[p] for p in positions]
+            R = opp_reach_table[hids]
+            if caller != my_id:
+                R = R * S[hids, :, 0]
+            R_T = R.T
+
+            M = self.card_removal_mat @ R_T
+            sat = np.einsum("ij,ij,jb->ib", self.card_removal_mat, T, R_T, optimize=True)
+
+            if caller != my_id:
+                WM = sat
+            else:
+                WM = M - sat
+
+            call_m[positions] = M.T
+            call_wm[positions] = WM.T
+
+            if store_terminal:
+                values = np.where(M > 0.0, WM / M, 0.0).T
+                for pos, row in zip(positions, values):
+                    hist = self._history_by_hid[curr_hids[pos]] + (CALL,)
+                    self.state_card_values[hist] = {self.hands[i]: float(row[i]) for i in range(self.n_hands)}
+
+        return call_wm, call_m
 
     def _solve_for_player(self, my_id: int) -> Tuple[np.ndarray, np.ndarray]:
-        H = 1 << self.k
-        wm = np.zeros((H, self.n_hands), dtype=float)
-        m = np.zeros((H, self.n_hands), dtype=float)
+        wm_next: np.ndarray | None = None
+        m_next: np.ndarray | None = None
+        next_hids: List[int] = []
+        idx_next: Dict[int, int] = {}
 
         opp_reach_table = self._opp_reach_table(my_id)
         S = self.opponent.S
         legal_actions = self.opponent.legal_actions
 
+        root_wm = None
+        root_m = None
+
         for pop in range(self.k, -1, -1):
-            for hid in self._hids_by_popcount[pop]:
+            curr_hids = self._hids_by_popcount[pop]
+            curr_len = len(curr_hids)
+            if curr_len == 0:
+                continue
+
+            wm_curr = np.zeros((curr_len, self.n_hands), dtype=float)
+            m_curr = np.zeros((curr_len, self.n_hands), dtype=float)
+            idx_curr = {hid: i for i, hid in enumerate(curr_hids)}
+
+            if pop < self.k:
+                idx_next = {hid: i for i, hid in enumerate(next_hids)}
+
+            to_play = pop & 1
+            call_wm, call_m = self._compute_call_layer(
+                curr_hids,
+                to_play=to_play,
+                my_id=my_id,
+                opp_reach_table=opp_reach_table,
+                S=S,
+            )
+
+            for pos, hid in enumerate(curr_hids):
                 actions = legal_actions[hid]
                 if not actions:
                     continue
-
-                to_play = pop & 1
-                opp_reach = opp_reach_table[hid]
 
                 if to_play != my_id:
                     total_wm = np.zeros(self.n_hands, dtype=float)
                     total_m = np.zeros(self.n_hands, dtype=float)
                     for action in actions:
                         if action == CALL:
-                            reach = opp_reach * S[hid, :, 0]
-                            wm_a, m_a = self._solve_terminal(hid, reach, caller=to_play, my_id=my_id)
+                            wm_a = call_wm[pos]
+                            m_a = call_m[pos]
                         else:
                             child = hid | (1 << action)
-                            wm_a = wm[child]
-                            m_a = m[child]
+                            child_idx = idx_next[child]
+                            wm_a = wm_next[child_idx]
+                            m_a = m_next[child_idx]
                         total_wm += wm_a
                         total_m += m_a
-                    wm[hid] = total_wm
-                    m[hid] = total_m
+                    wm_curr[pos] = total_wm
+                    m_curr[pos] = total_m
                     continue
 
                 wm_list: List[np.ndarray] = []
                 m_list: List[np.ndarray] = []
                 for action in actions:
                     if action == CALL:
-                        wm_a, m_a = self._solve_terminal(hid, opp_reach, caller=to_play, my_id=my_id)
+                        wm_a = call_wm[pos]
+                        m_a = call_m[pos]
                     else:
                         child = hid | (1 << action)
-                        wm_a = wm[child]
-                        m_a = m[child]
+                        child_idx = idx_next[child]
+                        wm_a = wm_next[child_idx]
+                        m_a = m_next[child_idx]
                     wm_list.append(wm_a)
                     m_list.append(m_a)
 
@@ -215,8 +267,8 @@ class BestResponseComputerDenseIter:
                 best_wm = wm_mat[best_idx, arange]
                 best_m = m_mat[best_idx, arange]
 
-                wm[hid] = best_wm
-                m[hid] = best_m
+                wm_curr[pos] = best_wm
+                m_curr[pos] = best_m
 
                 if self.store_state_values:
                     values = np.where(best_m > 0.0, best_wm / best_m, 0.0)
@@ -229,14 +281,26 @@ class BestResponseComputerDenseIter:
                     self.br_policy.S[hid, i, :] = 0.0
                     self.br_policy.S[hid, i, col] = 1.0
 
-        return wm, m
+            if pop == 0:
+                idx0 = idx_curr.get(0)
+                if idx0 is not None:
+                    root_wm = wm_curr[idx0]
+                    root_m = m_curr[idx0]
+
+            next_hids = curr_hids
+            wm_next = wm_curr
+            m_next = m_curr
+
+        if root_wm is None or root_m is None:
+            raise RuntimeError("Root values not computed.")
+        return root_wm, root_m
 
     def solve(self) -> None:
         wm0, m0 = self._solve_for_player(0)
-        self._root_values[0] = np.where(m0[0] > 0.0, wm0[0] / m0[0], 0.0)
+        self._root_values[0] = np.where(m0 > 0.0, wm0 / m0, 0.0)
 
         wm1, m1 = self._solve_for_player(1)
-        self._root_values[1] = np.where(m1[0] > 0.0, wm1[0] / m1[0], 0.0)
+        self._root_values[1] = np.where(m1 > 0.0, wm1 / m1, 0.0)
 
         self.br_policy.recompute_likelihoods()
 
