@@ -38,7 +38,7 @@ print(f"Artifacts   : {ARTIFACTS_ROOT}")
 from liars_poker import GameSpec
 from liars_poker.training.dense_fsp import dense_fsp_loop
 from liars_poker.serialization import load_policy
-from liars_poker.training.fsp_utils import save_fsp_run, dense_fsp_resume
+from liars_poker.training.fsp_utils import save_fsp_run, dense_fsp_resume, basic_eta_control, faster_eta_control
 
 # -----------------------------------------------------------------------------
 # 3. Main Logic
@@ -72,6 +72,11 @@ def parse_arguments():
         default=None,
         help="Resume an existing run directory under artifacts/benchmark_runs.",
     )
+    parser.add_argument(
+        "--faster_eta",
+        action="store_true",
+        help="Use faster_eta_control instead of basic_eta_control.",
+    )
     
     return parser.parse_args()
 
@@ -82,6 +87,7 @@ def main():
     print(f"Episodes    : {args.episodes}")
     if args.save_every is not None:
         print(f"Save Every  : {args.save_every}")
+    print(f"Eta Control : {'faster_eta_control' if args.faster_eta else 'basic_eta_control'}")
     if args.run_dir is not None:
         print(f"Run Dir     : {args.run_dir}")
     else:
@@ -121,6 +127,7 @@ def main():
         policy_dir = os.path.join(run_dir, "policy")
         _, spec = load_policy(policy_dir)
 
+    eta_control = faster_eta_control if args.faster_eta else basic_eta_control
     save_every = args.save_every
     if save_every is None or save_every <= 0:
         save_every = args.episodes
@@ -136,6 +143,7 @@ def main():
             pol, info = dense_fsp_loop(
                 spec=spec,
                 episodes=chunk,
+                eta_control=eta_control,
                 episodes_test=0,
                 efficient=True,
             )
@@ -145,6 +153,7 @@ def main():
             pol, info = dense_fsp_resume(
                 run_dir,
                 remaining_episodes=chunk,
+                eta_control=eta_control,
                 episodes_test=0,
                 efficient=True,
             )
