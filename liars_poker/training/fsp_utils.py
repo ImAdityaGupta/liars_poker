@@ -17,6 +17,10 @@ def basic_eta_control(episodes: int) -> float:
 def faster_eta_control(episodes: int) -> float:
     return 2 / (episodes + 4)
 
+def powerlaw_eta_control(episodes: int) -> float:
+    beta = (1-(0.1/np.log(episodes))) 
+    return min(0.5,1 / ((episodes + 2) ** beta))
+
 def plot_exploitability_series(logs: Dict | Iterable[Dict], *, figsize: tuple[int, int] = (12, 6)):
     """Plot exploitability over iterations using the logs dict returned by fsp_loop/dense_fsp_loop."""
     import matplotlib.pyplot as plt
