@@ -14,6 +14,8 @@ from liars_poker.serialization import save_policy, load_policy
 def basic_eta_control(episodes: int) -> float:
     return 1 / (episodes + 2)
 
+def faster_eta_control(episodes: int) -> float:
+    return 2 / (episodes + 4)
 
 def plot_exploitability_series(logs: Dict | Iterable[Dict], *, figsize: tuple[int, int] = (12, 6)):
     """Plot exploitability over iterations using the logs dict returned by fsp_loop/dense_fsp_loop."""

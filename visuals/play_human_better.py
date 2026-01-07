@@ -222,17 +222,26 @@ def get_truth_summary(spec, rules, history, p1, p2):
     if last_idx == NO_CLAIM: return None
     
     kind, rank = rules.claims[last_idx]
-    if kind == "RankHigh": needed = 1
-    elif kind == "Pair": needed = 2
-    elif kind == "Trips": needed = 3
-    else: needed = 0
-    
-    count = 0
-    for c in p1 + p2:
-        if card_rank(c, spec) == rank:
-            count += 1
-            
-    return rules.render_action(last_idx), count, needed
+    if kind == "RankHigh":
+        needed = 1
+        count = sum(1 for c in p1 + p2 if card_rank(c, spec) == rank)
+        return rules.render_action(last_idx), count, needed
+    if kind == "Pair":
+        needed = 2
+        count = sum(1 for c in p1 + p2 if card_rank(c, spec) == rank)
+        return rules.render_action(last_idx), count, needed
+    if kind == "Trips":
+        needed = 3
+        count = sum(1 for c in p1 + p2 if card_rank(c, spec) == rank)
+        return rules.render_action(last_idx), count, needed
+    if kind == "TwoPair":
+        low, high = rules.two_pair_ranks[rank]
+        count_low = sum(1 for c in p1 + p2 if card_rank(c, spec) == low)
+        count_high = sum(1 for c in p1 + p2 if card_rank(c, spec) == high)
+        count = f"{high}:{count_high}, {low}:{count_low}"
+        needed = "2 each"
+        return rules.render_action(last_idx), count, needed
+    return rules.render_action(last_idx), 0, 0
 
 
 # --- STATE MANAGEMENT ---
@@ -364,32 +373,64 @@ with col_game:
             st.info("Bot is thinking...")
         else:
             legal = set(env.legal_actions())
+            claim_kinds = spec.claim_kinds
+
+            single_kinds = [k for k in claim_kinds if k in ("RankHigh", "Pair", "Trips")]
+            has_two_pair = "TwoPair" in claim_kinds
+
             claim_map = {}
             for idx, (k, r) in enumerate(rules.claims):
-                claim_map[(k, r)] = idx
-            
-            claim_kinds = spec.claim_kinds
-            cols = st.columns(len(claim_kinds), gap="small")
-            
-            for i, k in enumerate(claim_kinds):
-                cols[i].markdown(f"**{k}**")
-            
-            for r in range(1, spec.ranks + 1):
-                row_cols = st.columns(len(claim_kinds), gap="small")
-                for i, k in enumerate(claim_kinds):
-                    idx = claim_map.get((k, r))
-                    if idx is not None:
-                        is_legal = idx in legal
-                        suffix = k[0].upper()
-                        if k == "RankHigh": suffix = "H"
-                        btn_label = f"{r}{suffix}"
-                        
-                        if row_cols[i].button(btn_label, key=f"btn_{idx}", disabled=not is_legal, use_container_width=True):
+                if k in single_kinds:
+                    claim_map[(k, r)] = idx
+
+            if single_kinds:
+                cols = st.columns(len(single_kinds), gap="small")
+                for i, k in enumerate(single_kinds):
+                    cols[i].markdown(f"**{k}**")
+                
+                for r in range(1, spec.ranks + 1):
+                    row_cols = st.columns(len(single_kinds), gap="small")
+                    for i, k in enumerate(single_kinds):
+                        idx = claim_map.get((k, r))
+                        if idx is not None:
+                            is_legal = idx in legal
+                            suffix = k[0].upper()
+                            if k == "RankHigh":
+                                suffix = "H"
+                            btn_label = f"{r}{suffix}"
+                            
+                            if row_cols[i].button(btn_label, key=f"btn_{idx}", disabled=not is_legal, use_container_width=True):
+                                obs = env.step(idx)
+                                st.session_state.obs = obs
+                                st.rerun()
+                        else:
+                            row_cols[i].write("")
+
+            if has_two_pair:
+                st.markdown("<div style='height: 12px'></div>", unsafe_allow_html=True)
+                st.markdown("**TwoPair**")
+                pair_map = {}
+                for idx, (k, r) in enumerate(rules.claims):
+                    if k == "TwoPair":
+                        low, high = rules.two_pair_ranks[r]
+                        pair_map[(low, high)] = idx
+
+                cols = st.columns(max(1, spec.ranks - 1), gap="small")
+                for j in range(1, spec.ranks):
+                    cols[j - 1].markdown(f"**{j}**")
+                for high in range(2, spec.ranks + 1):
+                    row_cols = st.columns(max(1, spec.ranks - 1), gap="small")
+                    for low in range(1, spec.ranks):
+                        if low >= high:
+                            row_cols[low - 1].write("")
+                            continue
+                        idx = pair_map.get((low, high))
+                        is_legal = idx in legal if idx is not None else False
+                        btn_label = f"{high}-{low}"
+                        if row_cols[low - 1].button(btn_label, key=f"btn_tp_{high}_{low}", disabled=not is_legal, use_container_width=True):
                             obs = env.step(idx)
                             st.session_state.obs = obs
                             st.rerun()
-                    else:
-                        row_cols[i].write("")
 
             st.markdown("<div style='height: 15px'></div>", unsafe_allow_html=True)
             can_call = CALL in legal
