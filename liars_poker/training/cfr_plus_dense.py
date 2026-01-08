@@ -47,8 +47,10 @@ def save_cfr_plus_run(
     eval_every: int,
     root: Path | None = None,
 ) -> None:
-    root = root or Path(ARTIFACTS_ROOT)
-    run_dir = root / "benchmark_runs" / run_id
+    if root is None:
+        run_dir = Path(ARTIFACTS_ROOT) / "benchmark_runs" / run_id
+    else:
+        run_dir = Path(root) / run_id
     run_dir.mkdir(parents=True, exist_ok=True)
 
     policy_dir = run_dir / "policy"

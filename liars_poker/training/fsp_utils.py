@@ -108,8 +108,10 @@ def plot_with_trend(info, *, last_n=None, targets=(1e-2, 2e-3)):
 
 def save_fsp_run(run_id: str, policy, info: dict, spec: GameSpec, root: Path | None = None) -> None:
     """Save a policy and its FSP run metrics to a run directory."""
-    root = root or Path(ARTIFACTS_ROOT)
-    run_dir = root / "benchmark_runs" / run_id
+    if root is None:
+        run_dir = Path(ARTIFACTS_ROOT) / "benchmark_runs" / run_id
+    else:
+        run_dir = Path(root) / run_id
     (run_dir / "policy").mkdir(parents=True, exist_ok=True)
 
     # Save policy
