@@ -126,7 +126,7 @@ def cfr_dense_loop(
         iter_idx = start_iter + i + 1
         if eval_every and iter_idx % eval_every == 0:
             avg_policy = cfr.average_policy()
-            _, meta = best_response_dense(spec, avg_policy, debug=False)
+            _, meta = best_response_dense(spec, avg_policy, debug=False, store_state_values=False)
             p_first, p_second = meta["computer"].exploitability()
             logs["exploitability_series"].append(
                 {
