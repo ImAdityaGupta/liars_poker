@@ -70,7 +70,8 @@ class BestResponseComputerDense:
         self._root_values: Dict[int, np.ndarray] = {}
 
         self.br_policy = DenseTabularPolicy(spec)
-        self._history_by_hid = self._build_histories()
+        if self.store_state_values:
+            self._history_by_hid = self._build_histories()
         self._claim_reqs = self._build_claim_requirements()
 
     def _build_claim_requirements(self) -> List[_ClaimReq]:
