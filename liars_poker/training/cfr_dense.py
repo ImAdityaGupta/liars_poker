@@ -142,7 +142,10 @@ def cfr_dense_loop(
                     f"[cfr] iter={iter_idx} elapsed={elapsed:.2f}s "
                     f"exploitability_avg={(p_first + p_second) * 0.5:.6f}"
                 )
-
+        elapsed = time.perf_counter() - start
+        print(
+            f"[cfr] iter={iter_idx} elapsed={elapsed:.2f}s "
+        )   
     return cfr.average_policy(), logs, cfr
 
 
