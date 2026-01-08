@@ -11,7 +11,7 @@ import numpy as np
 from liars_poker.core import GameSpec, generate_deck, possible_starting_hands, card_rank
 from liars_poker.env import Rules, rules_for_spec
 from liars_poker.infoset import CALL, NO_CLAIM, InfoSet
-from liars_poker.policies.random import RandomPolicy
+from liars_poker.policies.random_policy import RandomPolicy
 from liars_poker.policies.tabular import Policy, TabularPolicy
 
 

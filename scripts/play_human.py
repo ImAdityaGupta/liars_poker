@@ -8,7 +8,7 @@ import random
 
 from liars_poker.core import GameSpec
 from liars_poker.env import Env
-from liars_poker.policies.random import RandomPolicy
+from liars_poker.policies.random_policy import RandomPolicy
 
 
 def main() -> None:

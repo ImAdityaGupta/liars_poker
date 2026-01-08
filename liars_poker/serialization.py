@@ -163,7 +163,7 @@ def load_policy(directory: str) -> Tuple["Policy", GameSpec]:
 def _ensure_builtin_registration() -> None:
     # Lazy import to avoid cycles
     # We removed the try/except so Python will scream if a file is missing
-    from liars_poker.policies.random import RandomPolicy
+    from liars_poker.policies.random_policy import RandomPolicy
     from liars_poker.policies.tabular import TabularPolicy
     from liars_poker.policies.tabular_dense import DenseTabularPolicy
     from liars_poker.policies.commit_once import CommitOnceMixture

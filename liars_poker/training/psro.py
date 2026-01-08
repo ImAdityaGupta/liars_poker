@@ -13,7 +13,7 @@ from liars_poker.core import GameSpec, ARTIFACTS_ROOT
 from liars_poker.env import Env, Rules
 from liars_poker.eval.match import play_match
 from liars_poker.policies.base import Policy
-from liars_poker.policies.random import RandomPolicy
+from liars_poker.policies.random_policy import RandomPolicy
 from liars_poker.policies.population_mixture import PopulationMixturePolicy
 from liars_poker.serialization import save_policy
 from liars_poker.algo.psro import PSROState, nash_solver

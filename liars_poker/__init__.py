@@ -4,7 +4,7 @@ from .core import GameSpec, env_hash
 from .env import Env, Rules
 from .infoset import CALL, NO_CLAIM, InfoSet
 from .policies.base import Policy
-from .policies.random import RandomPolicy
+from .policies.random_policy import RandomPolicy
 from .policies.tabular import TabularPolicy
 from .policies.commit_once import CommitOnceMixture
 from .algo.br_mc import best_response_mc

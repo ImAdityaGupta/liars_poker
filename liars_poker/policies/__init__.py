@@ -1,7 +1,7 @@
 from .base import Policy
 from .tabular import TabularPolicy
 from .tabular_dense import DenseTabularPolicy, mix_dense
-from .random import RandomPolicy
+from .random_policy import RandomPolicy
 from .commit_once import CommitOnceMixture
 
 __all__ = [
