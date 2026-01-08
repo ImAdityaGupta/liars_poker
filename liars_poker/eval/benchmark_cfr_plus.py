@@ -2,6 +2,7 @@ import os
 import sys
 import argparse
 from datetime import datetime
+from pathlib import Path
 
 
 def find_repo_root(start_dir: str) -> str:
@@ -58,7 +59,13 @@ def parse_arguments():
         "--run_dir",
         type=str,
         default=None,
-        help="Resume an existing run directory under artifacts/benchmark_runs.",
+        help="Resume an existing run directory under run_folder.",
+    )
+    parser.add_argument(
+        "--run_folder",
+        type=str,
+        default=os.path.join(ARTIFACTS_ROOT, "benchmark_runs"),
+        help="Base folder for benchmark runs (default: artifacts/benchmark_runs).",
     )
     parser.add_argument(
         "--eval_every",
@@ -85,6 +92,7 @@ def main():
         print(f"Suits       : {args.suits}")
         print(f"Hand Size   : {args.hand_size}")
         print(f"Claim Kinds : {args.claim_kinds}")
+    print(f"Run Folder  : {args.run_folder}")
     print("---------------------\n")
 
     if args.run_dir is None:
@@ -101,14 +109,19 @@ def main():
         )
         print(f"Initialized Spec: {spec}\nStarting Training...")
 
+    run_folder = args.run_folder
+    if not os.path.isabs(run_folder):
+        run_folder = os.path.join(REPO_ROOT, run_folder)
+    os.makedirs(run_folder, exist_ok=True)
+
     if args.run_dir is None:
         time_right_now_string = datetime.now().strftime("%Y%m%d-%H%M%S")
         short_form = spec.to_short_str() + "___" + time_right_now_string
-        run_dir = os.path.join(ARTIFACTS_ROOT, "benchmark_runs", short_form)
+        run_dir = os.path.join(run_folder, short_form)
     else:
         run_dir = args.run_dir
         if not os.path.isabs(run_dir):
-            candidate = os.path.join(ARTIFACTS_ROOT, "benchmark_runs", run_dir)
+            candidate = os.path.join(run_folder, run_dir)
             if os.path.exists(candidate):
                 run_dir = candidate
         if not os.path.exists(run_dir):
@@ -154,6 +167,7 @@ def main():
             spec=spec,
             iterations_done=total_iters,
             eval_every=args.eval_every,
+            root=Path(run_folder),
         )
         remaining -= chunk
 
