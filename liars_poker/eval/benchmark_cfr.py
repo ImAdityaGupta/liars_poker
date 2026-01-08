@@ -133,7 +133,7 @@ def main():
                 iterations=chunk,
                 start_iter=0,
                 eval_every=args.eval_every,
-                debug=False,
+                debug=True,
             )
             total_iters = chunk
             first_chunk = False
@@ -142,7 +142,7 @@ def main():
                 run_dir,
                 remaining_iterations=chunk,
                 eval_every=args.eval_every,
-                debug=False,
+                debug=True,
             )
 
         print(f"\nCheckpoint saving to: {short_form} (iterations remaining after save: {remaining - chunk})")
