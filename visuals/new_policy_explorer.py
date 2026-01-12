@@ -15,7 +15,7 @@ if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
 # --- IMPORTS ---
-from liars_poker.core import card_display, generate_deck
+from liars_poker.core import card_display, card_rank, generate_deck
 from liars_poker.env import rules_for_spec
 from liars_poker.infoset import CALL, InfoSet
 # UPDATED: Use the new serialization logic
@@ -31,6 +31,20 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("Liar's Poker Policy Explorer")
+
+# --- LABEL HELPERS ---
+def format_claim_label(kind: str, value: int, rules) -> str:
+    if kind == "TwoPair":
+        low, high = rules.two_pair_ranks[value]
+        return f"{high}-{low}"
+    suffix_map = {"RankHigh": "H", "Pair": "P", "Trips": "T"}
+    suffix = suffix_map.get(kind, kind[:1].upper())
+    return f"{value}{suffix}"
+
+def hand_sort_key(hand: Tuple[int, ...], spec) -> Tuple[int, ...]:
+    ranks_desc = sorted((card_rank(c, spec) for c in hand), reverse=True)
+    cards_desc = sorted(hand, reverse=True)
+    return tuple(-r for r in ranks_desc) + tuple(-c for c in cards_desc)
 
 # --- SESSION STATE ---
 if "policy_dir" not in st.session_state:
@@ -80,9 +94,10 @@ with st.sidebar:
     history_flags = st.session_state.get("history_flags", {})
     updated_flags = {}
     
-    for idx, (kind, value) in enumerate(rules.claims):
-        suffix = "H" if kind == "RankHigh" else "P"
-        label = f"{value}{suffix}"
+    claim_indices = list(range(len(rules.claims)))
+    for idx in claim_indices:
+        kind, value = rules.claims[idx]
+        label = format_claim_label(kind, value, rules)
         key = f"history-{idx}"
         current = history_flags.get(idx, False)
         updated_flags[idx] = st.checkbox(label, value=current, key=key)
@@ -125,16 +140,22 @@ if is_terminal:
 
 # 2. Hands and Labels
 cards = generate_deck(spec)
-hand_combinations = sorted({tuple(sorted(h)) for h in itertools.combinations(cards, spec.hand_size)})
+hand_combinations = list({tuple(sorted(h)) for h in itertools.combinations(cards, spec.hand_size)})
+hand_combinations.sort(key=lambda h: hand_sort_key(h, spec))
 
 def format_hand_str(hand):
-    return "-".join(card_display(c, spec) for c in hand)
+    ordered = sorted(hand, key=lambda c: (card_rank(c, spec), c), reverse=True)
+    return "-".join(card_display(c, spec) for c in ordered)
 
 hand_labels = [format_hand_str(h) for h in hand_combinations]
-claim_labels = [f"{k}:{v}" for (k, v) in rules.claims]
-all_action_labels = claim_labels + ["CALL"]
-idx_to_label = {i: l for i, l in enumerate(claim_labels)}
+idx_to_label = {
+    idx: format_claim_label(kind, value, rules)
+    for idx, (kind, value) in enumerate(rules.claims)
+}
 idx_to_label[CALL] = "CALL"
+claim_indices = list(range(len(rules.claims)))
+claim_labels = [idx_to_label[idx] for idx in claim_indices]
+all_action_labels = claim_labels + ["CALL"]
 
 # 3. HELPER: Range Calculation
 def get_actor_range(policy, spec, pid, history, hands):
@@ -177,7 +198,7 @@ for hand_tuple, hand_str in zip(hand_combinations, hand_labels):
         except Exception:
             dist = {}
 
-    for action_idx in range(len(rules.claims)):
+    for action_idx in claim_indices:
         strategy_records.append({
             "Hand": hand_str,
             "Action": idx_to_label[action_idx],

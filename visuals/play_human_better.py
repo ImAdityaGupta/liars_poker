@@ -173,6 +173,39 @@ st.markdown(
         text-transform: uppercase; 
         letter-spacing: 1px;
     }
+    .scoreboard {
+        background-color: #ffffff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 8px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        font-family: 'Segoe UI', sans-serif;
+        box-shadow: 2px 2px 0px #e0e0e0;
+    }
+    .score-item {
+        text-align: center;
+    }
+    .score-label {
+        font-size: 0.75rem;
+        color: #666;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .score-value {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #222;
+    }
+    /* 7. INPUT GRID SIZE */
+    form[data-testid="stForm"] .stButton button[kind="secondary"] {
+        height: 36px;
+        width: 85%;
+        margin: 2px auto;
+        font-size: 0.9rem;
+        box-shadow: 1px 1px 0px #e0e0e0;
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -197,7 +230,7 @@ def render_hand_html(hand: Tuple[int, ...], spec, hidden: bool = False) -> str:
     html += "</div>"
     return html
 
-def render_ticker(history: List[int], rules) -> str:
+def render_ticker(history: List[int], rules, human_label: str) -> str:
     # Build list of strings to avoid indentation issues in Markdown
     lines = ["<div class='ticker-box'>"]
     
@@ -205,7 +238,8 @@ def render_ticker(history: List[int], rules) -> str:
         lines.append("<div class='log-entry system'>Game Started</div>")
     
     for i, action in enumerate(history):
-        is_human = (i % 2 == 0)
+        actor_label = "P1" if i % 2 == 0 else "P2"
+        is_human = (actor_label == human_label)
         actor = "You" if is_human else "Bot"
         cls = "human" if is_human else "bot"
         text = rules.render_action(action)
@@ -243,6 +277,12 @@ def get_truth_summary(spec, rules, history, p1, p2):
         return rules.render_action(last_idx), count, needed
     return rules.render_action(last_idx), 0, 0
 
+def other_label(label: str) -> str:
+    return "P2" if label == "P1" else "P1"
+
+def hand_for_label(env: Env, label: str) -> Tuple[int, ...]:
+    return env._p1_hand if label == "P1" else env._p2_hand
+
 
 # --- STATE MANAGEMENT ---
 
@@ -254,12 +294,22 @@ def init_state():
         st.session_state.obs = None
         st.session_state.game_over = False
         st.session_state.bot_rng = random.Random(time.time())
+    if "human_label" not in st.session_state:
+        st.session_state.human_label = HUMAN_LABEL
+    if "game_started" not in st.session_state:
+        st.session_state.game_started = False
+    if "score_human" not in st.session_state:
+        st.session_state.score_human = 0
+        st.session_state.score_bot = 0
+        st.session_state.score_recorded = False
 
-def reset_game():
+def reset_game(*, begin_episode: bool = True) -> None:
     if st.session_state.env:
         st.session_state.obs = st.session_state.env.reset()
-        st.session_state.policy.begin_episode(st.session_state.bot_rng)
+        if begin_episode:
+            st.session_state.policy.begin_episode(st.session_state.bot_rng)
         st.session_state.game_over = False
+        st.session_state.score_recorded = False
 
 init_state()
 
@@ -275,7 +325,11 @@ with st.sidebar:
             st.session_state.policy = p
             st.session_state.spec = s
             st.session_state.env = Env(s)
-            reset_game()
+            reset_game(begin_episode=False)
+            st.session_state.game_started = False
+            st.session_state.score_human = 0
+            st.session_state.score_bot = 0
+            st.session_state.score_recorded = False
             st.toast("Bot Loaded Successfully!", icon="🤖")
         except Exception as e:
             st.error(f"Failed: {e}")
@@ -290,6 +344,21 @@ with st.sidebar:
         **Hand Size:** {s.hand_size}  
         **Claims:** {", ".join(s.claim_kinds)}
         """)
+        st.divider()
+        st.subheader("Who Starts")
+        game_in_progress = False
+        if st.session_state.get("env") and st.session_state.get("obs") is not None:
+            game_in_progress = (
+                st.session_state.game_started
+                and not st.session_state.obs["terminal"]
+            )
+        start_cols = st.columns(2)
+        if start_cols[0].button("You", disabled=game_in_progress, use_container_width=True):
+            st.session_state.human_label = "P1"
+        if start_cols[1].button("Bot", disabled=game_in_progress, use_container_width=True):
+            st.session_state.human_label = "P2"
+        current_starter = "You" if st.session_state.human_label == "P1" else "Bot"
+        st.caption(f"Current starter: {current_starter}")
 
 # --- MAIN APP ---
 
@@ -302,18 +371,59 @@ spec = st.session_state.spec
 rules = rules_for_spec(spec)
 obs = st.session_state.obs
 policy = st.session_state.policy
+human_label = st.session_state.human_label
+bot_label = other_label(human_label)
+game_started = st.session_state.game_started
 
 # -- GAME LOGIC --
-human_turn = (env.current_player() == HUMAN_LABEL)
+human_turn = (env.current_player() == human_label)
 game_over = obs["terminal"]
+if game_started and game_over and not st.session_state.score_recorded:
+    winner = obs["winner"]
+    if winner == human_label:
+        st.session_state.score_human += 1
+    elif winner == bot_label:
+        st.session_state.score_bot += 1
+    st.session_state.score_recorded = True
 
-if not game_over and not human_turn:
+if game_started and not game_over and not human_turn:
     # Bot Move
-    bot_iset = env.infoset_key(BOT_LABEL)
+    bot_iset = env.infoset_key(bot_label)
     act = policy.sample(bot_iset, st.session_state.bot_rng)
     obs = env.step(act)
     st.session_state.obs = obs
     st.rerun()
+
+# --- SCOREBOARD ---
+human_display = f"You ({human_label})"
+bot_display = f"Bot ({bot_label})"
+score_c1, score_c2, score_c3 = st.columns([0.6, 1.4, 0.6])
+with score_c1:
+    st.markdown("<div class='big-label'>Score</div>", unsafe_allow_html=True)
+with score_c2:
+    score_html = f"""
+    <div class='scoreboard'>
+        <div class='score-item'>
+            <div class='score-label'>{human_display}</div>
+            <div class='score-value'>{st.session_state.score_human}</div>
+        </div>
+        <div class='score-item'>
+            <div class='score-label'>{bot_display}</div>
+            <div class='score-value'>{st.session_state.score_bot}</div>
+        </div>
+    </div>
+    """
+    st.markdown(score_html, unsafe_allow_html=True)
+with score_c3:
+    if st.button("Reset Score", use_container_width=True):
+        st.session_state.score_human = 0
+        st.session_state.score_bot = 0
+
+if not game_started:
+    if st.button("Start Game", type="primary", use_container_width=True):
+        reset_game(begin_episode=True)
+        st.session_state.game_started = True
+        st.rerun()
 
 # --- UI LAYOUT ---
 
@@ -328,12 +438,14 @@ with label_c2:
     with lc_right:
         reveal = st.checkbox("Reveal", value=game_over, disabled=game_over, key="reveal_chk")
 
+human_hand = hand_for_label(env, human_label)
+bot_hand = hand_for_label(env, bot_label)
 hand_c1, hand_c2 = st.columns([1, 1])
 with hand_c1:
-    st.markdown(render_hand_html(env._p1_hand, spec), unsafe_allow_html=True)
+    st.markdown(render_hand_html(human_hand, spec), unsafe_allow_html=True)
 with hand_c2:
     show_bot = reveal or game_over
-    st.markdown(render_hand_html(env._p2_hand, spec, hidden=not show_bot), unsafe_allow_html=True)
+    st.markdown(render_hand_html(bot_hand, spec, hidden=not show_bot), unsafe_allow_html=True)
 
 st.markdown("---")
 
@@ -344,12 +456,12 @@ col_log, col_game = st.columns([1, 1.3], gap="large")
 with col_log:
     st.markdown("<div class='big-label'>Game Log</div>", unsafe_allow_html=True)
     history = list(env._history)
-    st.markdown(render_ticker(history, rules), unsafe_allow_html=True)
+    st.markdown(render_ticker(history, rules, human_label), unsafe_allow_html=True)
     
     if game_over:
         winner = obs["winner"]
-        res_type = "success" if winner == HUMAN_LABEL else "error"
-        msg = "🎉 YOU WIN!" if winner == HUMAN_LABEL else "💀 BOT WINS"
+        res_type = "success" if winner == human_label else "error"
+        msg = "🎉 YOU WIN!" if winner == human_label else "💀 BOT WINS"
         
         st.divider()
         if res_type == "success": st.success(msg)
@@ -361,12 +473,16 @@ with col_log:
             st.info(f"Claim: **{claim_txt}**\n\nActual Count: **{count}** (Needed {needed})")
             
         if st.button("🔄 Play Again", type="primary", use_container_width=True):
-            reset_game()
+            reset_game(begin_episode=True)
+            st.session_state.game_started = True
             st.rerun()
 
 # --- RIGHT: INPUT GRID ---
 with col_game:
-    if not game_over:
+    if not game_started:
+        st.markdown("<div class='big-label'>Input</div>", unsafe_allow_html=True)
+        st.info("Press Start Game to begin.")
+    elif not game_over:
         st.markdown("<div class='big-label'>Input</div>", unsafe_allow_html=True)
         
         if not human_turn:
@@ -383,54 +499,55 @@ with col_game:
                 if k in single_kinds:
                     claim_map[(k, r)] = idx
 
-            if single_kinds:
-                cols = st.columns(len(single_kinds), gap="small")
-                for i, k in enumerate(single_kinds):
-                    cols[i].markdown(f"**{k}**")
-                
-                for r in range(1, spec.ranks + 1):
-                    row_cols = st.columns(len(single_kinds), gap="small")
+            with st.form(key="input-grid", clear_on_submit=False):
+                if single_kinds:
+                    cols = st.columns(len(single_kinds), gap="small")
                     for i, k in enumerate(single_kinds):
-                        idx = claim_map.get((k, r))
-                        if idx is not None:
-                            is_legal = idx in legal
-                            suffix = k[0].upper()
-                            if k == "RankHigh":
-                                suffix = "H"
-                            btn_label = f"{r}{suffix}"
-                            
-                            if row_cols[i].button(btn_label, key=f"btn_{idx}", disabled=not is_legal, use_container_width=True):
+                        cols[i].markdown(f"**{k}**")
+                    
+                    for r in range(1, spec.ranks + 1):
+                        row_cols = st.columns(len(single_kinds), gap="small")
+                        for i, k in enumerate(single_kinds):
+                            idx = claim_map.get((k, r))
+                            if idx is not None:
+                                is_legal = idx in legal
+                                suffix = k[0].upper()
+                                if k == "RankHigh":
+                                    suffix = "H"
+                                btn_label = f"{r}{suffix}"
+                                
+                                if row_cols[i].form_submit_button(btn_label, key=f"btn_{idx}", disabled=not is_legal, use_container_width=True):
+                                    obs = env.step(idx)
+                                    st.session_state.obs = obs
+                                    st.rerun()
+                            else:
+                                row_cols[i].write("")
+
+                if has_two_pair:
+                    st.markdown("<div style='height: 12px'></div>", unsafe_allow_html=True)
+                    st.markdown("**TwoPair**")
+                    pair_map = {}
+                    for idx, (k, r) in enumerate(rules.claims):
+                        if k == "TwoPair":
+                            low, high = rules.two_pair_ranks[r]
+                            pair_map[(low, high)] = idx
+
+                    cols = st.columns(max(1, spec.ranks - 1), gap="small")
+                    for j in range(1, spec.ranks):
+                        cols[j - 1].markdown(f"**{j}**")
+                    for high in range(2, spec.ranks + 1):
+                        row_cols = st.columns(max(1, spec.ranks - 1), gap="small")
+                        for low in range(1, spec.ranks):
+                            if low >= high:
+                                row_cols[low - 1].write("")
+                                continue
+                            idx = pair_map.get((low, high))
+                            is_legal = idx in legal if idx is not None else False
+                            btn_label = f"{high}-{low}"
+                            if row_cols[low - 1].form_submit_button(btn_label, key=f"btn_tp_{high}_{low}", disabled=not is_legal, use_container_width=True):
                                 obs = env.step(idx)
                                 st.session_state.obs = obs
                                 st.rerun()
-                        else:
-                            row_cols[i].write("")
-
-            if has_two_pair:
-                st.markdown("<div style='height: 12px'></div>", unsafe_allow_html=True)
-                st.markdown("**TwoPair**")
-                pair_map = {}
-                for idx, (k, r) in enumerate(rules.claims):
-                    if k == "TwoPair":
-                        low, high = rules.two_pair_ranks[r]
-                        pair_map[(low, high)] = idx
-
-                cols = st.columns(max(1, spec.ranks - 1), gap="small")
-                for j in range(1, spec.ranks):
-                    cols[j - 1].markdown(f"**{j}**")
-                for high in range(2, spec.ranks + 1):
-                    row_cols = st.columns(max(1, spec.ranks - 1), gap="small")
-                    for low in range(1, spec.ranks):
-                        if low >= high:
-                            row_cols[low - 1].write("")
-                            continue
-                        idx = pair_map.get((low, high))
-                        is_legal = idx in legal if idx is not None else False
-                        btn_label = f"{high}-{low}"
-                        if row_cols[low - 1].button(btn_label, key=f"btn_tp_{high}_{low}", disabled=not is_legal, use_container_width=True):
-                            obs = env.step(idx)
-                            st.session_state.obs = obs
-                            st.rerun()
 
             st.markdown("<div style='height: 15px'></div>", unsafe_allow_html=True)
             can_call = CALL in legal
