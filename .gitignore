@@ -13,6 +13,10 @@ env/
 artifacts/*
 !artifacts/benchmark_runs/
 !artifacts/benchmark_runs/**
+
+artifacts/benchmark_runs/**/cfr_state.npz
+artifacts/benchmark_runs/**/cfr_plus_state.npz
+
 !artifacts/benchmark_runs/**/*.bin
 !artifacts/benchmark_runs/**/*.pkl
 !artifacts/benchmark_runs/**/*.npy
