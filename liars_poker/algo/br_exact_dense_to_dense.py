@@ -61,6 +61,7 @@ class BestResponseComputerDense:
         self.hands = opponent.hands
         self.n_hands = len(self.hands)
         self._two_pair_ranks = self.rules.two_pair_ranks
+        self._full_house_ranks = self.rules.full_house_ranks
 
         self.card_removal_mat = self._build_card_removal_matrix()
         self.hand_weights = np.asarray([adjustment_factor(spec, tuple(), h) for h in self.hands], dtype=float)
@@ -86,6 +87,11 @@ class BestResponseComputerDense:
             elif kind == "TwoPair":
                 low, high = self._two_pair_ranks[rank_value]
                 reqs.append(_ClaimReq(kind=kind, rank1=low, rank2=high, need=2))
+            elif kind == "FullHouse":
+                trip, pair = self._full_house_ranks[rank_value]
+                reqs.append(_ClaimReq(kind=kind, rank1=trip, rank2=pair, need=0))
+            elif kind == "Quads":
+                reqs.append(_ClaimReq(kind=kind, rank1=rank_value, rank2=0, need=4))
             else:
                 raise ValueError(f"Unsupported claim kind: {kind}")
         return reqs
@@ -126,6 +132,10 @@ class BestResponseComputerDense:
             c1 = self.hand_rank_counts[:, req.rank1]
             c2 = self.hand_rank_counts[:, req.rank2]
             T = (c1[:, None] + c1[None, :] >= req.need) & (c2[:, None] + c2[None, :] >= req.need)
+        elif req.kind == "FullHouse":
+            c3 = self.hand_rank_counts[:, req.rank1]
+            c2 = self.hand_rank_counts[:, req.rank2]
+            T = (c3[:, None] + c3[None, :] >= 3) & (c2[:, None] + c2[None, :] >= 2)
         else:
             c = self.hand_rank_counts[:, req.rank1]
             T = (c[:, None] + c[None, :]) >= req.need

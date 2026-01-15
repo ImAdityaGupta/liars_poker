@@ -11,7 +11,15 @@ from .infoset import CALL, NO_CLAIM, InfoSet
 class Rules:
     """Immutable action ordering and legality."""
 
-    __slots__ = ("spec", "_claims", "_next_higher_indices", "_two_pair_ranks", "_two_pair_index")
+    __slots__ = (
+        "spec",
+        "_claims",
+        "_next_higher_indices",
+        "_two_pair_ranks",
+        "_two_pair_index",
+        "_full_house_ranks",
+        "_full_house_index",
+    )
 
     def __init__(self, spec: GameSpec):
         self.spec = spec
@@ -27,6 +35,10 @@ class Rules:
     @property
     def two_pair_ranks(self) -> Tuple[Tuple[int, int], ...]:
         return self._two_pair_ranks
+
+    @property
+    def full_house_ranks(self) -> Tuple[Tuple[int, int], ...]:
+        return self._full_house_ranks
 
     def legal_actions_from_last(self, last_claim_idx: Optional[int]) -> Tuple[int, ...]:
         if last_claim_idx is None:
@@ -67,6 +79,20 @@ class Rules:
                 rank_value = self._two_pair_index.get((low, high))
                 if rank_value is None:
                     raise ValueError(f"Unknown TwoPair ranks in action '{text}'")
+            elif kind_norm == "fullhouse":
+                parts = [p.strip() for p in value_str.split(",")]
+                if len(parts) != 2:
+                    raise ValueError(f"Invalid FullHouse action '{text}' (expected FullHouse:a,b).")
+                try:
+                    trip = int(parts[0])
+                    pair = int(parts[1])
+                except ValueError as exc:
+                    raise ValueError(f"Invalid FullHouse ranks in action '{text}'") from exc
+                if trip == pair:
+                    raise ValueError(f"FullHouse ranks must be distinct in action '{text}'")
+                rank_value = self._full_house_index.get((trip, pair))
+                if rank_value is None:
+                    raise ValueError(f"Unknown FullHouse ranks in action '{text}'")
             else:
                 try:
                     rank_value = int(value_str.strip())
@@ -93,12 +119,17 @@ class Rules:
         if kind == "TwoPair":
             low, high = self._two_pair_ranks[rank]
             return f"{kind}:{high},{low}"
+        if kind == "FullHouse":
+            trip, pair = self._full_house_ranks[rank]
+            return f"{kind}:{trip},{pair}"
         return f"{kind}:{rank}"
 
     def _build_claims(self) -> Tuple[Tuple[str, int], ...]:
         claims: List[Tuple[str, int]] = []
         self._two_pair_ranks = tuple()
         self._two_pair_index = {}
+        self._full_house_ranks = tuple()
+        self._full_house_index = {}
         R = self.spec.ranks
         for kind in self.spec.claim_kinds:
             if kind == "RankHigh":
@@ -119,6 +150,20 @@ class Rules:
             elif kind == "Trips":
                 for r in range(1, R + 1):
                     claims.append(("Trips", r))
+            elif kind == "FullHouse":
+                houses: List[Tuple[int, int]] = []
+                for trip in range(1, R + 1):
+                    for pair in range(1, R + 1):
+                        if pair == trip:
+                            continue
+                        houses.append((trip, pair))
+                self._full_house_ranks = tuple(houses)
+                self._full_house_index = {house: idx for idx, house in enumerate(self._full_house_ranks)}
+                for idx in range(len(self._full_house_ranks)):
+                    claims.append(("FullHouse", idx))
+            elif kind == "Quads":
+                for r in range(1, R + 1):
+                    claims.append(("Quads", r))
             else:
                 raise ValueError(f"Unsupported claim kind: {kind}")
         return tuple(claims)
@@ -134,6 +179,10 @@ class Rules:
             return self.spec.ranks >= 2 and S >= 2 and (self.spec.hand_size * 2) >= 4
         if kind == "Trips":
             return S >= 3 and (self.spec.hand_size * 2) >= 3
+        if kind == "FullHouse":
+            return self.spec.ranks >= 2 and S >= 3 and (self.spec.hand_size * 2) >= 5
+        if kind == "Quads":
+            return S >= 4 and (self.spec.hand_size * 2) >= 4
         return False
 
 
@@ -351,6 +400,11 @@ def resolve_call_winner(
         satisfied = counts[low] >= 2 and counts[high] >= 2
     elif kind == "Trips":
         satisfied = counts[rank_value] >= 3
+    elif kind == "FullHouse":
+        trip, pair = rules.full_house_ranks[rank_value]
+        satisfied = counts[trip] >= 3 and counts[pair] >= 2
+    elif kind == "Quads":
+        satisfied = counts[rank_value] >= 4
     else:
         raise ValueError(f"Unsupported claim kind: {kind}")
 

@@ -44,6 +44,8 @@ class GameSpec:
         kinds += "p" if "Pair" in self.claim_kinds else ""
         kinds += "2p" if "TwoPair" in self.claim_kinds else ""
         kinds += "t" if "Trips" in self.claim_kinds else ""
+        kinds += "fh" if "FullHouse" in self.claim_kinds else ""
+        kinds += "q" if "Quads" in self.claim_kinds else ""
         sym = "ss" if self.suit_symmetry else "nss"
         return f"r{self.ranks}_s{self.suits}_h{self.hand_size}_{kinds}_{sym}"
 
