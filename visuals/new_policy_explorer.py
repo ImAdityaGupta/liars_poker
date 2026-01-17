@@ -37,7 +37,10 @@ def format_claim_label(kind: str, value: int, rules) -> str:
     if kind == "TwoPair":
         low, high = rules.two_pair_ranks[value]
         return f"{high}-{low}"
-    suffix_map = {"RankHigh": "H", "Pair": "P", "Trips": "T"}
+    if kind == "FullHouse":
+        trip, pair = rules.full_house_ranks[value]
+        return f"{trip}{pair}-F"
+    suffix_map = {"RankHigh": "H", "Pair": "P", "Trips": "T", "Quads": "Q"}
     suffix = suffix_map.get(kind, kind[:1].upper())
     return f"{value}{suffix}"
 

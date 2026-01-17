@@ -275,6 +275,17 @@ def get_truth_summary(spec, rules, history, p1, p2):
         count = f"{high}:{count_high}, {low}:{count_low}"
         needed = "2 each"
         return rules.render_action(last_idx), count, needed
+    if kind == "FullHouse":
+        trip, pair = rules.full_house_ranks[rank]
+        count_trip = sum(1 for c in p1 + p2 if card_rank(c, spec) == trip)
+        count_pair = sum(1 for c in p1 + p2 if card_rank(c, spec) == pair)
+        count = f"{trip}:{count_trip}, {pair}:{count_pair}"
+        needed = "3+2"
+        return rules.render_action(last_idx), count, needed
+    if kind == "Quads":
+        needed = 4
+        count = sum(1 for c in p1 + p2 if card_rank(c, spec) == rank)
+        return rules.render_action(last_idx), count, needed
     return rules.render_action(last_idx), 0, 0
 
 def other_label(label: str) -> str:
@@ -491,8 +502,9 @@ with col_game:
             legal = set(env.legal_actions())
             claim_kinds = spec.claim_kinds
 
-            single_kinds = [k for k in claim_kinds if k in ("RankHigh", "Pair", "Trips")]
+            single_kinds = [k for k in ("RankHigh", "Pair", "Trips", "Quads") if k in claim_kinds]
             has_two_pair = "TwoPair" in claim_kinds
+            has_full_house = "FullHouse" in claim_kinds
 
             claim_map = {}
             for idx, (k, r) in enumerate(rules.claims):
@@ -511,9 +523,8 @@ with col_game:
                             idx = claim_map.get((k, r))
                             if idx is not None:
                                 is_legal = idx in legal
-                                suffix = k[0].upper()
-                                if k == "RankHigh":
-                                    suffix = "H"
+                                suffix_map = {"RankHigh": "H", "Pair": "P", "Trips": "T", "Quads": "Q"}
+                                suffix = suffix_map.get(k, k[0].upper())
                                 btn_label = f"{r}{suffix}"
                                 
                                 if row_cols[i].form_submit_button(btn_label, key=f"btn_{idx}", disabled=not is_legal, use_container_width=True):
@@ -523,31 +534,76 @@ with col_game:
                             else:
                                 row_cols[i].write("")
 
-                if has_two_pair:
+                if has_two_pair or has_full_house:
                     st.markdown("<div style='height: 12px'></div>", unsafe_allow_html=True)
-                    st.markdown("**TwoPair**")
-                    pair_map = {}
-                    for idx, (k, r) in enumerate(rules.claims):
-                        if k == "TwoPair":
-                            low, high = rules.two_pair_ranks[r]
-                            pair_map[(low, high)] = idx
+                    pair_cols = st.columns(2 if has_two_pair and has_full_house else 1, gap="large")
+                    two_pair_col = pair_cols[0]
+                    full_house_col = pair_cols[-1]
 
-                    cols = st.columns(max(1, spec.ranks - 1), gap="small")
-                    for j in range(1, spec.ranks):
-                        cols[j - 1].markdown(f"**{j}**")
-                    for high in range(2, spec.ranks + 1):
-                        row_cols = st.columns(max(1, spec.ranks - 1), gap="small")
-                        for low in range(1, spec.ranks):
-                            if low >= high:
-                                row_cols[low - 1].write("")
-                                continue
-                            idx = pair_map.get((low, high))
-                            is_legal = idx in legal if idx is not None else False
-                            btn_label = f"{high}-{low}"
-                            if row_cols[low - 1].form_submit_button(btn_label, key=f"btn_tp_{high}_{low}", disabled=not is_legal, use_container_width=True):
-                                obs = env.step(idx)
-                                st.session_state.obs = obs
-                                st.rerun()
+                    if has_two_pair:
+                        with two_pair_col:
+                            st.markdown("**TwoPair**")
+                            pair_map = {}
+                            for idx, (k, r) in enumerate(rules.claims):
+                                if k == "TwoPair":
+                                    low, high = rules.two_pair_ranks[r]
+                                    pair_map[(low, high)] = idx
+
+                            cols = st.columns(max(1, spec.ranks - 1), gap="small")
+                            for j in range(1, spec.ranks):
+                                cols[j - 1].markdown(f"**{j}**")
+                            for high in range(2, spec.ranks + 1):
+                                row_cols = st.columns(max(1, spec.ranks - 1), gap="small")
+                                for low in range(1, spec.ranks):
+                                    if low >= high:
+                                        row_cols[low - 1].write("")
+                                        continue
+                                    idx = pair_map.get((low, high))
+                                    is_legal = idx in legal if idx is not None else False
+                                    btn_label = f"{high}-{low}"
+                                    if row_cols[low - 1].form_submit_button(
+                                        btn_label,
+                                        key=f"btn_tp_{high}_{low}",
+                                        disabled=not is_legal,
+                                        use_container_width=True,
+                                    ):
+                                        obs = env.step(idx)
+                                        st.session_state.obs = obs
+                                        st.rerun()
+
+                    if has_full_house:
+                        with full_house_col:
+                            st.markdown("**FullHouse**")
+                            fh_map = {}
+                            for idx, (k, r) in enumerate(rules.claims):
+                                if k == "FullHouse":
+                                    trip, pair = rules.full_house_ranks[r]
+                                    fh_map[(trip, pair)] = idx
+
+                            header_cols = st.columns(spec.ranks + 1, gap="small")
+                            header_cols[0].markdown("**T\\P**")
+                            for pair in range(1, spec.ranks + 1):
+                                header_cols[pair].markdown(f"**{pair}**")
+
+                            for trip in range(1, spec.ranks + 1):
+                                row_cols = st.columns(spec.ranks + 1, gap="small")
+                                row_cols[0].markdown(f"**{trip}**")
+                                for pair in range(1, spec.ranks + 1):
+                                    if pair == trip:
+                                        row_cols[pair].write("")
+                                        continue
+                                    idx = fh_map.get((trip, pair))
+                                    is_legal = idx in legal if idx is not None else False
+                                    btn_label = f"{trip}/{pair}"
+                                    if row_cols[pair].form_submit_button(
+                                        btn_label,
+                                        key=f"btn_fh_{trip}_{pair}",
+                                        disabled=not is_legal,
+                                        use_container_width=True,
+                                    ):
+                                        obs = env.step(idx)
+                                        st.session_state.obs = obs
+                                        st.rerun()
 
             st.markdown("<div style='height: 15px'></div>", unsafe_allow_html=True)
             can_call = CALL in legal
