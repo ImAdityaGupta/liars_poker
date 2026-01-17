@@ -1,0 +1,57 @@
+{
+  "run_type": "cfr_plus",
+  "spec": "{\"claim_kinds\": [\"RankHigh\", \"Pair\", \"TwoPair\", \"Trips\", \"FullHouse\", \"Quads\"], \"hand_size\": 3, \"ranks\": 2, \"suit_symmetry\": true, \"suits\": 4}",
+  "iterations": 800,
+  "eval_every": 100,
+  "exploitability_series": [
+    {
+      "iter": 100,
+      "p_first": 0.6589374019127953,
+      "p_second": 0.388871646136022,
+      "predicted_avg": 0.5239045240244087
+    },
+    {
+      "iter": 200,
+      "p_first": 0.6575937250384581,
+      "p_second": 0.3544179994415539,
+      "predicted_avg": 0.506005862240006
+    },
+    {
+      "iter": 300,
+      "p_first": 0.6573435776300179,
+      "p_second": 0.3480038359632754,
+      "predicted_avg": 0.5026737067966467
+    },
+    {
+      "iter": 400,
+      "p_first": 0.6572558550025309,
+      "p_second": 0.3457545660728024,
+      "predicted_avg": 0.5015052105376667
+    },
+    {
+      "iter": 500,
+      "p_first": 0.6572152111291525,
+      "p_second": 0.3447124173118805,
+      "predicted_avg": 0.5009638142205165
+    },
+    {
+      "iter": 600,
+      "p_first": 0.6571931220765963,
+      "p_second": 0.3441459552030802,
+      "predicted_avg": 0.5006695386398383
+    },
+    {
+      "iter": 700,
+      "p_first": 0.6571797943247973,
+      "p_second": 0.343804252523376,
+      "predicted_avg": 0.5004920234240866
+    },
+    {
+      "iter": 800,
+      "p_first": 0.6571711400443601,
+      "p_second": 0.3435824024668602,
+      "predicted_avg": 0.5003767712556102
+    }
+  ],
+  "timestamp": "2026-01-15T15:59:07.926028Z"
+}

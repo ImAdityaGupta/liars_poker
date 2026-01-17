@@ -1,0 +1,48 @@
+{
+  "format_version": 1,
+  "root": {
+    "children": [],
+    "data": {
+      "counts": {
+        "A": 22,
+        "H": 2097152,
+        "N": 15,
+        "k": 21
+      },
+      "dtype": "float32",
+      "kind": "DenseTabularPolicy",
+      "spec": {
+        "claim_kinds": [
+          "RankHigh",
+          "Pair",
+          "TwoPair",
+          "Trips",
+          "FullHouse",
+          "Quads"
+        ],
+        "hand_size": 4,
+        "ranks": 3,
+        "suit_symmetry": true,
+        "suits": 4
+      },
+      "version": 1
+    },
+    "kind": "DenseTabularPolicy",
+    "prefix": "",
+    "version": 1
+  },
+  "spec": {
+    "claim_kinds": [
+      "RankHigh",
+      "Pair",
+      "TwoPair",
+      "Trips",
+      "FullHouse",
+      "Quads"
+    ],
+    "hand_size": 4,
+    "ranks": 3,
+    "suit_symmetry": true,
+    "suits": 4
+  }
+}
