@@ -14,14 +14,10 @@ artifacts/*
 !artifacts/benchmark_runs/
 !artifacts/benchmark_runs/**
 
-artifacts/benchmark_runs/**/cfr_state.npz
-artifacts/benchmark_runs/**/cfr_plus_state.npz
+# artifacts/benchmark_runs/**/cfr_state.npz
+# artifacts/benchmark_runs/**/cfr_plus_state.npz
 
-!artifacts/benchmark_runs/**/*.bin
-!artifacts/benchmark_runs/**/*.pkl
-!artifacts/benchmark_runs/**/*.npy
-!artifacts/benchmark_runs/**/*.log
-*.bin
-*.pkl
-*.npy
-*.log
+artifacts/benchmark_runs/cfr_plus_runs/r3_s4_h4_hp2ptfhq_ss___20260115-162925/policy/blobs.npz
+artifacts/benchmark_runs/cfr_plus_runs/r3_s4_h4_hp2ptfhq_ss___20260115-162925/cfr_plus_state.npz
+artifacts/benchmark_runs/cfr_plus_runs/r4_s4_h4_hp2pt_ss___20260108-192548/cfr_plus_state.npz
+artifacts/benchmark_runs/cfr_plus_runs/r6_s4_h3_hpt_ss___20260113-004305/cfr_plus_state.npz
