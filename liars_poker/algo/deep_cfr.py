@@ -154,7 +154,7 @@ class ReservoirBuffer:
 class DeepCFRTrainer:
     """External-sampling Deep CFR with player-specific advantage and average networks."""
 
-    CHECKPOINT_VERSION = 2
+    CHECKPOINT_VERSION = 3
 
     def __init__(
         self,
@@ -169,6 +169,7 @@ class DeepCFRTrainer:
         batch_size: int = 256,
         advantage_train_steps: int = 100,
         strategy_train_steps: int = 100,
+        advantage_positive_weight: float = 0.0,
         strategy_weighting: str = "linear",
         highest_regret_fallback: bool = True,
         alternating_updates: bool = True,
@@ -192,6 +193,7 @@ class DeepCFRTrainer:
         self.batch_size = int(batch_size)
         self.advantage_train_steps = int(advantage_train_steps)
         self.strategy_train_steps = int(strategy_train_steps)
+        self.advantage_positive_weight = float(advantage_positive_weight)
         if strategy_weighting not in {"linear", "uniform"}:
             raise ValueError("strategy_weighting must be 'linear' or 'uniform'.")
         self.strategy_weighting = strategy_weighting
@@ -530,8 +532,15 @@ class DeepCFRTrainer:
                 masked_logits = pred.masked_fill(~mask, -1e9)
                 per_sample = -(y * torch.log_softmax(masked_logits, dim=1)).sum(dim=1)
             else:
-                squared = (pred - y).square() * mask
-                per_sample = squared.sum(dim=1) / mask.sum(dim=1).clamp_min(1)
+                mask_float = mask.float()
+                if self.advantage_positive_weight:
+                    entry_weight = mask_float * (
+                        1.0 + self.advantage_positive_weight * (y > 1e-6).float()
+                    )
+                else:
+                    entry_weight = mask_float
+                squared = (pred - y).square() * entry_weight
+                per_sample = squared.sum(dim=1) / entry_weight.sum(dim=1).clamp_min(1.0)
             loss = (per_sample * weight).mean()
 
             optimizer.zero_grad()
@@ -732,6 +741,7 @@ class DeepCFRTrainer:
                 "batch_size": self.batch_size,
                 "advantage_train_steps": self.advantage_train_steps,
                 "strategy_train_steps": self.strategy_train_steps,
+                "advantage_positive_weight": self.advantage_positive_weight,
                 "strategy_weighting": self.strategy_weighting,
                 "highest_regret_fallback": self.highest_regret_fallback,
                 "alternating_updates": self.alternating_updates,
@@ -778,6 +788,7 @@ class DeepCFRTrainer:
         config = dict(state["config"])
         config.setdefault("traversal_backend", "recursive")
         config.setdefault("traversal_batch_size", 256)
+        config.setdefault("advantage_positive_weight", 0.0)
         if int(state.get("version", 1)) < 2:
             config.setdefault("highest_regret_fallback", False)
             config.setdefault("alternating_updates", False)
