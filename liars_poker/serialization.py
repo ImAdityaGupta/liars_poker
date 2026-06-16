@@ -166,9 +166,10 @@ def _ensure_builtin_registration() -> None:
     from liars_poker.policies.random_policy import RandomPolicy
     from liars_poker.policies.tabular import TabularPolicy
     from liars_poker.policies.tabular_dense import DenseTabularPolicy
+    from liars_poker.policies.neural import NeuralPolicy
     from liars_poker.policies.commit_once import CommitOnceMixture
 
-    for cls in (RandomPolicy, TabularPolicy, DenseTabularPolicy, CommitOnceMixture):
+    for cls in (RandomPolicy, TabularPolicy, DenseTabularPolicy, NeuralPolicy, CommitOnceMixture):
         register_policy(cls)
 
 
