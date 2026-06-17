@@ -57,7 +57,7 @@ class DenseTabularPolicy(Policy):
     L_pid1: np.ndarray
 
     def __init__(self, spec: GameSpec) -> None:
-        super().__init__()
+        Policy.__init__(self)
         self.spec = spec
         self.rules = rules_for_spec(spec)
         self.bind_rules(self.rules)
