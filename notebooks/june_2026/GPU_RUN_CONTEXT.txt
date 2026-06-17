@@ -1,0 +1,1232 @@
+Liar's Poker Research Context for Remote GPU Work
+=================================================
+
+Purpose
+-------
+
+This file is a project-memory handoff for a fresh Codex instance, especially one
+running on a rented GPU machine. It is intentionally detailed. The current work
+is not just "train a neural net"; it sits on top of a long sequence of exact
+game-engine, exact-evaluation, dense-policy, FSP, CFR, CFR+, and diagnostic
+work. A lot of the important context is methodological: we care about knowing
+which part of the system is working, which part is failing, and whether a result
+is an algorithmic signal or an implementation artifact.
+
+Repository root (on home laptop):
+
+    c:\Users\adidh\Documents\liars_poker
+
+Main current notebook:
+
+    notebooks/june_2026/deep_cfr_batched_gpu_validation.ipynb
+
+Main current neural files:
+
+    liars_poker/algo/deep_cfr.py
+    liars_poker/algo/neural_cfr_batched.py
+    liars_poker/training/deep_cfr.py
+    liars_poker/policies/neural.py
+
+
+Game and Engine Context
+-----------------------
+
+The project is about two-player Liar's Poker. A GameSpec fixes:
+
+    ranks
+    suits
+    hand_size
+    claim_kinds
+    suit_symmetry
+
+The game is sequential:
+
+    P1 opens.
+    Players alternate strictly increasing claims.
+    A player may CALL once there has been at least one claim.
+    CALL resolves the previous claim against the combined two hands.
+
+The public history is a strictly increasing list of claim ids. CALL is not part
+of nonterminal history encodings. In dense code, a public history is usually
+encoded as a bitmask hid over claim ids:
+
+    action column 0 = CALL
+    action column a + 1 = claim id a
+
+The player to act at a nonterminal history is determined by parity:
+
+    pid_to_act = popcount(hid) % 2
+
+This convention appears throughout dense policies, dense best response, CFR, and
+neural diagnostics.
+
+Important claim kinds currently supported in the core game:
+
+    RankHigh
+    Pair
+    TwoPair
+    Trips
+    FullHouse
+    Quads
+
+Overall claim ordering:
+
+    RankHigh < Pair < TwoPair < Trips < FullHouse < Quads
+
+Within rank-like claims, low rank to high rank. TwoPair is internally represented
+by one integer index into an enumerated pair list, not by carrying two rank
+fields everywhere. FullHouse is also internally represented by one integer index
+into an ordered list of (trips_rank, pair_rank), with order mattering. This was
+deliberate: most of the stack expects claims to be simple ids, and adding tuple
+claims everywhere would have made dense and BR code much more fragile.
+
+Suit symmetry:
+
+    suit_symmetry=True treats suits as interchangeable and deals rank-multisets
+    without replacement. This greatly reduces the number of private hands and is
+    critical for dense exact methods on nontrivial specs.
+
+
+Core Pre-Neural History
+-----------------------
+
+The project evolved roughly as follows.
+
+1. Core rules, env, infosets, policies
+
+The base engine lives in:
+
+    liars_poker/core.py
+    liars_poker/env.py
+    liars_poker/infoset.py
+    liars_poker/policies/base.py
+
+The Policy interface is deliberately simple:
+
+    action_probs(infoset)
+    sample(infoset, rng)
+    sample_action_fast(...)
+    bind_rules(rules)
+    begin_episode(rng)
+
+The fast path was added later so match rollouts can avoid repeatedly allocating
+observation dicts and InfoSet objects. Env now has reset_fast and step_fast, and
+policies can implement sample_action_fast. This matters for Monte Carlo evals
+and later approximate methods.
+
+2. Tabular policies
+
+There are sparse and dense tabular representations:
+
+    liars_poker/policies/tabular.py
+    liars_poker/policies/tabular_dense.py
+
+TabularPolicy is flexible and dictionary-based. It is appropriate for small
+games and debugging.
+
+DenseTabularPolicy is the main exact-policy object. It stores:
+
+    S[hid, hand_idx, action_col]
+
+where action_col 0 is CALL and action_col claim_id+1 is the claim action. It also
+precomputes likelihood tables L_pid used by exact methods. DenseTabularPolicy is
+heavier but much faster and more serialization-friendly for exact algorithms.
+
+Dense policies are central to:
+
+    exact best response
+    exact exploitability
+    dense FSP
+    exact CFR and CFR+
+    neural policy compilation for exact evaluation
+
+3. Exact best response and exact exploitability
+
+This took a long time to get right and efficient. The most important exact BR
+file is:
+
+    liars_poker/algo/br_exact_dense_to_dense.py
+
+The main function is:
+
+    best_response_dense(spec, policy, debug=False, store_state_values=...)
+
+The exact dense best response computes exploitability against a
+DenseTabularPolicy. It has to correctly account for blocker effects: the
+opponent-hand distribution conditional on my private hand is not independent.
+
+Important idea:
+
+    For each own hand, opponent hands are weighted by an adjustment factor based
+    on card removal. This is the same blocker logic that later mattered for CFR.
+
+The returned metadata contains a BestResponseComputerDense object. Its
+exploitability method returns two numbers:
+
+    p_first
+    p_second
+
+These are not "BR as first" in both cases. Be careful with role semantics:
+p_first corresponds to exploitability when the input policy is in the first
+seat and the opponent best responds from the second seat; p_second corresponds
+to exploitability when the input policy is in the second seat and the best
+response is first. In notebook plots, we usually use:
+
+    predicted_avg = 0.5 * (p_first + p_second)
+    exploitability = 2 * predicted_avg - 1
+
+So if predicted_avg is 0.55, the plotted exploitability is 0.10.
+
+There is also an older/sparser exact BR:
+
+    liars_poker/algo/br_exact.py
+
+It is useful for debugging and small specs, but the dense exact BR is the
+important one for current research.
+
+There was also an experimental new exact dense BR:
+
+    liars_poker/algo/br_exact_dense_new.py
+
+It explored iterative DP and direct likelihood lookup. Correctness passed, but
+the speedup was not large enough to replace the original. Treat it as an
+experimental branch, not the trusted evaluator.
+
+4. FSP
+
+FSP work lives in:
+
+    liars_poker/training/fsp.py
+    liars_poker/training/dense_fsp.py
+    liars_poker/training/fsp_utils.py
+
+Dense FSP was the first strong exact-training workhorse. The loop repeatedly:
+
+    computes exact best responses
+    mixes dense policies
+    evaluates exploitability periodically
+    saves run artifacts and metrics
+
+The benchmark script for dense FSP is:
+
+    liars_poker/eval/benchmark_script.py
+
+It supports resume, save_every, run_folder, and eta_control. It is useful as a
+baseline because many runs produced very smooth, convincing exploitability
+curves. A major point of comparison for neural methods is that exact FSP often
+converges far better and more smoothly on small and medium specs.
+
+Important historical lesson:
+
+    Exact BR helps FSP directly. It is part of the training loop, not only an
+    evaluator.
+
+5. Exact CFR and CFR+
+
+Exact dense CFR lives in:
+
+    liars_poker/algo/cfr_exact_dense.py
+    liars_poker/training/cfr_dense.py
+    liars_poker/eval/benchmark_cfr.py
+
+Exact dense CFR+ lives in:
+
+    liars_poker/algo/cfr_plus_dense.py
+    liars_poker/training/cfr_plus_dense.py
+    liars_poker/eval/benchmark_cfr_plus.py
+
+CFR/CFR+ are exact dense algorithms. They do not maintain a list of historical
+policies. They maintain regret tables and cumulative strategy tables. CFR+ adds
+clipped cumulative regrets, alternating updates, and stronger averaging.
+
+Important distinction from FSP:
+
+    In CFR/CFR+, exact best response is only used to measure progress. It does
+    not drive the update.
+
+The CFR implementation had to be blocker-aware. A key trap was CALL: CALL is not
+encoded as a child hid, so opponent CALL probabilities must be explicitly
+included in terminal weighting. This was checked carefully.
+
+CFR/CFR+ checkpoints store big tables:
+
+    cfr_state.npz
+    cfr_plus_state.npz
+
+These can be too large for git. Without these state files, exact resume is not
+possible; the saved average policy can be used for play/eval, but not to resume
+the exact CFR state exactly.
+
+6. PSRO
+
+PSRO exists but is not the current focus:
+
+    liars_poker/algo/psro.py
+    liars_poker/training/psro.py
+    liars_poker/policies/population_mixture.py
+
+It uses role-separated populations, stable policy ids, optional pruning, and a
+pure Nash meta-solver. It was useful but we are currently ignoring PSRO while
+working on neural methods.
+
+
+Notebook History Before Neural Work
+-----------------------------------
+
+Important December notebooks:
+
+    notebooks/dec_2025/overview.ipynb
+        High-level overview of the exact/dense project state at the time.
+
+    notebooks/dec_2025/benchmark_small_spec_policies.ipynb
+        Main exact FSP/CFR/CFR+ benchmarking notebook. Contains many of the
+        baseline curves and run comparisons. This is where a lot of the "how
+        hard is a spec?" intuition came from.
+
+    notebooks/dec_2025/small_spec_exploration.ipynb
+        Explores saved benchmark run metrics under artifacts/benchmark_runs.
+        Groups by rank and claim-kind count. Useful for broad visual comparison
+        of exact FSP/CFR-style runs.
+
+    notebooks/dec_2025/small_spec_exploration copy.ipynb
+        A smaller or partial copy, not the primary artifact. Prefer the non-copy
+        version unless specifically investigating an old fork.
+
+    notebooks/dec_2025/understanding_psro.ipynb
+    notebooks/dec_2025/understanding_psro copy.ipynb
+        PSRO experiments. Useful if returning to population methods, not central
+        to current neural work.
+
+Important test notebooks:
+
+    notebooks/tests/test_fullhouse_quads.ipynb
+        Validates FullHouse and Quads support.
+
+    notebooks/tests/test_cfr_dense.ipynb
+        Tests exact CFR and CFR+ loops, saving, loading.
+
+    notebooks/tests/test_env_sampling_perf.ipynb
+        Tests fast Env/match sampling changes.
+
+    notebooks/tests/new_exact_dense_br.ipynb
+        Compares original dense BR and experimental dense BR.
+
+
+Transition to Neural Methods
+----------------------------
+
+Motivation:
+
+Exact dense methods are excellent while the dense state space fits in RAM and
+can be traversed. But they do not scale arbitrarily. The long-term goal is to
+train low-exploitability policies on larger specs using function approximation.
+
+Initial idea:
+
+    Use Deep CFR style methods.
+    Approximate regret/advantage tables with neural networks.
+    Train an average-strategy network separately.
+    Use exact exploitability only while specs are still small enough to validate.
+
+This led to:
+
+    liars_poker/policies/neural.py
+    liars_poker/algo/deep_cfr.py
+    liars_poker/training/deep_cfr.py
+
+NeuralPolicy:
+
+    A playable Policy backed by two MLPs, one for P1 and one for P2.
+    The output dimension is k + 1, where k is number of claims.
+    It can be saved through the repository serializer.
+
+Infoset encoding:
+
+    Baseline encoder uses:
+        rank-count features for private hand
+        binary claim-history bits
+
+    input_dim = spec.ranks + number_of_claims
+
+We considered semantic and structured encodings. They help in some cases, but
+evidence is mixed. Baseline encoding remains the default because it is simple
+and has not clearly failed on harder specs.
+
+DeepCFRTrainer:
+
+    Maintains two advantage networks and two average-strategy networks.
+    Uses external-sampling traversals.
+    Stores advantage records in reservoir buffers.
+    Stores sampled strategy records in reservoir buffers.
+    Trains advantage nets on sampled instantaneous regrets.
+    Trains average strategy nets on sampled iteration strategies.
+
+Important defaults/choices:
+
+    separate P1/P2 networks
+    alternating player updates by default
+    highest-regret fallback when all predicted regrets are nonpositive
+    strategy weighting can be linear or uniform
+    current best loss variant includes positive-regret upweighting
+
+Recent addition:
+
+    advantage_positive_weight
+
+This weights positive advantage targets more heavily during advantage-net
+training. The best tested value so far is around:
+
+    advantage_positive_weight = 0.5
+
+This gave robust improvement versus plain masked MSE in multi-seed online
+experiments.
+
+
+Neural Experiment History and Lessons
+-------------------------------------
+
+1. Basic Deep CFR runs
+
+Notebook:
+
+    notebooks/june_2026/deep_cfr_basics.ipynb
+
+Purpose:
+
+    Establish that neural policy, training loop, exact evaluation, saving, and
+    loading work end to end.
+
+Early observations:
+
+    On very small specs, Deep CFR can improve.
+    On less trivial specs, it often plateaus far above exact FSP/CFR+.
+    Current strategy can be very unstable.
+    Average strategy is much more reliable than current strategy.
+
+Key interpretation:
+
+    The average-strategy network is not perfect, but it usually is not the main
+    bottleneck. The bigger bottleneck is the quality of the advantage/regret
+    approximation and how that affects future data collection.
+
+2. External sampling tabular diagnostics
+
+Notebook:
+
+    notebooks/june_2026/external_sampling_cfr_diagnostics.ipynb
+
+Purpose:
+
+    Separate algorithmic sampling effects from neural approximation effects.
+
+What was implemented:
+
+    Tabular external-sampling CFR.
+    Neural Deep CFR diagnostics.
+    Exact generated average versus learned average.
+    Held-out advantage MSE, sign accuracy, strategy TV.
+    Offline teacher experiments.
+
+Important result:
+
+    Tabular external sampling worked well. The exact/tabular version could get
+    very low exploitability on small specs.
+
+Interpretation:
+
+    The sampling procedure itself is not hopeless. The neural approximation and
+    its closed-loop interaction with data collection are the hard parts.
+
+3. Offline teacher experiments
+
+Notebook:
+
+    notebooks/june_2026/external_sampling_cfr_diagnostics.ipynb
+
+Purpose:
+
+    Train neural nets offline to mimic a tabular teacher, without closed-loop
+    data collection. This tests representational and optimization limits.
+
+Important result:
+
+    MSE can go very low while induced strategy remains poor.
+    Regret matching is very sensitive around zero.
+    A tiny sign/ranking error near zero can flip the deployed policy.
+
+This explained why raw regret MSE alone is a weak proxy.
+
+Direct strategy distillation often gave much better strategy TV and sometimes
+lower exploitability quickly, but it is not enough to solve closed-loop Deep CFR:
+the online process needs advantage networks to generate future strategies.
+
+4. Current versus average strategy experiments
+
+Notebook:
+
+    notebooks/june_2026/deep_cfr_basics.ipynb
+    notebooks/june_2026/external_sampling_cfr_diagnostics.ipynb
+
+Finding:
+
+    In Deep CFR, the average strategy often strongly outperforms the current
+    advantage-derived strategy.
+
+Interpretation:
+
+    The current neural regret policy is noisy and exploitable. Averaging smooths
+    the noise and produces a much more stable deployed policy.
+
+5. Highest-regret fallback and alternating updates
+
+Notebook:
+
+    notebooks/june_2026/external_sampling_cfr_diagnostics.ipynb
+
+Motivation:
+
+    Standard regret matching falls back to uniform when all predicted regrets
+    are nonpositive. With neural approximation, this can be terrible if all
+    legal regrets are slightly negative. Highest-regret fallback chooses the
+    least bad legal action instead.
+
+Result:
+
+    Highest-regret fallback alone was not a magic fix.
+    Alternating updates clearly helped and became the default.
+
+6. Loss experiments
+
+Notebook:
+
+    notebooks/june_2026/external_sampling_cfr_diagnostics.ipynb
+    notebooks/june_2026/deep_cfr_beta_confirmation.ipynb
+
+Variants tested:
+
+    masked MSE
+    Huber
+    positive-weighted MSE
+    MSE + sign auxiliary
+
+Important result:
+
+    Positive-weighted MSE with beta around 0.5 looked genuinely better across
+    seeds. It improved exact generated-average exploitability, learned-average
+    exploitability, and current exploitability compared with plain masked MSE.
+
+Interpretation:
+
+    The network should care more about positive regrets because regret matching
+    discards negative regret magnitudes. This does not solve everything, but it
+    is one of the most robust improvements found so far.
+
+7. Architecture and optimizer-step experiments
+
+Notebook:
+
+    notebooks/june_2026/deep_cfr_architecture_steps.ipynb
+
+Variants:
+
+    64x64
+    128x128
+    256x256
+    64x128x64
+    advantage steps 100 versus 300
+
+Main findings:
+
+    Larger networks can help, even with fewer iterations per wall-clock time.
+    256x256 with 100 advantage steps was competitive and often best.
+    64x64 with 300 steps was also competitive.
+    More fitting can help, but per unit CPU time too much fitting is not always
+    optimal.
+
+Interpretation:
+
+    On CPU, we are balancing traversal and fitting. On GPU, fitting becomes much
+    cheaper, so larger architectures and/or more optimizer steps become more
+    attractive.
+
+Current practical parameter stance:
+
+    For CPU:
+        256x256, 100 advantage steps, strategy steps around 50 to 100
+        or 64x64, 300 advantage steps if keeping net small
+
+    For GPU:
+        Prefer trying 256x256 or larger first.
+        Strategy steps can likely be 50.
+        Advantage steps may be increased once fitting is cheap.
+
+8. Encoding experiments
+
+Notebook:
+
+    notebooks/june_2026/deep_cfr_encoding_replay.ipynb
+
+Specs tested:
+
+    easy: r3_s4_h2_hp_ss
+    current: r4_s4_h2_hp_ss
+    varied harder: r4_s4_h3_hpt_ss
+
+Encodings:
+
+    baseline
+    semantic
+    structured
+
+Result:
+
+    Semantic/structured encodings helped in some easy/current cases, but the
+    evidence was mixed on the varied harder spec.
+
+Interpretation:
+
+    Encoding improvements may help, but baseline encoding is still credible.
+    We should not overfit to easy-spec improvements. Larger networks on GPU may
+    make hand-crafted encodings less important.
+
+9. Replay/training schedule experiments
+
+Notebook:
+
+    notebooks/june_2026/deep_cfr_encoding_replay.ipynb
+
+Variants:
+
+    fixed 100 steps
+    fixed 300 steps
+    fixed replay ratio
+    growing replay ratio
+    adaptive held-out
+
+Result:
+
+    Fixed 100 steps remained surprisingly strong per wall-clock time on CPU.
+    More steps improved current strategies and sometimes MSE, but not always
+    average exploitability per second.
+
+Interpretation:
+
+    On CPU, traversal remains expensive and more fitting can reduce iterations.
+    On GPU, this tradeoff may shift substantially.
+
+10. Target reparameterization experiments
+
+Notebook:
+
+    notebooks/june_2026/deep_cfr_target_reparameterization.ipynb
+
+Variants:
+
+    raw positive-weighted
+    normalized per record
+    sign + magnitude
+    direct regret-matched strategy
+
+Result:
+
+    Raw positive-weighted remained best or near best.
+    Normalizing per record was not a clear win.
+    Sign+magnitude and direct strategy variants underperformed badly in online
+    Deep CFR for the varied harder spec.
+
+Interpretation:
+
+    Do not move away from raw positive-weighted advantage training yet.
+
+11. Neural CFR+
+
+Files:
+
+    liars_poker/algo/deep_cfr_plus.py
+    liars_poker/training/deep_cfr_plus.py
+
+Notebook:
+
+    notebooks/june_2026/cfr_plus_teacher_distillation.ipynb
+    notebooks/june_2026/deep_cfr_plus_online.ipynb
+
+Motivation:
+
+    Exact CFR+ is strong. Try neural CFR+ by approximating clipped cumulative
+    regrets instead of raw signed cumulative regrets.
+
+Offline teacher distillation:
+
+    Distilling exact CFR+ current strategy/regrets worked very well in strategy
+    TV, but exploitability still lagged exact teacher.
+
+Online neural CFR+:
+
+    Initial implementation was too stale/too online in a problematic way. After
+    fixing snapshot/freeze behavior, results improved dramatically.
+
+Recent neural CFR+ behavior:
+
+    Curves are much smoother than Deep CFR.
+    Current and average strategy are much closer to each other.
+    It looks promising, but it is still experimental and not yet fully trusted.
+
+Important conceptual difference:
+
+    CFR+ clipped regrets produce a current policy that can be much more stable
+    than vanilla Deep CFR's current advantage-derived policy. This may explain
+    why average and current are closer in neural CFR+.
+
+12. Batched Deep CFR traversal
+
+Files:
+
+    liars_poker/algo/neural_cfr_batched.py
+    liars_poker/algo/deep_cfr.py
+
+Notebook:
+
+    notebooks/june_2026/deep_cfr_batched_gpu_validation.ipynb
+
+Motivation:
+
+    The recursive external-sampling traversal calls neural inference one
+    infoset at a time. That is bad for GPU and also surprisingly bad on CPU.
+    We added a batched traversal backend.
+
+Result on CPU:
+
+    Batched traversal is often around 8x to 15x faster than recursive traversal
+    for traversal record generation.
+
+Important current observation:
+
+    A batched run reached hundreds of iterations in the same time a recursive
+    run reached only tens of iterations, and the exact generated average became
+    much better.
+
+Current likely GPU path:
+
+    Use traversal_backend="batched"
+    Use traversal_batch_size around 128, 256, or 512 after timing on the GPU.
+    Use advantage_positive_weight=0.5.
+    Use exact eval sparsely.
+
+
+Current Neural Method Summary
+-----------------------------
+
+The current most important neural training object is:
+
+    DeepCFRTrainer
+
+It has:
+
+    advantage_nets[0], advantage_nets[1]
+    strategy_nets[0], strategy_nets[1]
+    advantage_buffers[0], advantage_buffers[1]
+    strategy_buffers[0], strategy_buffers[1]
+
+The advantage nets predict regret/advantage-like values. The current policy is
+obtained by regret matching over those predictions, with legal-action masking.
+
+The average strategy nets directly output logits for average play. The playable
+final NeuralPolicy is built from the average strategy networks, not from the
+advantage networks.
+
+For exact evaluation, neural policies are compiled to DenseTabularPolicy:
+
+    compile_neural_to_dense(trainer.average_policy())
+    trainer.current_policy_dense()
+
+Then exact exploitability is measured by:
+
+    best_response_dense(spec, dense_policy, store_state_values=False)
+
+Important:
+
+    Exact evaluation is CPU/RAM-bound. It is not part of GPU training.
+    If run inline, it will become the bottleneck.
+
+Current Deep CFR settings worth starting with:
+
+    hidden_sizes = (256, 256)
+    learning_rate = 1e-3
+    batch_size = 512
+    advantage_train_steps = 100
+    strategy_train_steps = 50
+    advantage_positive_weight = 0.5
+    highest_regret_fallback = True
+    alternating_updates = True
+    traversal_backend = "batched"
+    traversal_batch_size = 128, 256, or 512 after timing
+    strategy_weighting = "linear"
+
+These are not final. They are the best current working baseline.
+
+Specs used in recent neural experiments:
+
+    easy:
+        GameSpec(ranks=3, suits=4, hand_size=2,
+                 claim_kinds=("RankHigh", "Pair"), suit_symmetry=True)
+
+    current:
+        GameSpec(ranks=4, suits=4, hand_size=2,
+                 claim_kinds=("RankHigh", "Pair"), suit_symmetry=True)
+
+    varied harder:
+        GameSpec(ranks=4, suits=4, hand_size=3,
+                 claim_kinds=("RankHigh", "Pair", "Trips"),
+                 suit_symmetry=True)
+
+For GPU validation, varied harder is a good next spec. It is nontrivial but
+still exact-evaluable.
+
+
+Exact Evaluation and Bottleneck Plan
+------------------------------------
+
+Exact eval is the most valuable metric while specs are small enough. It is also
+the thing most likely to become the bottleneck once training moves to GPU.
+
+Current exact eval in liars_poker/training/deep_cfr.py:
+
+    _exact_evaluation(...)
+
+This evaluates:
+
+    learned average
+    current strategy
+    exact generated average if exact_averager is provided
+
+This can mean multiple dense compiles and multiple exact BR computations per
+eval point. That is expensive.
+
+Current exact-average observation:
+
+    _observe_exact_average(...)
+
+This calls:
+
+    trainer.current_policy_dense()
+
+and feeds it to ExactDenseStrategyAverager. This is useful but can also be a
+hidden cost because it compiles a dense current policy.
+
+For GPU runs:
+
+    eval_every should be sparse.
+    exact_averager should be used carefully.
+    Consider observing exact average every N iterations, not every iteration.
+    Save snapshots and evaluate asynchronously.
+
+Best practical design:
+
+    GPU process:
+        runs training
+        periodically saves policy/checkpoint snapshots
+        appends training metrics
+
+    CPU worker process:
+        watches an eval queue folder
+        loads snapshots
+        compiles dense policy
+        runs best_response_dense(..., store_state_values=False)
+        writes evals.jsonl
+
+This lets the GPU continue training while exact eval runs on CPU.
+
+Do not parallelize best_response_dense first. The queue-worker split is simpler
+and likely enough for the next stage.
+
+
+GPU Migration Notes
+-------------------
+
+Use VS Code Remote-SSH to work on the rented GPU host. Open the remote repo
+folder and run notebooks there. Install Codex extension on the remote workspace
+if prompted.
+
+Basic remote setup:
+
+    git clone <repo>
+    cd liars_poker
+    python -m venv .venv
+    source .venv/bin/activate
+    pip install -e .
+    python -c "import torch; print(torch.cuda.is_available())"
+    nvidia-smi
+
+Good first GPU notebook:
+
+    notebooks/june_2026/deep_cfr_batched_gpu_validation.ipynb
+
+First cells to run:
+
+    device check
+    backend timing cell
+    short batched run
+    then longer timed run
+
+Do not trust a single GPU run until:
+
+    the timing table confirms batched backend is actually being used
+    the device is cuda
+    exact eval is not accidentally being run every iteration
+    logs show reasonable traversal/fit times
+
+GPU choice:
+
+    A single RTX 3080 or RTX 3090 is more than enough for the current MLP work.
+    VRAM around 20 to 24GB is comfortable.
+    The RTX 3090 is attractive because of 24GB VRAM and high bandwidth.
+    The 3080 20GB is fine.
+    Older 2080 Ti/Titan RTX/V100 can work, but the 3090/3080 usually offers
+    better value for PyTorch MLP experiments.
+
+
+Important Files to Read and Understand
+--------------------------------------
+
+1. liars_poker/core.py
+
+Defines GameSpec, deck/card helpers, possible_starting_hands, artifacts root,
+and short spec strings. Understand this first because every algorithm takes a
+GameSpec.
+
+2. liars_poker/env.py
+
+Defines Rules, claim construction, legal actions, CALL resolution, Env, fast env
+methods, and claim-kind semantics. This is the source of game truth.
+
+3. liars_poker/infoset.py
+
+Defines InfoSet and CALL. Small but conceptually central.
+
+4. liars_poker/policies/base.py
+
+Policy interface. Includes normal and fast sampling paths.
+
+5. liars_poker/policies/tabular.py
+
+Sparse tabular policy. Useful for debugging and small games.
+
+6. liars_poker/policies/tabular_dense.py
+
+DenseTabularPolicy. This is the exact-workhorse policy representation. Understand
+S, legal masks, hid encoding, likelihood recomputation, and dense mixing.
+
+7. liars_poker/policies/neural.py
+
+NeuralPolicy, InfosetEncoder, NeuralMLP, and compile_neural_to_dense. This file
+bridges neural policies and exact dense evaluation.
+
+8. liars_poker/serialization.py
+
+Repository serializer. NeuralPolicy and DenseTabularPolicy are saved through
+this where possible. Full trainer checkpoints use torch/native checkpointing.
+
+9. liars_poker/eval/match.py
+
+Monte Carlo match/eval code. Uses fast Env/policy sampling. Relevant for
+approximate eval when exact exploitability becomes too expensive.
+
+10. liars_poker/algo/br_exact_dense_to_dense.py
+
+Trusted exact dense best response and exact exploitability. This file took a lot
+of care. Treat it as the evaluator of record for exact-evaluable specs.
+
+11. liars_poker/algo/br_exact.py
+
+Older/sparser exact best response. Useful for small correctness checks and
+conceptual comparison.
+
+12. liars_poker/training/dense_fsp.py
+
+Dense FSP loop. Important historical baseline because it uses exact BR in the
+training process.
+
+13. liars_poker/training/fsp_utils.py
+
+FSP save/resume/plot utilities. Also contains eta controls. Useful for
+understanding benchmark artifacts.
+
+14. liars_poker/eval/benchmark_script.py
+
+CLI benchmark runner for dense FSP. Supports run_folder, run_dir, save_every,
+eta_control. Useful model for future CLI scripts.
+
+15. liars_poker/algo/cfr_exact_dense.py
+
+Exact dense CFR. Important for understanding blocker-aware CFR traversal and
+the exact baseline.
+
+16. liars_poker/algo/cfr_plus_dense.py
+
+Exact dense CFR+. Important because CFR+ is a strong exact baseline and inspired
+neural CFR+ experiments.
+
+17. liars_poker/training/cfr_dense.py
+
+Training/save/resume wrapper for exact CFR.
+
+18. liars_poker/training/cfr_plus_dense.py
+
+Training/save/resume wrapper for exact CFR+.
+
+19. liars_poker/algo/cfr_external_sampling_dense.py
+
+Tabular/dense external-sampling CFR diagnostics. This helped prove external
+sampling itself is not the bottleneck.
+
+20. liars_poker/algo/deep_cfr.py
+
+Main Deep CFR trainer. Understand buffers, traversal, current policy,
+average policy, loss, checkpointing, and batched backend integration.
+
+21. liars_poker/algo/neural_cfr_batched.py
+
+Batched external-sampling traversal backend. Critical for GPU readiness and also
+large CPU speedups.
+
+22. liars_poker/training/deep_cfr.py
+
+Training loops, timed loops, exact evaluation, saving/loading. Important because
+exact eval and exact averaging can silently dominate wall-clock time.
+
+23. liars_poker/algo/deep_cfr_diagnostics.py
+
+ExactDenseStrategyAverager and diagnostics. Important for comparing learned
+average strategy versus exact generated average.
+
+24. liars_poker/algo/deep_cfr_plus.py
+
+Experimental neural CFR+ trainer. Promising but less mature than Deep CFR.
+
+25. liars_poker/training/deep_cfr_plus.py
+
+Training wrapper for neural CFR+.
+
+26. notebooks/june_2026/reviewing.ipynb
+
+Basic repo review notebook. Good for getting oriented.
+
+27. notebooks/june_2026/deep_cfr_basics.ipynb
+
+First neural basics notebook. Shows initialization, training, evaluation, and
+storage.
+
+28. notebooks/june_2026/external_sampling_cfr_diagnostics.ipynb
+
+Most important neural diagnostics notebook. Contains tabular external sampling,
+offline teacher experiments, loss experiments, current-vs-average comparisons,
+and many scientific conclusions.
+
+29. notebooks/june_2026/deep_cfr_beta_confirmation.ipynb
+
+Confirms positive-regret upweighting beta around 0.5 across seeds.
+
+30. notebooks/june_2026/deep_cfr_architecture_steps.ipynb
+
+Architecture and optimizer-step experiments.
+
+31. notebooks/june_2026/deep_cfr_encoding_replay.ipynb
+
+Encoding and replay/training schedule experiments across multiple specs.
+
+32. notebooks/june_2026/deep_cfr_target_reparameterization.ipynb
+
+Target reparameterization experiments. Important negative results.
+
+33. notebooks/june_2026/cfr_plus_teacher_distillation.ipynb
+
+Neural CFR+ teacher distillation and early neural CFR+ work.
+
+34. notebooks/june_2026/deep_cfr_plus_online.ipynb
+
+Online neural CFR+ experiments.
+
+35. notebooks/june_2026/deep_cfr_batched_gpu_validation.ipynb
+
+Current GPU-readiness notebook. Timing, batched traversal, and longer batched
+Deep CFR runs live here.
+
+
+Current Open Questions
+----------------------
+
+1. Does GPU training make larger networks clearly better?
+
+CPU experiments suggest 256x256 is already good despite fewer iterations. On
+GPU, fitting is cheaper, so larger networks may dominate. Test 256x256 and maybe
+512x512 once the batched traversal is confirmed.
+
+2. How sparse can exact eval be while still guiding research?
+
+Exact exploitability is precious but expensive. For larger specs, evaluate less
+often and maybe only at milestones. Use async eval workers.
+
+3. How good are proxies once exact eval is gone?
+
+Known weak proxies:
+
+    raw advantage MSE alone
+    current-strategy exploitability
+
+More useful but still imperfect:
+
+    exact generated average versus learned average gap
+    held-out induced-strategy TV
+    positive-regret recall
+    top-action match
+    Monte Carlo match results against a suite of saved opponents
+    approximate/MC best responses
+
+The main metric remains exact exploitability when available.
+
+4. Should neural CFR+ become the main path?
+
+Neural CFR+ looks smoother and promising after fixing snapshot behavior. But it
+is newer and less validated. Deep CFR with batched traversal is the safer next
+GPU target. Neural CFR+ should remain an active branch.
+
+5. Is baseline encoding enough?
+
+Probably for now. Semantic/structured encodings helped sometimes but not
+decisively. More GPU capacity may make architecture more important than
+hand-crafted features.
+
+
+Research Philosophy
+-------------------
+
+The project philosophy is deliberately rigorous and empirical.
+
+1. Get correctness before speed.
+
+Examples:
+
+    exact dense BR blocker effects
+    CALL weighting in CFR
+    FullHouse and Quads claim logic
+    dense policy likelihood recomputation
+
+Exact exploitability took a long time because it is easy to get subtly wrong.
+The current exact dense BR should be treated as trusted but still respected.
+
+2. Use exact methods as ground truth while possible.
+
+Exact FSP, exact CFR, exact CFR+, and exact BR are the scaffolding for neural
+work. Neural results are interpreted against exact exploitability until scaling
+makes that impossible.
+
+3. Separate algorithmic failure from approximation failure.
+
+This is why tabular external-sampling CFR and offline teacher experiments were
+important. They showed that the sampled algorithm can work, and that neural
+regret approximation is a real bottleneck.
+
+4. Do not overtrust a single curve.
+
+Run multiple seeds when possible. Compare:
+
+    final exploitability
+    best exploitability
+    normalized AUC
+    learned average
+    exact generated average
+    current strategy
+    timing
+    buffer retention
+
+5. Optimize for understanding, not just leaderboard numbers.
+
+Many experiments are designed to answer "which part is failing?" rather than
+just "what got the lowest final value?"
+
+6. Prefer minimal, local changes to trusted exact code.
+
+The exact code works. Do not casually refactor dense BR, CFR, or Env logic unless
+there is a clear reason and a test/diagnostic notebook.
+
+7. Keep artifacts resumable and inspectable.
+
+Dense FSP/CFR/CFR+ support save/resume. Neural policies use repository
+serialization for playable policies and torch checkpoints for full trainer state.
+
+8. Wall-clock time matters.
+
+For neural methods, iterations alone are misleading. Use timed experiments. On
+GPU, the bottlenecks shift, so remeasure rather than assuming CPU conclusions
+hold.
+
+
+Practical Next Steps on GPU
+---------------------------
+
+1. Start with deep_cfr_batched_gpu_validation.ipynb.
+
+2. Verify:
+
+    torch.cuda.is_available()
+    device is cuda
+    batched backend timing is much faster than recursive
+
+3. Run a short timed Deep CFR experiment on:
+
+    GameSpec(ranks=4, suits=4, hand_size=3,
+             claim_kinds=("RankHigh", "Pair", "Trips"),
+             suit_symmetry=True)
+
+with:
+
+    hidden_sizes=(256, 256)
+    advantage_positive_weight=0.5
+    advantage_train_steps=100
+    strategy_train_steps=50
+    batch_size=512 or 1024
+    traversal_backend="batched"
+    traversal_batch_size chosen from timing cell
+    traversals_per_player=512 initially
+
+4. Keep exact eval sparse.
+
+5. If short run is healthy, test:
+
+    256x256 with more advantage steps
+    512x512 with 100 steps
+    larger batch sizes
+    larger traversals_per_player
+
+6. Add async exact-eval worker before running very long GPU jobs.
+
+7. Preserve metrics and checkpoints carefully. Do not rely only on notebook
+state.
+
+
+Final Caution
+-------------
+
+The project has many moving parts. A good-looking neural curve can be misleading
+if:
+
+    exact eval was too sparse
+    exact average was not observed as intended
+    recursive backend was accidentally used
+    current strategy was mistaken for average strategy
+    predicted_avg was plotted without converting to 2 * predicted_avg - 1
+    exact eval time was excluded from budget but still dominated real wall-clock
+    a notebook variable was overwritten by a later recursive/baseline run
+
+When in doubt, inspect:
+
+    logs["training_series"]
+    logs["exploitability_series"]
+    trainer.traversal_backend
+    trainer.traversal_batch_size
+    trainer.advantage_positive_weight
+    device
+    exact eval frequency
+
+The fastest path forward is not to chase one giant run immediately. First make
+the GPU pipeline trustworthy, then scale.
