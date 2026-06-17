@@ -1164,7 +1164,40 @@ hold.
 Practical Next Steps on GPU
 ---------------------------
 
-1. Start with deep_cfr_batched_gpu_validation.ipynb.
+Update after the initial GPU fitting benchmark:
+
+    A device-native Deep CFR path now exists.
+
+New files:
+
+    liars_poker/algo/neural_cfr_gpu.py
+        Tensorized external-sampling traversal. Deals, histories, batched
+        inference, action sampling, terminal resolution, reverse backup, and
+        generated records remain as Torch tensors on the trainer device.
+
+    liars_poker/eval/deep_cfr_async.py
+        Saves learned-average snapshots and evaluates them in a separate CPU
+        process so GPU training does not wait for dense exact best response.
+
+    notebooks/june_2026/deep_cfr_gpu_native_validation.ipynb
+        Compares hybrid batched and GPU-native online training, validates
+        terminal semantics and replay, times traversal/fitting, and compares
+        exact exploitability for fixed training-time runs.
+
+DeepCFRTrainer now supports:
+
+    traversal_backend="gpu_native"
+    device_replay=True
+    fused_optimizer=True
+    amp_dtype=None, "bfloat16", or "float16"
+    compile_models=True or False
+
+The GPU-native backend automatically enables device replay. The existing
+"recursive" and "batched" backends remain available as correctness and
+performance references.
+
+1. Start with deep_cfr_gpu_native_validation.ipynb. Keep
+   deep_cfr_batched_gpu_validation.ipynb as the hybrid-backend reference.
 
 2. Verify:
 

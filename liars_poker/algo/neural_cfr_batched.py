@@ -165,7 +165,9 @@ class BatchedDeepCFRTraverser:
     ) -> torch.Tensor:
         model = self.trainer.advantage_nets[actor]
         with torch.no_grad():
-            values = model(features)
+            with self.trainer._autocast():
+                values = self.trainer._forward(model, features)
+            values = values.float()
             mask_float = legal_mask.float()
             positive = torch.relu(values) * mask_float
             totals = positive.sum(dim=1, keepdim=True)

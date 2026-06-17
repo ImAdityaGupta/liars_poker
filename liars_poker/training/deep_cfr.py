@@ -67,8 +67,12 @@ def _exact_evaluation(
 def _observe_exact_average(
     trainer: DeepCFRTrainer,
     exact_averager: ExactDenseStrategyAverager | None,
+    *,
+    every: int = 1,
 ) -> None:
     if exact_averager is None:
+        return
+    if every <= 0 or trainer.iteration % every != 0:
         return
     weight = 1.0 if trainer.strategy_weighting == "uniform" else float(trainer.iteration + 1)
     exact_averager.observe(trainer.current_policy_dense(), weight=weight)
@@ -83,6 +87,7 @@ def deep_cfr_loop(
     traversals_per_player: int = 100,
     eval_every: int = 0,
     exact_averager: ExactDenseStrategyAverager | None = None,
+    exact_average_every: int = 1,
     debug: bool = False,
 ) -> Tuple[NeuralPolicy, Dict[str, object], DeepCFRTrainer]:
     if trainer is None:
@@ -95,7 +100,11 @@ def deep_cfr_loop(
     start = time.perf_counter()
 
     for _ in range(iterations):
-        _observe_exact_average(trainer, exact_averager)
+        _observe_exact_average(
+            trainer,
+            exact_averager,
+            every=exact_average_every,
+        )
         record = trainer.run_iteration(traversals_per_player=traversals_per_player)
         if trainer.validation_fraction > 0.0:
             record["validation"] = trainer.validation_metrics()
@@ -134,9 +143,15 @@ def deep_cfr_timed_loop(
     traversals_per_player: int = 100,
     eval_every: int = 0,
     exact_averager: ExactDenseStrategyAverager | None = None,
+    exact_average_every: int = 1,
+    final_eval: bool = True,
     debug: bool = False,
 ) -> Tuple[NeuralPolicy, Dict[str, object], DeepCFRTrainer]:
-    """Train for a fixed wall-clock budget, excluding exact-evaluation time."""
+    """Train for a fixed wall-clock budget, excluding exact-evaluation time.
+
+    Setting exact_average_every above one samples iteration strategies rather
+    than producing the full per-iteration exact generated average.
+    """
 
     if trainer is None:
         trainer = DeepCFRTrainer(spec, **(trainer_kwargs or {}))
@@ -148,7 +163,11 @@ def deep_cfr_timed_loop(
     training_elapsed = 0.0
 
     while training_elapsed < training_seconds:
-        _observe_exact_average(trainer, exact_averager)
+        _observe_exact_average(
+            trainer,
+            exact_averager,
+            every=exact_average_every,
+        )
         start = time.perf_counter()
         record = trainer.run_iteration(traversals_per_player=traversals_per_player)
         iteration_s = time.perf_counter() - start
@@ -175,7 +194,10 @@ def deep_cfr_timed_loop(
                 f"fit={timing['advantage_training_s'] + timing['strategy_training_s']:.2f}s"
             )
 
-    if not logs["exploitability_series"] or logs["exploitability_series"][-1]["iter"] != trainer.iteration:
+    if final_eval and (
+        not logs["exploitability_series"]
+        or logs["exploitability_series"][-1]["iter"] != trainer.iteration
+    ):
         logs["exploitability_series"].append(
             {
                 "iter": trainer.iteration,
