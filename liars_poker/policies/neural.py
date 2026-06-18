@@ -7,7 +7,7 @@ import numpy as np
 import torch
 from torch import nn
 
-from liars_poker.core import GameSpec, card_rank, possible_starting_hands
+from liars_poker.core import GameSpec, card_rank
 from liars_poker.env import rules_for_spec
 from liars_poker.infoset import CALL, InfoSet
 
@@ -227,32 +227,51 @@ class NeuralPolicy(Policy):
 def compile_neural_to_dense(
     policy: NeuralPolicy,
     *,
-    batch_size: int = 4096,
+    batch_size: int = 16_384,
 ):
-    """Compile a neural strategy to DenseTabularPolicy for exact small-game evaluation."""
+    """Compile a neural strategy to a dense policy in batched infoset blocks.
+
+    ``batch_size`` is the approximate maximum number of (history, hand)
+    infosets passed through a network at once.
+    """
 
     from .tabular_dense import DenseTabularPolicy
 
     dense = DenseTabularPolicy(policy.spec)
-    hands = tuple(possible_starting_hands(policy.spec))
+    hands = dense.hands
+    n_hands = len(hands)
+    if batch_size <= 0:
+        raise ValueError("batch_size must be positive.")
 
-    for hid in range(1 << policy.encoder.k):
-        history = tuple(action for action in range(policy.encoder.k) if hid & (1 << action))
-        legal = dense.legal_actions[hid]
-        cols = NeuralPolicy._cols(legal)
-        pid = dense.pid_to_act(hid)
-        model = policy._model(pid)
+    histories_per_batch = max(1, int(batch_size) // n_hands)
+    rank_dim = policy.spec.ranks
+    input_dim = policy.encoder.input_dim
+    action_dim = policy.encoder.action_dim
+    claim_bits = np.arange(policy.encoder.k, dtype=np.int64)
+    hand_features = policy.encoder.encode_hands(hands, ())
 
-        for start in range(0, len(hands), batch_size):
-            stop = min(start + batch_size, len(hands))
-            features = policy.encoder.encode_hands(hands[start:stop], history)
-            x = torch.from_numpy(features).to(policy.device)
-            with torch.no_grad():
-                logits = model(x)
-                probs = torch.softmax(logits[:, cols], dim=1).cpu().numpy()
-            block = dense.S[hid, start:stop]
-            block.fill(0.0)
-            block[:, cols] = probs
+    with torch.inference_mode():
+        for pid in (0, 1):
+            actor_hids = np.flatnonzero((dense.popcount & 1) == pid)
+            model = policy._model(pid)
+            for start in range(0, len(actor_hids), histories_per_batch):
+                hids = actor_hids[start:start + histories_per_batch]
+                history_bits = (
+                    (hids[:, None].astype(np.int64) >> claim_bits[None, :]) & 1
+                ).astype(np.float32)
+
+                features = np.empty(
+                    (len(hids), n_hands, input_dim),
+                    dtype=np.float32,
+                )
+                features[:, :, :rank_dim] = hand_features[None, :, :rank_dim]
+                features[:, :, rank_dim:] = history_bits[:, None, :]
+
+                x = torch.from_numpy(features.reshape(-1, input_dim)).to(policy.device)
+                logits = model(x).reshape(len(hids), n_hands, action_dim)
+                legal_mask = torch.from_numpy(dense.legal_mask[hids]).to(policy.device)
+                logits = logits.masked_fill(~legal_mask[:, None, :], -torch.inf)
+                dense.S[hids] = torch.softmax(logits, dim=2).cpu().numpy()
 
     dense.recompute_likelihoods()
     return dense
