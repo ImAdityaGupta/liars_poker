@@ -350,13 +350,15 @@ class DeviceReservoirBuffer:
 class DeepCFRTrainer:
     """External-sampling Deep CFR with player-specific advantage and average networks."""
 
-    CHECKPOINT_VERSION = 4
+    CHECKPOINT_VERSION = 5
 
     def __init__(
         self,
         spec: GameSpec,
         *,
-        hidden_sizes: Sequence[int] = (128, 128),
+        hidden_sizes: Sequence[int] | None = None,
+        advantage_hidden_sizes: Sequence[int] | None = None,
+        strategy_hidden_sizes: Sequence[int] | None = None,
         device: str | torch.device = "cpu",
         seed: int = 0,
         advantage_buffer_capacity: int = 100_000,
@@ -382,7 +384,27 @@ class DeepCFRTrainer:
         self.spec = spec
         self.rules = rules_for_spec(spec)
         self.encoder = InfosetEncoder(spec)
-        self.hidden_sizes = tuple(int(size) for size in hidden_sizes)
+        shared_hidden_sizes = (
+            (128, 128)
+            if hidden_sizes is None
+            else tuple(int(size) for size in hidden_sizes)
+        )
+        self.advantage_hidden_sizes = tuple(
+            int(size) for size in (
+                shared_hidden_sizes
+                if advantage_hidden_sizes is None
+                else advantage_hidden_sizes
+            )
+        )
+        self.strategy_hidden_sizes = tuple(
+            int(size) for size in (
+                shared_hidden_sizes
+                if strategy_hidden_sizes is None
+                else strategy_hidden_sizes
+            )
+        )
+        # Legacy alias for notebook subclasses written before architectures split.
+        self.hidden_sizes = self.strategy_hidden_sizes
         self.device = torch.device(device)
         self.seed = int(seed)
         self.rng = random.Random(seed)
@@ -435,11 +457,19 @@ class DeepCFRTrainer:
             self._grad_scaler = torch.cuda.amp.GradScaler(enabled=scaler_enabled)
 
         self.advantage_nets = [
-            NeuralMLP(self.encoder.input_dim, self.encoder.action_dim, self.hidden_sizes).to(self.device)
+            NeuralMLP(
+                self.encoder.input_dim,
+                self.encoder.action_dim,
+                self.advantage_hidden_sizes,
+            ).to(self.device)
             for _ in range(2)
         ]
         self.strategy_nets = [
-            NeuralMLP(self.encoder.input_dim, self.encoder.action_dim, self.hidden_sizes).to(self.device)
+            NeuralMLP(
+                self.encoder.input_dim,
+                self.encoder.action_dim,
+                self.strategy_hidden_sizes,
+            ).to(self.device)
             for _ in range(2)
         ]
         self.advantage_optimizers = [
@@ -825,7 +855,7 @@ class DeepCFRTrainer:
             self.advantage_nets[pid] = NeuralMLP(
                 self.encoder.input_dim,
                 self.encoder.action_dim,
-                self.hidden_sizes,
+                self.advantage_hidden_sizes,
             ).to(self.device)
             self.advantage_optimizers[pid] = self._make_optimizer(
                 self.advantage_nets[pid]
@@ -1111,7 +1141,7 @@ class DeepCFRTrainer:
     def average_policy(self) -> NeuralPolicy:
         policy = NeuralPolicy(
             self.spec,
-            hidden_sizes=self.hidden_sizes,
+            hidden_sizes=self.strategy_hidden_sizes,
             device=self.device,
         )
         policy.model_p1.load_state_dict(self.strategy_nets[0].state_dict())
@@ -1123,7 +1153,8 @@ class DeepCFRTrainer:
             "version": self.CHECKPOINT_VERSION,
             "spec": _spec_to_dict(self.spec),
             "config": {
-                "hidden_sizes": self.hidden_sizes,
+                "advantage_hidden_sizes": self.advantage_hidden_sizes,
+                "strategy_hidden_sizes": self.strategy_hidden_sizes,
                 "seed": self.seed,
                 "advantage_buffer_capacity": self.advantage_buffers[0].capacity,
                 "strategy_buffer_capacity": self.strategy_buffers[0].capacity,
@@ -1181,6 +1212,15 @@ class DeepCFRTrainer:
     ) -> "DeepCFRTrainer":
         state = torch.load(path, map_location=device, weights_only=False)
         config = dict(state["config"])
+        if (
+            "advantage_hidden_sizes" not in config
+            or "strategy_hidden_sizes" not in config
+        ):
+            legacy_hidden_sizes = config.pop("hidden_sizes", (128, 128))
+            config.setdefault("advantage_hidden_sizes", legacy_hidden_sizes)
+            config.setdefault("strategy_hidden_sizes", legacy_hidden_sizes)
+        else:
+            config.pop("hidden_sizes", None)
         config.setdefault("traversal_backend", "recursive")
         config.setdefault("traversal_batch_size", 256)
         config.setdefault("advantage_positive_weight", 0.0)
