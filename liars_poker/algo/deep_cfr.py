@@ -1280,10 +1280,15 @@ class DeepCFRTrainer:
         trainer.rng.setstate(state["random_state"])
         if "validation_random_state" in state:
             trainer.validation_rng.setstate(state["validation_random_state"])
-        torch.set_rng_state(state["torch_random_state"])
+        # ``map_location=device`` also moves the saved RNG byte tensors.
+        # The CPU generator requires its state on CPU, while CUDA generator
+        # states are likewise restored from CPU ByteTensors.
+        torch.set_rng_state(state["torch_random_state"].cpu())
         if (
             state.get("torch_cuda_random_state") is not None
             and torch.cuda.is_available()
         ):
-            torch.cuda.set_rng_state_all(state["torch_cuda_random_state"])
+            torch.cuda.set_rng_state_all(
+                [rng_state.cpu() for rng_state in state["torch_cuda_random_state"]]
+            )
         return trainer

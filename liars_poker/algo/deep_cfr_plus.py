@@ -738,5 +738,5 @@ class DeepCFRPlusTrainer:
         ]
         trainer.rng.setstate(state["random_state"])
         trainer.validation_rng.setstate(state["validation_random_state"])
-        torch.set_rng_state(state["torch_random_state"])
+        torch.set_rng_state(state["torch_random_state"].cpu())
         return trainer
