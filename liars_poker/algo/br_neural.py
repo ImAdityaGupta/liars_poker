@@ -16,6 +16,7 @@ from liars_poker.infoset import CALL
 from liars_poker.policies.base import Policy
 from liars_poker.policies.neural import InfosetEncoder, NeuralMLP, NeuralPolicy
 from liars_poker.policies.neural_q import NeuralQPolicy
+from liars_poker.policies.action_conditioned import ActionConditionedQPolicy
 from liars_poker.policies.tabular_dense import DenseTabularPolicy
 
 
@@ -200,10 +201,14 @@ class _FixedOpponent:
             self.hand_lookup = lookup
             return
 
-        if isinstance(policy, (NeuralPolicy, NeuralQPolicy)):
+        if isinstance(policy, (NeuralPolicy, NeuralQPolicy, ActionConditionedQPolicy)):
             if policy.spec != spec:
                 raise ValueError("Opponent policy spec mismatch.")
-            self.kind = "neural_q" if isinstance(policy, NeuralQPolicy) else "neural"
+            if isinstance(policy, ActionConditionedQPolicy):
+                self.kind = "action_conditioned_q"
+                self.action_features = policy.action_features.to(device)
+            else:
+                self.kind = "neural_q" if isinstance(policy, NeuralQPolicy) else "neural"
             self.models = [
                 copy.deepcopy(policy.model_p1).to(device).eval(),
                 copy.deepcopy(policy.model_p2).to(device).eval(),
@@ -212,7 +217,7 @@ class _FixedOpponent:
 
         raise TypeError(
             "NeuralBRTrainer currently supports DenseTabularPolicy, NeuralPolicy, "
-            "or NeuralQPolicy opponents."
+            "NeuralQPolicy, or ActionConditionedQPolicy opponents."
         )
 
     def probabilities(
@@ -231,8 +236,14 @@ class _FixedOpponent:
             probs = self.S[hids, hand_idx].float() * legal_mask
         else:
             with torch.inference_mode():
-                values = self.models[actor](features).float()
-            if self.kind == "neural_q":
+                if self.kind == "action_conditioned_q":
+                    values = self.models[actor].score_all(
+                        features,
+                        self.action_features,
+                    ).float()
+                else:
+                    values = self.models[actor](features).float()
+            if self.kind in {"neural_q", "action_conditioned_q"}:
                 best = values.masked_fill(~legal_mask, -torch.inf).argmax(dim=1)
                 probs = torch.zeros_like(values).scatter_(1, best[:, None], 1.0)
             else:

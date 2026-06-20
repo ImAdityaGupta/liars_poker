@@ -168,6 +168,7 @@ def _ensure_builtin_registration() -> None:
     from liars_poker.policies.tabular_dense import DenseTabularPolicy
     from liars_poker.policies.neural import NeuralPolicy
     from liars_poker.policies.neural_q import NeuralQPolicy
+    from liars_poker.policies.action_conditioned import ActionConditionedQPolicy
     from liars_poker.policies.commit_once import CommitOnceMixture
 
     for cls in (
@@ -176,6 +177,7 @@ def _ensure_builtin_registration() -> None:
         DenseTabularPolicy,
         NeuralPolicy,
         NeuralQPolicy,
+        ActionConditionedQPolicy,
         CommitOnceMixture,
     ):
         register_policy(cls)
