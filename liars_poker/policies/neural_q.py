@@ -142,3 +142,66 @@ class NeuralQPolicy(Policy):
 
     def iter_children(self):
         return ()
+
+
+def compile_neural_q_to_dense(
+    policy: NeuralQPolicy,
+    *,
+    batch_size: int = 65_536,
+):
+    """Compile a greedy role-specific Q policy into a dense deterministic policy."""
+
+    from .tabular_dense import DenseTabularPolicy
+
+    dense = DenseTabularPolicy(policy.spec)
+    dense.S.fill(0.0)
+    n_hands = len(dense.hands)
+    if batch_size <= 0:
+        raise ValueError("batch_size must be positive.")
+
+    histories_per_batch = max(1, int(batch_size) // n_hands)
+    rank_dim = policy.spec.ranks
+    input_dim = policy.encoder.input_dim
+    action_dim = policy.encoder.action_dim
+    claim_bits = np.arange(policy.encoder.k, dtype=np.int64)
+    hand_features = policy.encoder.encode_hands(dense.hands, ())[:, :rank_dim]
+
+    with torch.inference_mode():
+        for pid in (0, 1):
+            actor_hids = np.flatnonzero((dense.popcount & 1) == pid)
+            model = policy._model(pid)
+            for start in range(0, len(actor_hids), histories_per_batch):
+                hids = actor_hids[start:start + histories_per_batch]
+                history_bits = (
+                    (hids[:, None].astype(np.int64) >> claim_bits[None, :]) & 1
+                ).astype(np.float32)
+
+                features = np.empty(
+                    (len(hids), n_hands, input_dim),
+                    dtype=np.float32,
+                )
+                features[:, :, :rank_dim] = hand_features[None, :, :rank_dim]
+                features[:, :, rank_dim:] = history_bits[:, None, :]
+
+                x = torch.from_numpy(features.reshape(-1, input_dim)).to(policy.device)
+                q_values = model(x).reshape(len(hids), n_hands, action_dim)
+                legal_mask = torch.from_numpy(dense.legal_mask[hids]).to(policy.device)
+                best_cols = q_values.masked_fill(
+                    ~legal_mask[:, None, :],
+                    -torch.inf,
+                ).argmax(dim=2)
+                best_cols = best_cols.cpu().numpy()
+
+                block = np.zeros(
+                    (len(hids), n_hands, action_dim),
+                    dtype=np.float32,
+                )
+                block[
+                    np.arange(len(hids))[:, None],
+                    np.arange(n_hands)[None, :],
+                    best_cols,
+                ] = 1.0
+                dense.S[hids] = block
+
+    dense.recompute_likelihoods()
+    return dense
