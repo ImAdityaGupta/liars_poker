@@ -134,6 +134,7 @@ def deep_cfr_plus_timed_loop(
     traversals_per_player: int = 100,
     eval_every: int = 0,
     exact_averager: ExactDenseStrategyAverager | None = None,
+    final_eval: bool = True,
     debug: bool = False,
 ) -> Tuple[NeuralPolicy, Dict[str, object], DeepCFRPlusTrainer]:
     """Train for a fixed wall-clock budget, excluding exact-evaluation time."""
@@ -175,7 +176,10 @@ def deep_cfr_plus_timed_loop(
                 f"fit={timing['regret_training_s'] + timing['strategy_training_s']:.2f}s"
             )
 
-    if not logs["exploitability_series"] or logs["exploitability_series"][-1]["iter"] != trainer.iteration:
+    if final_eval and (
+        not logs["exploitability_series"]
+        or logs["exploitability_series"][-1]["iter"] != trainer.iteration
+    ):
         logs["exploitability_series"].append(
             {
                 "iter": trainer.iteration,

@@ -16,7 +16,10 @@ from liars_poker.infoset import CALL
 from liars_poker.policies.base import Policy
 from liars_poker.policies.neural import InfosetEncoder, NeuralMLP, NeuralPolicy
 from liars_poker.policies.neural_q import NeuralQPolicy
-from liars_poker.policies.action_conditioned import ActionConditionedQPolicy
+from liars_poker.policies.action_conditioned import (
+    ActionConditionedPolicy,
+    ActionConditionedQPolicy,
+)
 from liars_poker.policies.tabular_dense import DenseTabularPolicy
 
 
@@ -201,11 +204,19 @@ class _FixedOpponent:
             self.hand_lookup = lookup
             return
 
-        if isinstance(policy, (NeuralPolicy, NeuralQPolicy, ActionConditionedQPolicy)):
+        if isinstance(
+            policy,
+            (NeuralPolicy, NeuralQPolicy, ActionConditionedPolicy, ActionConditionedQPolicy),
+        ):
             if policy.spec != spec:
                 raise ValueError("Opponent policy spec mismatch.")
-            if isinstance(policy, ActionConditionedQPolicy):
-                self.kind = "action_conditioned_q"
+            if isinstance(policy, (ActionConditionedPolicy, ActionConditionedQPolicy)):
+                self.kind = (
+                    "action_conditioned_q"
+                    if isinstance(policy, ActionConditionedQPolicy)
+                    and not isinstance(policy, ActionConditionedPolicy)
+                    else "action_conditioned"
+                )
                 self.action_features = policy.action_features.to(device)
             else:
                 self.kind = "neural_q" if isinstance(policy, NeuralQPolicy) else "neural"
@@ -217,7 +228,7 @@ class _FixedOpponent:
 
         raise TypeError(
             "NeuralBRTrainer currently supports DenseTabularPolicy, NeuralPolicy, "
-            "NeuralQPolicy, or ActionConditionedQPolicy opponents."
+            "NeuralQPolicy, ActionConditionedPolicy, or ActionConditionedQPolicy opponents."
         )
 
     def probabilities(
@@ -236,7 +247,7 @@ class _FixedOpponent:
             probs = self.S[hids, hand_idx].float() * legal_mask
         else:
             with torch.inference_mode():
-                if self.kind == "action_conditioned_q":
+                if self.kind in {"action_conditioned", "action_conditioned_q"}:
                     values = self.models[actor].score_all(
                         features,
                         self.action_features,

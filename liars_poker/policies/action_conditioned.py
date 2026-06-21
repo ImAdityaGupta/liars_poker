@@ -304,6 +304,144 @@ class ActionConditionedQPolicy(Policy):
         return ()
 
 
+class ActionConditionedPolicy(ActionConditionedQPolicy):
+    """Stochastic policy backed by role-specific action-conditioned logits."""
+
+    POLICY_KIND = "ActionConditionedPolicy"
+    POLICY_VERSION = 1
+
+    def __init__(
+        self,
+        spec: GameSpec,
+        *,
+        state_hidden_sizes: Sequence[int] = (512, 512),
+        action_hidden_sizes: Sequence[int] = (128, 128),
+        embedding_dim: int = 256,
+        device: str | torch.device = "cpu",
+    ) -> None:
+        super().__init__(
+            spec,
+            state_hidden_sizes=state_hidden_sizes,
+            action_hidden_sizes=action_hidden_sizes,
+            embedding_dim=embedding_dim,
+            device=device,
+        )
+        self._initialize_uniform()
+
+    def _initialize_uniform(self) -> None:
+        for model in (self.model_p1, self.model_p2):
+            final = model.action_tower.net[-1]
+            if isinstance(final, nn.Linear):
+                nn.init.zeros_(final.weight)
+                nn.init.zeros_(final.bias)
+            nn.init.zeros_(model.action_bias.weight)
+            nn.init.zeros_(model.action_bias.bias)
+
+    def legal_logits(
+        self,
+        *,
+        pid: int,
+        hand: Tuple[int, ...],
+        history: Tuple[int, ...],
+        legal: Sequence[int],
+    ) -> tuple[list[int], torch.Tensor]:
+        cols = [self._action_col(action) for action in legal]
+        features = torch.from_numpy(self.encoder.encode(hand, history)).to(self.device)
+        logits = self._model(pid).score_all(
+            features[None, :],
+            self.action_features,
+        )[0, cols]
+        return cols, logits
+
+    def action_probs(self, infoset: InfoSet) -> Dict[int, float]:
+        legal = self._legal_actions(infoset)
+        if not legal:
+            return {}
+        with torch.inference_mode():
+            _, logits = self.legal_logits(
+                pid=infoset.pid,
+                hand=infoset.hand,
+                history=infoset.history,
+                legal=legal,
+            )
+            probs = torch.softmax(logits, dim=0).float().cpu().numpy()
+        return {action: float(prob) for action, prob in zip(legal, probs)}
+
+    def sample_action_fast(
+        self,
+        *,
+        pid: int,
+        hand: Tuple[int, ...],
+        history: Tuple[int, ...],
+        legal: Tuple[int, ...],
+        rng: random.Random,
+    ) -> int:
+        if not legal:
+            raise ValueError("Cannot sample from empty policy distribution.")
+        with torch.inference_mode():
+            _, logits = self.legal_logits(
+                pid=pid,
+                hand=hand,
+                history=history,
+                legal=legal,
+            )
+            probs = torch.softmax(logits, dim=0).float().cpu().numpy()
+        pick = rng.random()
+        cumulative = 0.0
+        for action, prob in zip(legal, probs):
+            cumulative += float(prob)
+            if pick <= cumulative:
+                return action
+        return legal[-1]
+
+
+def compile_action_conditioned_to_dense(
+    policy: ActionConditionedPolicy,
+    *,
+    batch_size: int = 65_536,
+):
+    """Compile an action-conditioned stochastic policy into a dense policy."""
+
+    from .tabular_dense import DenseTabularPolicy
+
+    dense = DenseTabularPolicy(policy.spec)
+    n_hands = len(dense.hands)
+    histories_per_batch = max(1, int(batch_size) // n_hands)
+    rank_dim = policy.spec.ranks
+    input_dim = policy.encoder.input_dim
+    action_dim = policy.encoder.action_dim
+    claim_bits = np.arange(policy.encoder.k, dtype=np.int64)
+    hand_features = policy.encoder.encode_hands(dense.hands, ())[:, :rank_dim]
+
+    with torch.inference_mode():
+        for pid in (0, 1):
+            actor_hids = np.flatnonzero((dense.popcount & 1) == pid)
+            model = policy._model(pid)
+            for start in range(0, len(actor_hids), histories_per_batch):
+                hids = actor_hids[start:start + histories_per_batch]
+                history_bits = (
+                    (hids[:, None].astype(np.int64) >> claim_bits[None, :]) & 1
+                ).astype(np.float32)
+                features = np.empty(
+                    (len(hids), n_hands, input_dim),
+                    dtype=np.float32,
+                )
+                features[:, :, :rank_dim] = hand_features[None, :, :]
+                features[:, :, rank_dim:] = history_bits[:, None, :]
+
+                x = torch.from_numpy(features.reshape(-1, input_dim)).to(policy.device)
+                logits = model.score_all(
+                    x,
+                    policy.action_features,
+                ).reshape(len(hids), n_hands, action_dim)
+                legal_mask = torch.from_numpy(dense.legal_mask[hids]).to(policy.device)
+                logits = logits.masked_fill(~legal_mask[:, None, :], -torch.inf)
+                dense.S[hids] = torch.softmax(logits, dim=2).float().cpu().numpy()
+
+    dense.recompute_likelihoods()
+    return dense
+
+
 def compile_action_conditioned_q_to_dense(
     policy: ActionConditionedQPolicy,
     *,

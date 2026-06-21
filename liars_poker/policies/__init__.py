@@ -4,7 +4,9 @@ from .tabular_dense import DenseTabularPolicy, mix_dense
 from .neural import NeuralPolicy, compile_neural_to_dense
 from .neural_q import NeuralQPolicy, compile_neural_q_to_dense
 from .action_conditioned import (
+    ActionConditionedPolicy,
     ActionConditionedQPolicy,
+    compile_action_conditioned_to_dense,
     compile_action_conditioned_q_to_dense,
 )
 from .random_policy import RandomPolicy
@@ -17,9 +19,11 @@ __all__ = [
     "mix_dense",
     "NeuralPolicy",
     "NeuralQPolicy",
+    "ActionConditionedPolicy",
     "ActionConditionedQPolicy",
     "compile_neural_to_dense",
     "compile_neural_q_to_dense",
+    "compile_action_conditioned_to_dense",
     "compile_action_conditioned_q_to_dense",
     "RandomPolicy",
     "CommitOnceMixture",

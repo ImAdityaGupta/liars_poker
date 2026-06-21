@@ -37,6 +37,7 @@ class ActionConditionedFittedReturnBRTrainer(FittedReturnBRTrainer):
         epsilon_end: float = 0.05,
         epsilon_decay_decisions: int = 500_000,
         rollouts_per_action: int = 1,
+        fused_optimizer: bool | None = None,
         seed: int = 0,
     ) -> None:
         super().__init__(
@@ -60,13 +61,28 @@ class ActionConditionedFittedReturnBRTrainer(FittedReturnBRTrainer):
         self.embedding_dim = int(embedding_dim)
         self.action_encoder = ActionFeatureEncoder(spec)
         self.action_features = self.action_encoder.tensor(self.device)
+        self.fused_optimizer = (
+            self.device.type == "cuda"
+            if fused_optimizer is None
+            else bool(fused_optimizer)
+        )
 
         self.q_nets = [self._new_model().to(self.device).eval() for _ in range(2)]
         self.target_nets = []
-        self.optimizers = [
-            torch.optim.Adam(model.parameters(), lr=self.learning_rate)
-            for model in self.q_nets
-        ]
+        optimizer_kwargs = {"lr": self.learning_rate}
+        if self.fused_optimizer and self.device.type == "cuda":
+            optimizer_kwargs["fused"] = True
+        try:
+            self.optimizers = [
+                torch.optim.Adam(model.parameters(), **optimizer_kwargs)
+                for model in self.q_nets
+            ]
+        except TypeError:
+            optimizer_kwargs.pop("fused", None)
+            self.optimizers = [
+                torch.optim.Adam(model.parameters(), **optimizer_kwargs)
+                for model in self.q_nets
+            ]
 
     def _new_model(self) -> ActionConditionedScorer:
         return ActionConditionedScorer(
