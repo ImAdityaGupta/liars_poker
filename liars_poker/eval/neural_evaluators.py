@@ -7,7 +7,7 @@ import math
 import multiprocessing as mp
 from pathlib import Path
 import time
-from typing import Callable, Dict, List
+from typing import Callable, Dict, List, Sequence
 
 import numpy as np
 
@@ -220,6 +220,52 @@ class BlockingFunctionEvaluator:
         return []
 
 
+class PolicySnapshotEvaluator:
+    """Persist playable policies without performing an evaluation."""
+
+    def __init__(self) -> None:
+        self.root: Path | None = None
+        self._submitted = 0
+
+    @property
+    def pending_count(self) -> int:
+        return 0
+
+    def start(self, root: str | Path) -> None:
+        self.root = Path(root)
+        self.root.mkdir(parents=True, exist_ok=True)
+
+    def submit(self, policy, context: Dict[str, object]) -> List[Dict[str, object]]:
+        if self.root is None:
+            raise RuntimeError("Evaluator has not been started.")
+        iteration = int(context.get("iteration", 0))
+        training_s = float(context.get("measured_training_s", 0.0))
+        policy_dir = self.root / "snapshots" / (
+            f"train_{training_s:010.3f}_iter_{iteration:08d}_{self._submitted:04d}"
+        )
+        self._submitted += 1
+        start = time.perf_counter()
+        save_policy(policy, str(policy_dir))
+        result = dict(context)
+        result.update(
+            {
+                "policy_dir": str(policy_dir),
+                "snapshot_s": time.perf_counter() - start,
+            }
+        )
+        (policy_dir / "result.json").write_text(
+            json.dumps(result, indent=2, default=_json_default),
+            encoding="utf-8",
+        )
+        return [result]
+
+    def collect_ready(self) -> List[Dict[str, object]]:
+        return []
+
+    def close(self, *, wait: bool = True) -> List[Dict[str, object]]:
+        return []
+
+
 @dataclass
 class ScheduledEvaluation:
     """Schedule an evaluator by measured training time and/or iteration."""
@@ -228,10 +274,28 @@ class ScheduledEvaluation:
     evaluator: object
     every_minutes: float | None = None
     every_iterations: int | None = None
+    at_minutes: Sequence[float] | None = None
     run_at_end: bool = True
     _next_training_s: float = field(init=False, default=math.inf)
+    _next_periodic_training_s: float = field(init=False, default=math.inf)
+    _training_milestones_s: tuple[float, ...] = field(
+        init=False,
+        default=(),
+    )
+    _next_milestone: int = field(init=False, default=0)
     _next_iteration: int = field(init=False, default=2**63 - 1)
     _last_submitted_iteration: int | None = field(init=False, default=None)
+
+    def _refresh_next_training_s(self) -> None:
+        milestone = (
+            self._training_milestones_s[self._next_milestone]
+            if self._next_milestone < len(self._training_milestones_s)
+            else math.inf
+        )
+        self._next_training_s = min(
+            self._next_periodic_training_s,
+            milestone,
+        )
 
     def start(
         self,
@@ -242,11 +306,32 @@ class ScheduledEvaluation:
     ) -> None:
         root = Path(run_dir) / "evaluations" / self.name
         self.evaluator.start(root)
+        self._next_periodic_training_s = math.inf
+        self._next_training_s = math.inf
+        self._next_iteration = 2**63 - 1
+        self._last_submitted_iteration = None
         if self.every_minutes is not None and self.every_minutes > 0:
             period = 60.0 * float(self.every_minutes)
-            self._next_training_s = (
+            self._next_periodic_training_s = (
                 math.floor(measured_training_s / period) + 1
             ) * period
+        self._training_milestones_s = tuple(
+            sorted(
+                {
+                    60.0 * float(minutes)
+                    for minutes in (self.at_minutes or ())
+                    if float(minutes) > 0.0
+                }
+            )
+        )
+        self._next_milestone = 0
+        while (
+            self._next_milestone < len(self._training_milestones_s)
+            and self._training_milestones_s[self._next_milestone]
+            <= measured_training_s
+        ):
+            self._next_milestone += 1
+        self._refresh_next_training_s()
         if self.every_iterations is not None and self.every_iterations > 0:
             period = int(self.every_iterations)
             self._next_iteration = (iteration // period + 1) * period
@@ -266,8 +351,15 @@ class ScheduledEvaluation:
         self._last_submitted_iteration = int(iteration)
         if self.every_minutes is not None and self.every_minutes > 0:
             period = 60.0 * float(self.every_minutes)
-            while self._next_training_s <= measured_training_s:
-                self._next_training_s += period
+            while self._next_periodic_training_s <= measured_training_s:
+                self._next_periodic_training_s += period
+        while (
+            self._next_milestone < len(self._training_milestones_s)
+            and self._training_milestones_s[self._next_milestone]
+            <= measured_training_s
+        ):
+            self._next_milestone += 1
+        self._refresh_next_training_s()
         if self.every_iterations is not None and self.every_iterations > 0:
             period = int(self.every_iterations)
             while self._next_iteration <= iteration:
