@@ -67,7 +67,11 @@ class ActionConditionedFittedReturnBRTrainer(FittedReturnBRTrainer):
             else bool(fused_optimizer)
         )
 
-        self.q_nets = [self._new_model().to(self.device).eval() for _ in range(2)]
+        self.q_nets = [self._new_model().to(self.device) for _ in range(2)]
+        for model in self.q_nets:
+            model.initialize_action_neutral()
+            model.eval()
+            model.cache_actions(self.action_features)
         self.target_nets = []
         optimizer_kwargs = {"lr": self.learning_rate}
         if self.fused_optimizer and self.device.type == "cuda":
@@ -101,10 +105,7 @@ class ActionConditionedFittedReturnBRTrainer(FittedReturnBRTrainer):
         epsilon: float,
     ) -> torch.Tensor:
         with torch.inference_mode():
-            q_values = self.q_nets[role].score_all(
-                features,
-                self.action_features,
-            )
+            q_values = self.q_nets[role].score_all_cached(features)
         greedy = q_values.masked_fill(~legal_mask, -torch.inf).argmax(dim=1)
         if epsilon <= 0.0:
             return greedy
@@ -137,8 +138,11 @@ class ActionConditionedFittedReturnBRTrainer(FittedReturnBRTrainer):
                 self.batch_size,
                 self.generator,
             )
-            action_features = self.action_features.index_select(0, actions)
-            predicted = model.score_pairs(features, action_features)
+            predicted = model.score_selected(
+                features,
+                self.action_features,
+                actions,
+            )
             loss = F.smooth_l1_loss(predicted, returns)
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
@@ -147,6 +151,7 @@ class ActionConditionedFittedReturnBRTrainer(FittedReturnBRTrainer):
             self.optimizer_steps[role] += 1
             losses.append(float(loss.detach()))
         model.eval()
+        model.cache_actions(self.action_features)
         return float(np.mean(losses))
 
     def policy(self) -> ActionConditionedQPolicy:

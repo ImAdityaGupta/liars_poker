@@ -258,7 +258,7 @@ class GPUFSPStrategyCollector:
     ) -> torch.Tensor:
         model = policy._model(role)
         with torch.inference_mode():
-            scores = model.score_all(features, policy.action_features).float()
+            scores = model.score_all_cached(features).float()
             scores = scores.masked_fill(~legal_mask, -torch.inf)
             if isinstance(policy, ActionConditionedPolicy):
                 return torch.multinomial(

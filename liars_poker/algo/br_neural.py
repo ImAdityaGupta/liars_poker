@@ -224,6 +224,9 @@ class _FixedOpponent:
                 copy.deepcopy(policy.model_p1).to(device).eval(),
                 copy.deepcopy(policy.model_p2).to(device).eval(),
             ]
+            if self.kind in {"action_conditioned", "action_conditioned_q"}:
+                for model in self.models:
+                    model.cache_actions(self.action_features)
             return
 
         raise TypeError(
@@ -248,10 +251,7 @@ class _FixedOpponent:
         else:
             with torch.inference_mode():
                 if self.kind in {"action_conditioned", "action_conditioned_q"}:
-                    values = self.models[actor].score_all(
-                        features,
-                        self.action_features,
-                    ).float()
+                    values = self.models[actor].score_all_cached(features).float()
                 else:
                     values = self.models[actor](features).float()
             if self.kind in {"neural_q", "action_conditioned_q"}:

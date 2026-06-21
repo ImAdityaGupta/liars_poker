@@ -246,6 +246,7 @@ class NeuralFSPTrainer:
             optimizer.step()
             losses.append(float(loss.detach()))
         model.eval()
+        model.cache_actions(self.average.action_features)
         return float(np.mean(losses))
 
     def train_average(
@@ -276,10 +277,7 @@ class NeuralFSPTrainer:
             legal_rows = buffer.legal_rows[: buffer.size].long()
             legal = self.legal_masks.index_select(0, legal_rows)
             with torch.inference_mode():
-                logits = self.average_nets[role].score_all(
-                    features,
-                    self.average.action_features,
-                )
+                logits = self.average_nets[role].score_all_cached(features)
                 logits = logits.masked_fill(~legal, -1e9)
                 loss = F.cross_entropy(logits, actions)
                 accuracy = (logits.argmax(dim=1) == actions).float().mean()
@@ -307,6 +305,7 @@ class NeuralFSPTrainer:
             for model, state in zip(trainer.q_nets, self.last_br_states):
                 model.load_state_dict(state)
                 model.eval()
+                model.cache_actions(trainer.action_features)
         return trainer
 
     def run_iteration(
@@ -452,6 +451,7 @@ class NeuralFSPTrainer:
         ):
             model.load_state_dict(model_state)
             model.eval()
+            model.cache_actions(trainer.average.action_features)
         for optimizer, optimizer_state in zip(
             trainer.average_optimizers,
             state["average_optimizers"],

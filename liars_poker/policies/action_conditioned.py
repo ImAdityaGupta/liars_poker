@@ -132,6 +132,50 @@ class ActionConditionedScorer(nn.Module):
         self.state_bias = nn.Linear(state_dim, 1)
         self.action_bias = nn.Linear(action_dim, 1)
         self.scale = math.sqrt(embedding_dim)
+        self._cached_action_embedding: torch.Tensor | None = None
+        self._cached_action_bias: torch.Tensor | None = None
+
+    def train(self, mode: bool = True) -> "ActionConditionedScorer":
+        super().train(mode)
+        if mode:
+            self.clear_action_cache()
+        return self
+
+    def clear_action_cache(self) -> None:
+        self._cached_action_embedding = None
+        self._cached_action_bias = None
+
+    def initialize_action_neutral(self) -> None:
+        final = self.action_tower.net[-1]
+        if isinstance(final, nn.Linear):
+            nn.init.zeros_(final.weight)
+            nn.init.zeros_(final.bias)
+        nn.init.zeros_(self.action_bias.weight)
+        nn.init.zeros_(self.action_bias.bias)
+        self.clear_action_cache()
+
+    def cache_actions(self, action_features: torch.Tensor) -> None:
+        with torch.no_grad():
+            self._cached_action_embedding = self.action_tower(
+                action_features
+            ).detach()
+            self._cached_action_bias = self.action_bias(
+                action_features
+            ).squeeze(1).detach()
+
+    def _score_encoded_actions(
+        self,
+        state_features: torch.Tensor,
+        action_embedding: torch.Tensor,
+        action_bias: torch.Tensor,
+    ) -> torch.Tensor:
+        state_embedding = self.state_tower(state_features)
+        interaction = state_embedding @ action_embedding.T / self.scale
+        return (
+            interaction
+            + self.state_bias(state_features)
+            + action_bias[None, :]
+        )
 
     def score_pairs(
         self,
@@ -147,18 +191,47 @@ class ActionConditionedScorer(nn.Module):
             + self.action_bias(action_features).squeeze(1)
         )
 
+    def score_selected(
+        self,
+        state_features: torch.Tensor,
+        action_features: torch.Tensor,
+        action_ids: torch.Tensor,
+    ) -> torch.Tensor:
+        """Score one selected action per state after one action-table encoding."""
+
+        action_embedding = self.action_tower(action_features)
+        action_bias = self.action_bias(action_features).squeeze(1)
+        state_embedding = self.state_tower(state_features)
+        selected_embedding = action_embedding.index_select(0, action_ids)
+        return (
+            (state_embedding * selected_embedding).sum(dim=1) / self.scale
+            + self.state_bias(state_features).squeeze(1)
+            + action_bias.index_select(0, action_ids)
+        )
+
     def score_all(
         self,
         state_features: torch.Tensor,
         action_features: torch.Tensor,
     ) -> torch.Tensor:
-        state_embedding = self.state_tower(state_features)
         action_embedding = self.action_tower(action_features)
-        interaction = state_embedding @ action_embedding.T / self.scale
-        return (
-            interaction
-            + self.state_bias(state_features)
-            + self.action_bias(action_features).T
+        action_bias = self.action_bias(action_features).squeeze(1)
+        return self._score_encoded_actions(
+            state_features,
+            action_embedding,
+            action_bias,
+        )
+
+    def score_all_cached(self, state_features: torch.Tensor) -> torch.Tensor:
+        if (
+            self._cached_action_embedding is None
+            or self._cached_action_bias is None
+        ):
+            raise RuntimeError("Action embeddings have not been cached.")
+        return self._score_encoded_actions(
+            state_features,
+            self._cached_action_embedding,
+            self._cached_action_bias,
         )
 
     def forward(
@@ -197,6 +270,7 @@ class ActionConditionedQPolicy(Policy):
         self.action_features = self.action_encoder.tensor(self.device)
         self.model_p1 = self._new_model().to(self.device)
         self.model_p2 = self._new_model().to(self.device)
+        self._initialize_action_neutral()
         self.eval()
 
     def _new_model(self) -> ActionConditionedScorer:
@@ -208,9 +282,15 @@ class ActionConditionedQPolicy(Policy):
             embedding_dim=self.embedding_dim,
         )
 
+    def _initialize_action_neutral(self) -> None:
+        for model in (self.model_p1, self.model_p2):
+            model.initialize_action_neutral()
+
     def eval(self) -> "ActionConditionedQPolicy":
         self.model_p1.eval()
         self.model_p2.eval()
+        self.model_p1.cache_actions(self.action_features)
+        self.model_p2.cache_actions(self.action_features)
         return self
 
     def _model(self, pid: int) -> ActionConditionedScorer:
@@ -229,10 +309,7 @@ class ActionConditionedQPolicy(Policy):
     ) -> np.ndarray:
         features = torch.from_numpy(self.encoder.encode(hand, history)).to(self.device)
         with torch.inference_mode():
-            values = self._model(pid).score_all(
-                features[None, :],
-                self.action_features,
-            )[0]
+            values = self._model(pid).score_all_cached(features[None, :])[0]
         return values.float().cpu().numpy()
 
     def action_probs(self, infoset: InfoSet) -> Dict[int, float]:
@@ -329,13 +406,8 @@ class ActionConditionedPolicy(ActionConditionedQPolicy):
         self._initialize_uniform()
 
     def _initialize_uniform(self) -> None:
-        for model in (self.model_p1, self.model_p2):
-            final = model.action_tower.net[-1]
-            if isinstance(final, nn.Linear):
-                nn.init.zeros_(final.weight)
-                nn.init.zeros_(final.bias)
-            nn.init.zeros_(model.action_bias.weight)
-            nn.init.zeros_(model.action_bias.bias)
+        self._initialize_action_neutral()
+        self.eval()
 
     def legal_logits(
         self,
@@ -347,10 +419,7 @@ class ActionConditionedPolicy(ActionConditionedQPolicy):
     ) -> tuple[list[int], torch.Tensor]:
         cols = [self._action_col(action) for action in legal]
         features = torch.from_numpy(self.encoder.encode(hand, history)).to(self.device)
-        logits = self._model(pid).score_all(
-            features[None, :],
-            self.action_features,
-        )[0, cols]
+        logits = self._model(pid).score_all_cached(features[None, :])[0, cols]
         return cols, logits
 
     def action_probs(self, infoset: InfoSet) -> Dict[int, float]:
@@ -430,10 +499,11 @@ def compile_action_conditioned_to_dense(
                 features[:, :, rank_dim:] = history_bits[:, None, :]
 
                 x = torch.from_numpy(features.reshape(-1, input_dim)).to(policy.device)
-                logits = model.score_all(
-                    x,
-                    policy.action_features,
-                ).reshape(len(hids), n_hands, action_dim)
+                logits = model.score_all_cached(x).reshape(
+                    len(hids),
+                    n_hands,
+                    action_dim,
+                )
                 legal_mask = torch.from_numpy(dense.legal_mask[hids]).to(policy.device)
                 logits = logits.masked_fill(~legal_mask[:, None, :], -torch.inf)
                 dense.S[hids] = torch.softmax(logits, dim=2).float().cpu().numpy()
@@ -478,10 +548,11 @@ def compile_action_conditioned_q_to_dense(
                 features[:, :, rank_dim:] = history_bits[:, None, :]
 
                 x = torch.from_numpy(features.reshape(-1, input_dim)).to(policy.device)
-                q_values = model.score_all(
-                    x,
-                    policy.action_features,
-                ).reshape(len(hids), n_hands, action_dim)
+                q_values = model.score_all_cached(x).reshape(
+                    len(hids),
+                    n_hands,
+                    action_dim,
+                )
                 legal_mask = torch.from_numpy(dense.legal_mask[hids]).to(policy.device)
                 best_cols = q_values.masked_fill(
                     ~legal_mask[:, None, :],
