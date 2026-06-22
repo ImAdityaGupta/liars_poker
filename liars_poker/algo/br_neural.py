@@ -10,6 +10,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
+from liars_poker.algo.packed_history import PackedHistory
 from liars_poker.core import GameSpec, card_rank, generate_deck
 from liars_poker.env import rules_for_spec
 from liars_poker.infoset import CALL
@@ -243,6 +244,10 @@ class _FixedOpponent:
         legal_mask: torch.Tensor,
     ) -> torch.Tensor:
         if self.kind == "dense":
+            if hids.ndim != 1:
+                raise ValueError(
+                    "Dense opponents are unavailable above 63 claims."
+                )
             codes = (hand_counts.long() * self.hand_code_powers).sum(dim=1)
             hand_idx = self.hand_lookup.index_select(0, codes)
             if bool((hand_idx < 0).any()):
@@ -356,11 +361,7 @@ class NeuralBRTrainer:
         self.k = self.encoder.k
         self.action_dim = self.encoder.action_dim
         self.ranks = spec.ranks
-        self.history_shifts = torch.arange(
-            self.k,
-            dtype=torch.long,
-            device=self.device,
-        )
+        self.history = PackedHistory(self.k, self.device)
         deck_ranks = [card_rank(card, spec) - 1 for card in generate_deck(spec)]
         self.deck_ranks = torch.tensor(
             deck_ranks,
@@ -450,12 +451,12 @@ class NeuralBRTrainer:
         self,
         actor: int,
         deal_idx: torch.Tensor,
-        hids: torch.Tensor,
+        histories: torch.Tensor,
         p1_counts: torch.Tensor,
         p2_counts: torch.Tensor,
     ) -> torch.Tensor:
         hand = (p1_counts if actor == 0 else p2_counts).index_select(0, deal_idx)
-        history = ((hids[:, None] >> self.history_shifts[None, :]) & 1).float()
+        history = self.history.features(histories)
         return torch.cat((hand, history), dim=1)
 
     def _terminal_rewards(
@@ -498,12 +499,18 @@ class NeuralBRTrainer:
         self,
         actor: int,
         deal_idx: torch.Tensor,
-        hids: torch.Tensor,
+        histories: torch.Tensor,
         last_claim: torch.Tensor,
         p1_counts: torch.Tensor,
         p2_counts: torch.Tensor,
     ) -> torch.Tensor:
-        features = self._features(actor, deal_idx, hids, p1_counts, p2_counts)
+        features = self._features(
+            actor,
+            deal_idx,
+            histories,
+            p1_counts,
+            p2_counts,
+        )
         legal = self.legal_masks.index_select(0, last_claim + 1)
         hand_counts = (p1_counts if actor == 0 else p2_counts).index_select(
             0,
@@ -512,7 +519,7 @@ class NeuralBRTrainer:
         probs = self.opponent.probabilities(
             actor,
             features,
-            hids,
+            histories,
             hand_counts,
             legal,
         )
@@ -557,7 +564,7 @@ class NeuralBRTrainer:
         self,
         role: int,
         deal_idx: torch.Tensor,
-        hids: torch.Tensor,
+        histories: torch.Tensor,
         last_claim: torch.Tensor,
         action_cols: torch.Tensor,
         p1_counts: torch.Tensor,
@@ -567,7 +574,7 @@ class NeuralBRTrainer:
         n = len(action_cols)
         rewards = torch.zeros(n, dtype=torch.float32, device=self.device)
         dones = torch.zeros(n, dtype=torch.bool, device=self.device)
-        next_hids = hids.clone()
+        next_histories = histories.clone()
         next_last = last_claim.clone()
 
         calls = action_cols == 0
@@ -585,15 +592,16 @@ class NeuralBRTrainer:
         if bool(raises.any()):
             rows = raises.nonzero(as_tuple=False).squeeze(1)
             claims = action_cols.index_select(0, rows) - 1
-            raised_hids = hids.index_select(0, rows) | (
-                torch.ones_like(claims) << claims
+            raised_histories = self.history.append(
+                self.history.select(histories, rows),
+                claims,
             )
             branch_deals = deal_idx.index_select(0, rows)
             opponent_role = 1 - role
             opponent_cols = self._opponent_actions(
                 opponent_role,
                 branch_deals,
-                raised_hids,
+                raised_histories,
                 claims,
                 p1_counts,
                 p2_counts,
@@ -614,8 +622,9 @@ class NeuralBRTrainer:
             if bool(opponent_raises.any()):
                 continue_rows = rows[opponent_raises]
                 opponent_claims = opponent_cols[opponent_raises] - 1
-                next_hids[continue_rows] = raised_hids[opponent_raises] | (
-                    torch.ones_like(opponent_claims) << opponent_claims
+                next_histories[continue_rows] = self.history.append(
+                    raised_histories[opponent_raises],
+                    opponent_claims,
                 )
                 next_last[continue_rows] = opponent_claims
 
@@ -634,7 +643,7 @@ class NeuralBRTrainer:
             next_features[continues] = self._features(
                 role,
                 deal_idx[continues],
-                next_hids[continues],
+                next_histories[continues],
                 p1_counts,
                 p2_counts,
             )
@@ -642,7 +651,14 @@ class NeuralBRTrainer:
                 0,
                 next_last[continues] + 1,
             )
-        return rewards, dones, next_hids, next_last, next_features, next_masks
+        return (
+            rewards,
+            dones,
+            next_histories,
+            next_last,
+            next_features,
+            next_masks,
+        )
 
     def _run_batch(
         self,
@@ -655,7 +671,7 @@ class NeuralBRTrainer:
     ) -> Dict[str, int]:
         p1_counts, p2_counts, total_counts = self._sample_deals(episodes)
         deal_idx = torch.arange(episodes, device=self.device)
-        hids = torch.zeros(episodes, dtype=torch.long, device=self.device)
+        histories = self.history.zeros(episodes)
         last_claim = torch.full(
             (episodes,),
             -1,
@@ -667,27 +683,27 @@ class NeuralBRTrainer:
             opponent_cols = self._opponent_actions(
                 0,
                 deal_idx,
-                hids,
+                histories,
                 last_claim,
                 p1_counts,
                 p2_counts,
             )
             claims = opponent_cols - 1
-            hids = torch.ones_like(claims) << claims
+            histories = self.history.from_claims(claims)
             last_claim = claims
 
         wins = 0
         transitions = 0
         decisions = 0
         active_deals = deal_idx
-        active_hids = hids
+        active_histories = histories
         active_last = last_claim
 
         while active_deals.numel():
             features = self._features(
                 role,
                 active_deals,
-                active_hids,
+                active_histories,
                 p1_counts,
                 p2_counts,
             )
@@ -701,7 +717,10 @@ class NeuralBRTrainer:
                 parent_rows = edges[:, 0]
                 action_cols = edges[:, 1]
                 branch_deals = active_deals.index_select(0, parent_rows)
-                branch_hids = active_hids.index_select(0, parent_rows)
+                branch_histories = self.history.select(
+                    active_histories,
+                    parent_rows,
+                )
                 branch_last = active_last.index_select(0, parent_rows)
                 branch_features = features.index_select(0, parent_rows)
                 branch_index = torch.full(
@@ -721,7 +740,7 @@ class NeuralBRTrainer:
             else:
                 action_cols = chosen_cols
                 branch_deals = active_deals
-                branch_hids = active_hids
+                branch_histories = active_histories
                 branch_last = active_last
                 branch_features = features
                 selected = torch.arange(n_states, device=self.device)
@@ -729,14 +748,14 @@ class NeuralBRTrainer:
             (
                 rewards,
                 dones,
-                next_hids,
+                next_histories,
                 next_last,
                 next_features,
                 next_masks,
             ) = self._advance_actions(
                 role,
                 branch_deals,
-                branch_hids,
+                branch_histories,
                 branch_last,
                 action_cols,
                 p1_counts,
@@ -761,7 +780,10 @@ class NeuralBRTrainer:
             keep = ~selected_done
             selected = selected[keep]
             active_deals = branch_deals.index_select(0, selected)
-            active_hids = next_hids.index_select(0, selected)
+            active_histories = self.history.select(
+                next_histories,
+                selected,
+            )
             active_last = next_last.index_select(0, selected)
 
         if collect:

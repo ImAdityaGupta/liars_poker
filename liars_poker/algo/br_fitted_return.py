@@ -138,7 +138,7 @@ class FittedReturnBRTrainer(NeuralBRTrainer):
         self,
         role: int,
         deal_idx: torch.Tensor,
-        hids: torch.Tensor,
+        histories: torch.Tensor,
         last_claim: torch.Tensor,
         action_cols: torch.Tensor,
         p1_counts: torch.Tensor,
@@ -149,21 +149,21 @@ class FittedReturnBRTrainer(NeuralBRTrainer):
         base_n = len(action_cols)
         if repeats > 1:
             deal_idx = deal_idx.repeat_interleave(repeats)
-            hids = hids.repeat_interleave(repeats)
+            histories = self.history.repeat_interleave(histories, repeats)
             last_claim = last_claim.repeat_interleave(repeats)
             action_cols = action_cols.repeat_interleave(repeats)
 
         (
             rewards,
             dones,
-            next_hids,
+            next_histories,
             next_last,
             _,
             _,
         ) = self._advance_actions(
             role,
             deal_idx,
-            hids,
+            histories,
             last_claim,
             action_cols,
             p1_counts,
@@ -175,14 +175,14 @@ class FittedReturnBRTrainer(NeuralBRTrainer):
 
         active_rows = (~dones).nonzero(as_tuple=False).squeeze(1)
         active_deals = deal_idx.index_select(0, active_rows)
-        active_hids = next_hids.index_select(0, active_rows)
+        active_histories = self.history.select(next_histories, active_rows)
         active_last = next_last.index_select(0, active_rows)
 
         while active_rows.numel():
             features = self._features(
                 role,
                 active_deals,
-                active_hids,
+                active_histories,
                 p1_counts,
                 p2_counts,
             )
@@ -191,14 +191,14 @@ class FittedReturnBRTrainer(NeuralBRTrainer):
             (
                 rewards,
                 dones,
-                next_hids,
+                next_histories,
                 next_last,
                 _,
                 _,
             ) = self._advance_actions(
                 role,
                 active_deals,
-                active_hids,
+                active_histories,
                 active_last,
                 chosen,
                 p1_counts,
@@ -209,7 +209,8 @@ class FittedReturnBRTrainer(NeuralBRTrainer):
             keep = ~dones
             active_rows = active_rows[keep]
             active_deals = active_deals[keep]
-            active_hids = next_hids[keep]
+            keep_rows = keep.nonzero(as_tuple=False).squeeze(1)
+            active_histories = self.history.select(next_histories, keep_rows)
             active_last = next_last[keep]
 
         if repeats > 1:
@@ -219,7 +220,7 @@ class FittedReturnBRTrainer(NeuralBRTrainer):
     def _collect_batch_returns(self, role: int, episodes: int) -> Dict[str, int]:
         p1_counts, p2_counts, total_counts = self._sample_deals(episodes)
         deal_idx = torch.arange(episodes, device=self.device)
-        hids = torch.zeros(episodes, dtype=torch.long, device=self.device)
+        histories = self.history.zeros(episodes)
         last_claim = torch.full(
             (episodes,),
             -1,
@@ -231,13 +232,13 @@ class FittedReturnBRTrainer(NeuralBRTrainer):
             opponent_cols = self._opponent_actions(
                 0,
                 deal_idx,
-                hids,
+                histories,
                 last_claim,
                 p1_counts,
                 p2_counts,
             )
             claims = opponent_cols - 1
-            hids = torch.ones_like(claims) << claims
+            histories = self.history.from_claims(claims)
             last_claim = claims
 
         wins = 0
@@ -245,14 +246,14 @@ class FittedReturnBRTrainer(NeuralBRTrainer):
         targets = 0
         epsilon = self.epsilon(role)
         active_deals = deal_idx
-        active_hids = hids
+        active_histories = histories
         active_last = last_claim
 
         while active_deals.numel():
             features = self._features(
                 role,
                 active_deals,
-                active_hids,
+                active_histories,
                 p1_counts,
                 p2_counts,
             )
@@ -267,7 +268,7 @@ class FittedReturnBRTrainer(NeuralBRTrainer):
             returns = self._complete_returns(
                 role,
                 active_deals.index_select(0, parent_rows),
-                active_hids.index_select(0, parent_rows),
+                self.history.select(active_histories, parent_rows),
                 active_last.index_select(0, parent_rows),
                 action_cols,
                 p1_counts,
@@ -280,14 +281,14 @@ class FittedReturnBRTrainer(NeuralBRTrainer):
             (
                 rewards,
                 dones,
-                next_hids,
+                next_histories,
                 next_last,
                 _,
                 _,
             ) = self._advance_actions(
                 role,
                 active_deals,
-                active_hids,
+                active_histories,
                 active_last,
                 chosen,
                 p1_counts,
@@ -297,7 +298,8 @@ class FittedReturnBRTrainer(NeuralBRTrainer):
             wins += int((dones & (rewards > 0)).sum().item())
             keep = ~dones
             active_deals = active_deals[keep]
-            active_hids = next_hids[keep]
+            keep_rows = keep.nonzero(as_tuple=False).squeeze(1)
+            active_histories = self.history.select(next_histories, keep_rows)
             active_last = next_last[keep]
 
         self.decisions_seen[role] += decisions
@@ -374,4 +376,3 @@ class FittedReturnBRTrainer(NeuralBRTrainer):
             collected["replay_seen"] = self.replay[role].seen
             role_records.append(collected)
         return {"iter": self.iteration, "roles": role_records}
-

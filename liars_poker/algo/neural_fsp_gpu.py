@@ -4,6 +4,7 @@ from typing import Dict
 
 import torch
 
+from liars_poker.algo.packed_history import PackedHistory
 from liars_poker.core import GameSpec, card_rank, generate_deck
 from liars_poker.infoset import CALL
 from liars_poker.policies.action_conditioned import (
@@ -182,11 +183,7 @@ class GPUFSPStrategyCollector:
         self.k = self.encoder.k
         self.action_dim = self.encoder.action_dim
         self.ranks = spec.ranks
-        self.history_shifts = torch.arange(
-            self.k,
-            dtype=torch.long,
-            device=self.device,
-        )
+        self.history = PackedHistory(self.k, self.device)
         deck_ranks = [card_rank(card, spec) - 1 for card in generate_deck(spec)]
         self.deck_ranks = torch.tensor(
             deck_ranks,
@@ -240,12 +237,12 @@ class GPUFSPStrategyCollector:
         self,
         role: int,
         deal_idx: torch.Tensor,
-        hids: torch.Tensor,
+        histories: torch.Tensor,
         p1_counts: torch.Tensor,
         p2_counts: torch.Tensor,
     ) -> torch.Tensor:
         hand = (p1_counts if role == 0 else p2_counts).index_select(0, deal_idx)
-        history = ((hids[:, None] >> self.history_shifts[None, :]) & 1).float()
+        history = self.history.features(histories)
         return torch.cat((hand, history), dim=1)
 
     def _policy_actions(
@@ -280,7 +277,7 @@ class GPUFSPStrategyCollector:
     ) -> Dict[str, int]:
         p1_counts, p2_counts = self._sample_hands(episodes)
         deal_idx = torch.arange(episodes, device=self.device)
-        hids = torch.zeros(episodes, dtype=torch.long, device=self.device)
+        histories = self.history.zeros(episodes)
         last_claim = torch.full(
             (episodes,),
             -1,
@@ -300,7 +297,7 @@ class GPUFSPStrategyCollector:
                 features = self._features(
                     role,
                     deal_idx,
-                    hids,
+                    histories,
                     p1_counts,
                     p2_counts,
                 )
@@ -338,9 +335,9 @@ class GPUFSPStrategyCollector:
 
                 continues = actions > 0
                 deal_idx = deal_idx[continues]
-                hids = hids[continues]
+                histories = histories[continues]
                 claims = actions[continues] - 1
-                hids = hids | (torch.ones_like(claims) << claims)
+                histories = self.history.append(histories, claims)
                 last_claim = claims
                 continue
 
@@ -348,8 +345,9 @@ class GPUFSPStrategyCollector:
             parent_rows = claim_edges[:, 0]
             claims = claim_edges[:, 1]
             deal_idx = deal_idx.index_select(0, parent_rows)
-            hids = hids.index_select(0, parent_rows) | (
-                torch.ones_like(claims) << claims
+            histories = self.history.append(
+                self.history.select(histories, parent_rows),
+                claims,
             )
             last_claim = claims
             peak_states = max(peak_states, int(deal_idx.numel()))

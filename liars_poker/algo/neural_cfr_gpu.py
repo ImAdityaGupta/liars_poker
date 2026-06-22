@@ -4,6 +4,7 @@ from typing import Dict, List
 
 import torch
 
+from liars_poker.algo.packed_history import PackedHistory
 from liars_poker.core import card_rank, generate_deck
 from liars_poker.infoset import CALL
 
@@ -27,11 +28,10 @@ class GPUDeepCFRTraverser:
         self.k = self.encoder.k
         self.action_dim = self.encoder.action_dim
         self.ranks = self.spec.ranks
+        self.history = PackedHistory(self.k, self.device)
 
         deck_ranks = [card_rank(card, self.spec) - 1 for card in generate_deck(self.spec)]
         self.deck_ranks = torch.tensor(deck_ranks, dtype=torch.long, device=self.device)
-        self.history_shifts = torch.arange(self.k, dtype=torch.long, device=self.device)
-
         legal_masks = torch.zeros(
             (self.k + 1, self.action_dim),
             dtype=torch.bool,
@@ -113,7 +113,7 @@ class GPUDeepCFRTraverser:
         self,
         actor: int,
         deal_idx: torch.Tensor,
-        hids: torch.Tensor,
+        histories: torch.Tensor,
         p1_counts: torch.Tensor,
         p2_counts: torch.Tensor,
     ) -> torch.Tensor:
@@ -121,7 +121,7 @@ class GPUDeepCFRTraverser:
             0,
             deal_idx,
         )
-        history = ((hids[:, None] >> self.history_shifts[None, :]) & 1).float()
+        history = self.history.features(histories)
         return torch.cat((hand_counts, history), dim=1)
 
     def _strategy_batch(
@@ -191,7 +191,7 @@ class GPUDeepCFRTraverser:
     def run_traversals(self, traverser: int, batch_size: int) -> Dict[str, int]:
         p1_counts, p2_counts, total_counts = self._sample_deals(batch_size)
         current_deal = torch.arange(batch_size, dtype=torch.long, device=self.device)
-        current_hid = torch.zeros(batch_size, dtype=torch.long, device=self.device)
+        current_history = self.history.zeros(batch_size)
         current_last = torch.full(
             (batch_size,),
             -1,
@@ -205,14 +205,14 @@ class GPUDeepCFRTraverser:
         strategy_masks: List[torch.Tensor] = []
 
         for depth in range(self.k + 1):
-            if current_hid.numel() == 0:
+            if self.history.rows(current_history) == 0:
                 break
 
             actor = depth & 1
             features = self._features(
                 actor,
                 current_deal,
-                current_hid,
+                current_history,
                 p1_counts,
                 p2_counts,
             )
@@ -244,8 +244,9 @@ class GPUDeepCFRTraverser:
                 )
 
                 current_deal = current_deal.index_select(0, parent_rows)
-                current_hid = current_hid.index_select(0, parent_rows) | (
-                    torch.ones_like(claim_ids) << claim_ids
+                current_history = self.history.append(
+                    self.history.select(current_history, parent_rows),
+                    claim_ids,
                 )
                 current_last = claim_ids
                 continue
@@ -280,8 +281,9 @@ class GPUDeepCFRTraverser:
 
             claim_ids = sampled_cols.index_select(0, parent_rows) - 1
             current_deal = current_deal.index_select(0, parent_rows)
-            current_hid = current_hid.index_select(0, parent_rows) | (
-                torch.ones_like(claim_ids) << claim_ids
+            current_history = self.history.append(
+                self.history.select(current_history, parent_rows),
+                claim_ids,
             )
             current_last = claim_ids
 

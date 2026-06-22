@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import time
 from typing import Dict, List
 
 import torch
 
+from liars_poker.algo.packed_history import PackedHistory
 from liars_poker.core import card_rank, generate_deck
 from liars_poker.infoset import CALL
 
@@ -32,6 +34,7 @@ class GPUDeepCFRPlusTraverser:
         self.action_full_first = trainer.traverser_action_full_first
         self.action_priority_count = trainer.traverser_action_priority_count
         self.action_baseline = trainer.traverser_action_baseline
+        self.history = PackedHistory(self.k, self.device)
 
         deck_ranks = [
             card_rank(card, self.spec) - 1 for card in generate_deck(self.spec)
@@ -41,12 +44,6 @@ class GPUDeepCFRPlusTraverser:
             dtype=torch.long,
             device=self.device,
         )
-        self.history_shifts = torch.arange(
-            self.k,
-            dtype=torch.long,
-            device=self.device,
-        )
-
         legal_masks = torch.zeros(
             (self.k + 1, self.action_dim),
             dtype=torch.bool,
@@ -140,7 +137,7 @@ class GPUDeepCFRPlusTraverser:
         self,
         actor: int,
         deal_idx: torch.Tensor,
-        hids: torch.Tensor,
+        histories: torch.Tensor,
         p1_counts: torch.Tensor,
         p2_counts: torch.Tensor,
     ) -> torch.Tensor:
@@ -148,7 +145,7 @@ class GPUDeepCFRPlusTraverser:
             0,
             deal_idx,
         )
-        history = ((hids[:, None] >> self.history_shifts[None, :]) & 1).float()
+        history = self.history.features(histories)
         return torch.cat((hand_counts, history), dim=1)
 
     def _regrets_and_strategy(
@@ -334,18 +331,27 @@ class GPUDeepCFRPlusTraverser:
             -torch.ones_like(count_a),
         )
 
-    def run_traversals(self, traverser: int, batch_size: int) -> Dict[str, int]:
+    def run_traversals(
+        self,
+        traverser: int,
+        batch_size: int,
+        *,
+        profile: bool = False,
+        commit_records: bool = True,
+    ) -> Dict[str, object]:
+        use_cuda_events = profile and self.device.type == "cuda"
+        if use_cuda_events:
+            torch.cuda.reset_peak_memory_stats(self.device)
+        depth_profile: List[Dict[str, object]] = []
+        profile_by_depth: Dict[int, Dict[str, object]] = {}
+
         p1_counts, p2_counts, total_counts = self._sample_deals(batch_size)
         current_deal = torch.arange(
             batch_size,
             dtype=torch.long,
             device=self.device,
         )
-        current_hid = torch.zeros(
-            batch_size,
-            dtype=torch.long,
-            device=self.device,
-        )
+        current_history = self.history.zeros(batch_size)
         current_last = torch.full(
             (batch_size,),
             -1,
@@ -375,14 +381,38 @@ class GPUDeepCFRPlusTraverser:
         )
 
         for depth in range(self.k + 1):
-            if current_hid.numel() == 0:
+            if self.history.rows(current_history) == 0:
                 break
 
+            forward_start = None
+            forward_end = None
+            cpu_forward_start = 0.0
+            if use_cuda_events:
+                forward_start = torch.cuda.Event(enable_timing=True)
+                forward_end = torch.cuda.Event(enable_timing=True)
+                forward_start.record()
+            elif profile:
+                cpu_forward_start = time.perf_counter()
+
             actor = depth & 1
+            profile_row: Dict[str, object] | None = None
+            if profile:
+                profile_row = {
+                    "depth": depth,
+                    "actor": actor,
+                    "traverser": traverser,
+                    "active_rows_in": self.history.rows(current_history),
+                    "traverser_claim_edges_full": 0,
+                    "traverser_claim_edges_expanded": 0,
+                    "opponent_continuations": 0,
+                    "regret_records": 0,
+                    "strategy_records": 0,
+                    "backup_s": 0.0,
+                }
             features = self._features(
                 actor,
                 current_deal,
-                current_hid,
+                current_history,
                 p1_counts,
                 p2_counts,
             )
@@ -425,6 +455,7 @@ class GPUDeepCFRPlusTraverser:
                 layers.append(
                     {
                         "kind": "traverser",
+                        "depth": depth,
                         "features": features,
                         "legal_mask": legal_mask,
                         "regret_values": regret_values,
@@ -437,16 +468,47 @@ class GPUDeepCFRPlusTraverser:
                         "path_probability": current_path_probability,
                     }
                 )
+                if profile_row is not None:
+                    profile_row["traverser_claim_edges_full_tensor"] = (
+                        layer_full_edges
+                    )
+                    profile_row["traverser_claim_edges_expanded"] = int(
+                        layer_sampled_edges
+                    )
+                    profile_row["regret_records"] = int(features.shape[0])
 
                 current_deal = current_deal.index_select(0, parent_rows)
-                current_hid = current_hid.index_select(0, parent_rows) | (
-                    torch.ones_like(claim_ids) << claim_ids
+                current_history = self.history.append(
+                    self.history.select(current_history, parent_rows),
+                    claim_ids,
                 )
                 current_last = claim_ids
                 current_path_probability = (
                     current_path_probability.index_select(0, parent_rows)
                     * child_inclusion
                 )
+                if profile_row is not None:
+                    profile_row["active_rows_out"] = self.history.rows(
+                        current_history
+                    )
+                    profile_row["allocated_bytes"] = int(
+                        torch.cuda.memory_allocated(self.device)
+                    ) if self.device.type == "cuda" else 0
+                    profile_row["reserved_bytes"] = int(
+                        torch.cuda.memory_reserved(self.device)
+                    ) if self.device.type == "cuda" else 0
+                    if use_cuda_events:
+                        forward_end.record()
+                        profile_row["forward_events"] = (
+                            forward_start,
+                            forward_end,
+                        )
+                    else:
+                        profile_row["forward_s"] = (
+                            time.perf_counter() - cpu_forward_start
+                        )
+                    depth_profile.append(profile_row)
+                    profile_by_depth[depth] = profile_row
                 continue
 
             strategy_features.append(features)
@@ -471,22 +533,49 @@ class GPUDeepCFRPlusTraverser:
             layers.append(
                 {
                     "kind": "opponent",
+                    "depth": depth,
                     "terminal_values": terminal_values,
                     "continues": continues,
                     "child_positions": child_positions,
                 }
             )
+            if profile_row is not None:
+                profile_row["opponent_continuations"] = int(parent_rows.numel())
+                profile_row["strategy_records"] = int(features.shape[0])
 
             claim_ids = sampled_cols.index_select(0, parent_rows) - 1
             current_deal = current_deal.index_select(0, parent_rows)
-            current_hid = current_hid.index_select(0, parent_rows) | (
-                torch.ones_like(claim_ids) << claim_ids
+            current_history = self.history.append(
+                self.history.select(current_history, parent_rows),
+                claim_ids,
             )
             current_last = claim_ids
             current_path_probability = current_path_probability.index_select(
                 0,
                 parent_rows,
             )
+            if profile_row is not None:
+                profile_row["active_rows_out"] = self.history.rows(
+                    current_history
+                )
+                profile_row["allocated_bytes"] = int(
+                    torch.cuda.memory_allocated(self.device)
+                ) if self.device.type == "cuda" else 0
+                profile_row["reserved_bytes"] = int(
+                    torch.cuda.memory_reserved(self.device)
+                ) if self.device.type == "cuda" else 0
+                if use_cuda_events:
+                    forward_end.record()
+                    profile_row["forward_events"] = (
+                        forward_start,
+                        forward_end,
+                    )
+                else:
+                    profile_row["forward_s"] = (
+                        time.perf_counter() - cpu_forward_start
+                    )
+                depth_profile.append(profile_row)
+                profile_by_depth[depth] = profile_row
 
         next_values: torch.Tensor | None = None
         regret_features: List[torch.Tensor] = []
@@ -498,6 +587,16 @@ class GPUDeepCFRPlusTraverser:
         instant_scale = 1.0 / iteration
 
         for layer in reversed(layers):
+            backup_start = None
+            backup_end = None
+            cpu_backup_start = 0.0
+            if use_cuda_events:
+                backup_start = torch.cuda.Event(enable_timing=True)
+                backup_end = torch.cuda.Event(enable_timing=True)
+                backup_start.record()
+            elif profile:
+                cpu_backup_start = time.perf_counter()
+
             if layer["kind"] == "opponent":
                 terminal_values = layer["terminal_values"]
                 continues = layer["continues"]
@@ -509,6 +608,13 @@ class GPUDeepCFRPlusTraverser:
                         child_positions[continues],
                     )
                 next_values = values
+                if profile:
+                    row = profile_by_depth[int(layer["depth"])]
+                    if use_cuda_events:
+                        backup_end.record()
+                        row["backup_events"] = (backup_start, backup_end)
+                    else:
+                        row["backup_s"] = time.perf_counter() - cpu_backup_start
                 continue
 
             strategy = layer["strategy"]
@@ -552,6 +658,13 @@ class GPUDeepCFRPlusTraverser:
                 layer["path_probability"].clamp_min(1e-12).reciprocal()
             )
             next_values = node_values
+            if profile:
+                row = profile_by_depth[int(layer["depth"])]
+                if use_cuda_events:
+                    backup_end.record()
+                    row["backup_events"] = (backup_start, backup_end)
+                else:
+                    row["backup_s"] = time.perf_counter() - cpu_backup_start
 
         regret_count = 0
         regret_weight_sum = 0.0
@@ -566,14 +679,15 @@ class GPUDeepCFRPlusTraverser:
             regret_weight_sum = float(weights.sum().item())
             regret_weight_square_sum = float(weights.square().sum().item())
             max_regret_weight = float(weights.max().item())
-            self.trainer._add_device_records(
-                self.trainer.regret_buffers[traverser],
-                self.trainer.regret_validation_buffers[traverser],
-                features,
-                targets,
-                masks,
-                weights,
-            )
+            if commit_records:
+                self.trainer._add_device_records(
+                    self.trainer.regret_buffers[traverser],
+                    self.trainer.regret_validation_buffers[traverser],
+                    features,
+                    targets,
+                    masks,
+                    weights,
+                )
 
         strategy_count = 0
         if strategy_features:
@@ -591,16 +705,17 @@ class GPUDeepCFRPlusTraverser:
                 if self.trainer.strategy_weighting == "uniform"
                 else float(self.trainer.iteration)
             )
-            self.trainer._add_device_records(
-                self.trainer.strategy_buffers[actor_pid],
-                self.trainer.strategy_validation_buffers[actor_pid],
-                features,
-                targets,
-                masks,
-                path_weights * iteration_weight,
-            )
+            if commit_records:
+                self.trainer._add_device_records(
+                    self.trainer.strategy_buffers[actor_pid],
+                    self.trainer.strategy_validation_buffers[actor_pid],
+                    features,
+                    targets,
+                    masks,
+                    path_weights * iteration_weight,
+                )
 
-        return {
+        result: Dict[str, object] = {
             "regret_records": regret_count,
             "strategy_records": strategy_count,
             "full_claim_edges": int(full_claim_edges.item()),
@@ -610,3 +725,45 @@ class GPUDeepCFRPlusTraverser:
             "regret_weight_count": regret_count,
             "max_regret_weight": max_regret_weight,
         }
+        if profile:
+            if use_cuda_events:
+                torch.cuda.synchronize(self.device)
+            for row in depth_profile:
+                full_edges = row.pop(
+                    "traverser_claim_edges_full_tensor",
+                    None,
+                )
+                if full_edges is not None:
+                    row["traverser_claim_edges_full"] = int(
+                        full_edges.item()
+                    )
+                events = row.pop("forward_events", None)
+                if events is not None:
+                    row["forward_s"] = events[0].elapsed_time(events[1]) / 1000.0
+                backup_events = row.pop("backup_events", None)
+                if backup_events is not None:
+                    row["backup_s"] = (
+                        backup_events[0].elapsed_time(backup_events[1]) / 1000.0
+                    )
+            result["depth_profile"] = depth_profile
+            result["peak_rows"] = max(
+                (
+                    max(
+                        int(row["active_rows_in"]),
+                        int(row["active_rows_out"]),
+                    )
+                    for row in depth_profile
+                ),
+                default=0,
+            )
+            result["peak_allocated_bytes"] = (
+                int(torch.cuda.max_memory_allocated(self.device))
+                if self.device.type == "cuda"
+                else 0
+            )
+            result["peak_reserved_bytes"] = (
+                int(torch.cuda.max_memory_reserved(self.device))
+                if self.device.type == "cuda"
+                else 0
+            )
+        return result

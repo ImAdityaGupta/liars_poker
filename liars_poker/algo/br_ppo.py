@@ -112,7 +112,7 @@ class PPOBRTrainer(NeuralBRTrainer):
     ) -> tuple[Dict[str, int], Dict[str, torch.Tensor]]:
         p1_counts, p2_counts, total_counts = self._sample_deals(episodes)
         deal_idx = torch.arange(episodes, device=self.device)
-        hids = torch.zeros(episodes, dtype=torch.long, device=self.device)
+        histories = self.history.zeros(episodes)
         last_claim = torch.full(
             (episodes,),
             -1,
@@ -124,13 +124,13 @@ class PPOBRTrainer(NeuralBRTrainer):
             opponent_cols = self._opponent_actions(
                 0,
                 deal_idx,
-                hids,
+                histories,
                 last_claim,
                 p1_counts,
                 p2_counts,
             )
             claims = opponent_cols - 1
-            hids = torch.ones_like(claims) << claims
+            histories = self.history.from_claims(claims)
             last_claim = claims
 
         episode_returns = torch.empty(
@@ -148,14 +148,14 @@ class PPOBRTrainer(NeuralBRTrainer):
         wins = 0
         decisions = 0
         active_deals = deal_idx
-        active_hids = hids
+        active_histories = histories
         active_last = last_claim
 
         while active_deals.numel():
             features = self._features(
                 role,
                 active_deals,
-                active_hids,
+                active_histories,
                 p1_counts,
                 p2_counts,
             )
@@ -175,14 +175,14 @@ class PPOBRTrainer(NeuralBRTrainer):
             (
                 rewards,
                 dones,
-                next_hids,
+                next_histories,
                 next_last,
                 _,
                 _,
             ) = self._advance_actions(
                 role,
                 active_deals,
-                active_hids,
+                active_histories,
                 active_last,
                 actions,
                 p1_counts,
@@ -193,7 +193,8 @@ class PPOBRTrainer(NeuralBRTrainer):
             wins += int((dones & (rewards > 0)).sum().item())
             keep = ~dones
             active_deals = active_deals[keep]
-            active_hids = next_hids[keep]
+            keep_rows = keep.nonzero(as_tuple=False).squeeze(1)
+            active_histories = self.history.select(next_histories, keep_rows)
             active_last = next_last[keep]
 
         record_deals = torch.cat(deal_parts)
@@ -332,7 +333,7 @@ class PPOBRTrainer(NeuralBRTrainer):
     def _evaluate_batch(self, role: int, episodes: int) -> Dict[str, int]:
         p1_counts, p2_counts, total_counts = self._sample_deals(episodes)
         deal_idx = torch.arange(episodes, device=self.device)
-        hids = torch.zeros(episodes, dtype=torch.long, device=self.device)
+        histories = self.history.zeros(episodes)
         last_claim = torch.full(
             (episodes,),
             -1,
@@ -343,24 +344,24 @@ class PPOBRTrainer(NeuralBRTrainer):
             opponent_cols = self._opponent_actions(
                 0,
                 deal_idx,
-                hids,
+                histories,
                 last_claim,
                 p1_counts,
                 p2_counts,
             )
             claims = opponent_cols - 1
-            hids = torch.ones_like(claims) << claims
+            histories = self.history.from_claims(claims)
             last_claim = claims
 
         wins = 0
         active_deals = deal_idx
-        active_hids = hids
+        active_histories = histories
         active_last = last_claim
         while active_deals.numel():
             features = self._features(
                 role,
                 active_deals,
-                active_hids,
+                active_histories,
                 p1_counts,
                 p2_counts,
             )
@@ -370,14 +371,14 @@ class PPOBRTrainer(NeuralBRTrainer):
             (
                 rewards,
                 dones,
-                next_hids,
+                next_histories,
                 next_last,
                 _,
                 _,
             ) = self._advance_actions(
                 role,
                 active_deals,
-                active_hids,
+                active_histories,
                 active_last,
                 actions,
                 p1_counts,
@@ -387,7 +388,8 @@ class PPOBRTrainer(NeuralBRTrainer):
             wins += int((dones & (rewards > 0)).sum().item())
             keep = ~dones
             active_deals = active_deals[keep]
-            active_hids = next_hids[keep]
+            keep_rows = keep.nonzero(as_tuple=False).squeeze(1)
+            active_histories = self.history.select(next_histories, keep_rows)
             active_last = next_last[keep]
         return {"episodes": episodes, "wins": wins}
 
