@@ -514,16 +514,19 @@ with controls_col:
         st.session_state.score_human = 0
         st.session_state.score_bot = 0
     if game_over:
-        reveal_label = "Cards Revealed"
+        if st.button("Play Again", type="primary", use_container_width=True):
+            reset_game(begin_episode=True)
+            st.session_state.game_started = True
+            st.rerun()
     else:
         reveal_label = "Hide Cards" if st.session_state.reveal_bot else "Reveal Cards"
-    if st.button(
-        reveal_label,
-        disabled=game_over or not game_started,
-        use_container_width=True,
-    ):
-        st.session_state.reveal_bot = not st.session_state.reveal_bot
-        st.rerun()
+        if st.button(
+            reveal_label,
+            disabled=not game_started,
+            use_container_width=True,
+        ):
+            st.session_state.reveal_bot = not st.session_state.reveal_bot
+            st.rerun()
     if not game_started:
         if st.button("Start Game", type="primary", use_container_width=True):
             reset_game(begin_episode=True)
@@ -534,38 +537,41 @@ st.markdown("<div class='section-rule'></div>", unsafe_allow_html=True)
 
 # 2. MAIN ARENA
 col_game, col_log = st.columns([2.1, 0.9], gap="medium")
+history = list(env._history)
 
 # --- RIGHT: LOG ---
 with col_log:
     st.markdown("<div class='big-label'>Game Log</div>", unsafe_allow_html=True)
-    history = list(env._history)
     st.markdown(render_ticker(history, rules, human_label), unsafe_allow_html=True)
-    
-    if game_over:
-        winner = obs["winner"]
-        res_type = "success" if winner == human_label else "error"
-        msg = "🎉 YOU WIN!" if winner == human_label else "💀 BOT WINS"
-        
-        st.divider()
-        if res_type == "success": st.success(msg)
-        else: st.error(msg)
-        
-        t = get_truth_summary(spec, rules, tuple(history), env._p1_hand, env._p2_hand)
-        if t:
-            claim_txt, count, needed = t
-            st.info(f"Claim: **{claim_txt}**\n\nActual Count: **{count}** (Needed {needed})")
-            
-        if st.button("🔄 Play Again", type="primary", use_container_width=True):
-            reset_game(begin_episode=True)
-            st.session_state.game_started = True
-            st.rerun()
 
 # --- LEFT: INPUT GRID ---
 with col_game:
     if not game_started:
         st.markdown("<div class='big-label'>Input</div>", unsafe_allow_html=True)
         st.info("Press Start Game to begin.")
-    elif not game_over:
+    elif game_over:
+        winner = obs["winner"]
+        st.markdown("<div class='big-label'>Result</div>", unsafe_allow_html=True)
+        if winner == human_label:
+            st.success("YOU WIN")
+        else:
+            st.error("BOT WINS")
+
+        truth = get_truth_summary(
+            spec,
+            rules,
+            tuple(history),
+            env._p1_hand,
+            env._p2_hand,
+        )
+        if truth:
+            claim_txt, count, needed = truth
+            st.info(
+                f"Final claim: **{claim_txt}**  \n"
+                f"Actual count: **{count}** · Needed: **{needed}**"
+            )
+        st.caption("Use Play Again in the top-right controls to start the next hand.")
+    else:
         st.markdown("<div class='big-label'>Input</div>", unsafe_allow_html=True)
         
         if not human_turn:
