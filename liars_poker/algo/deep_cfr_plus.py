@@ -294,6 +294,8 @@ class DeepCFRPlusTrainer:
         validation_buffer_capacity: int = 10_000,
         traversal_backend: str = "recursive",
         traversal_batch_size: int = 256,
+        traverser_action_sample_count: int | None = None,
+        traverser_action_baseline: str = "none",
         device_replay: bool = False,
         fused_optimizer: bool | None = None,
         amp_dtype: str | None = None,
@@ -344,6 +346,32 @@ class DeepCFRPlusTrainer:
             raise ValueError("traversal_backend must be 'recursive' or 'gpu_native'.")
         self.traversal_backend = traversal_backend
         self.traversal_batch_size = int(traversal_batch_size)
+        self.traverser_action_sample_count = (
+            None
+            if traverser_action_sample_count is None
+            else int(traverser_action_sample_count)
+        )
+        if (
+            self.traverser_action_sample_count is not None
+            and self.traverser_action_sample_count <= 0
+        ):
+            raise ValueError("traverser_action_sample_count must be positive.")
+        if traverser_action_baseline not in {"none", "call"}:
+            raise ValueError(
+                "traverser_action_baseline must be 'none' or 'call'."
+            )
+        self.traverser_action_baseline = traverser_action_baseline
+        if (
+            self.traversal_backend != "gpu_native"
+            and (
+                self.traverser_action_sample_count is not None
+                or self.traverser_action_baseline != "none"
+            )
+        ):
+            raise ValueError(
+                "Traverser action sampling is only available with "
+                "traversal_backend='gpu_native'."
+            )
         self.device_replay = bool(device_replay)
         if self.traversal_backend == "gpu_native":
             self.device_replay = True
@@ -929,6 +957,14 @@ class DeepCFRPlusTrainer:
         traversal_s = 0.0
         regret_training_s = 0.0
         regret_losses = [0.0, 0.0]
+        action_sampling_totals = {
+            "full_claim_edges": 0,
+            "sampled_claim_edges": 0,
+            "regret_weight_sum": 0.0,
+            "regret_weight_square_sum": 0.0,
+            "regret_weight_count": 0,
+            "max_regret_weight": 0.0,
+        }
         for traverser in (0, 1):
             self.regret_buffers[traverser].clear()
             self.regret_validation_buffers[traverser].clear()
@@ -944,7 +980,22 @@ class DeepCFRPlusTrainer:
                 remaining = int(traversals_per_player)
                 while remaining > 0:
                     batch = min(self.traversal_batch_size, remaining)
-                    self._gpu_traverser.run_traversals(traverser, batch)
+                    traversal_stats = self._gpu_traverser.run_traversals(
+                        traverser,
+                        batch,
+                    )
+                    for key in (
+                        "full_claim_edges",
+                        "sampled_claim_edges",
+                        "regret_weight_sum",
+                        "regret_weight_square_sum",
+                        "regret_weight_count",
+                    ):
+                        action_sampling_totals[key] += traversal_stats.get(key, 0)
+                    action_sampling_totals["max_regret_weight"] = max(
+                        action_sampling_totals["max_regret_weight"],
+                        traversal_stats.get("max_regret_weight", 0.0),
+                    )
                     remaining -= batch
             else:
                 for _ in range(traversals_per_player):
@@ -965,6 +1016,26 @@ class DeepCFRPlusTrainer:
 
         regret_seen = [buffer.seen for buffer in self.regret_buffers]
         strategy_seen = [buffer.seen for buffer in self.strategy_buffers]
+        full_edges = action_sampling_totals["full_claim_edges"]
+        sampled_edges = action_sampling_totals["sampled_claim_edges"]
+        weight_sum = action_sampling_totals["regret_weight_sum"]
+        weight_square_sum = action_sampling_totals["regret_weight_square_sum"]
+        weight_count = action_sampling_totals["regret_weight_count"]
+        sampling_diagnostics = {
+            **action_sampling_totals,
+            "claim_edge_fraction": (
+                sampled_edges / full_edges if full_edges else 1.0
+            ),
+            "mean_regret_weight": (
+                weight_sum / weight_count if weight_count else 1.0
+            ),
+            "regret_weight_ess_fraction": (
+                (weight_sum * weight_sum)
+                / (weight_count * weight_square_sum)
+                if weight_count and weight_square_sum
+                else 1.0
+            ),
+        }
         return {
             "iteration": self.iteration,
             "regret_loss": regret_losses,
@@ -977,6 +1048,7 @@ class DeepCFRPlusTrainer:
             "new_strategy_records": [
                 after - before for before, after in zip(strategy_seen_before, strategy_seen)
             ],
+            "action_sampling": sampling_diagnostics,
             "timing": {
                 "traversal_s": traversal_s,
                 "regret_training_s": regret_training_s,
@@ -1014,6 +1086,8 @@ class DeepCFRPlusTrainer:
                 "validation_buffer_capacity": self.validation_buffer_capacity,
                 "traversal_backend": self.traversal_backend,
                 "traversal_batch_size": self.traversal_batch_size,
+                "traverser_action_sample_count": self.traverser_action_sample_count,
+                "traverser_action_baseline": self.traverser_action_baseline,
                 "device_replay": self.device_replay,
                 "fused_optimizer": self.fused_optimizer,
                 "amp_dtype": self.amp_dtype,
@@ -1062,6 +1136,8 @@ class DeepCFRPlusTrainer:
             config.pop("hidden_sizes", None)
         config.setdefault("traversal_backend", "recursive")
         config.setdefault("traversal_batch_size", 256)
+        config.setdefault("traverser_action_sample_count", None)
+        config.setdefault("traverser_action_baseline", "none")
         config.setdefault("device_replay", False)
         config.setdefault("fused_optimizer", None)
         config.setdefault("amp_dtype", None)

@@ -27,6 +27,8 @@ class GPUDeepCFRPlusTraverser:
         self.k = self.encoder.k
         self.action_dim = self.encoder.action_dim
         self.ranks = self.spec.ranks
+        self.action_sample_count = trainer.traverser_action_sample_count
+        self.action_baseline = trainer.traverser_action_baseline
 
         deck_ranks = [
             card_rank(card, self.spec) - 1 for card in generate_deck(self.spec)
@@ -167,6 +169,63 @@ class GPUDeepCFRPlusTraverser:
             strategy = torch.where(totals > 0.0, matched, fallback)
         return values, strategy
 
+    def _claim_edges(
+        self,
+        legal_mask: torch.Tensor,
+    ) -> tuple[
+        torch.Tensor,
+        torch.Tensor,
+        torch.Tensor,
+        torch.Tensor,
+        int,
+    ]:
+        claim_legal = legal_mask[:, 1:]
+        full_edge_count = claim_legal.sum()
+        if (
+            self.action_sample_count is None
+            or self.action_sample_count >= self.k
+        ):
+            edges = claim_legal.nonzero(as_tuple=False)
+            return (
+                edges[:, 0],
+                edges[:, 1],
+                torch.ones(
+                    len(edges),
+                    dtype=torch.float32,
+                    device=self.device,
+                ),
+                full_edge_count,
+                full_edge_count,
+            )
+
+        sample_count = min(self.action_sample_count, self.k)
+        scores = torch.rand(
+            claim_legal.shape,
+            dtype=torch.float32,
+            device=self.device,
+        ).masked_fill(~claim_legal, -1.0)
+        sampled_cols = scores.topk(sample_count, dim=1).indices
+        sampled_valid = claim_legal.gather(1, sampled_cols)
+        sampled_mask = torch.zeros_like(claim_legal)
+        sampled_mask.scatter_(1, sampled_cols, sampled_valid)
+        edges = sampled_mask.nonzero(as_tuple=False)
+        parent_rows = edges[:, 0]
+        claim_ids = edges[:, 1]
+
+        legal_counts = claim_legal.sum(dim=1).clamp_min(1)
+        inclusion_by_row = (
+            torch.full_like(legal_counts, sample_count, dtype=torch.float32)
+            / legal_counts.float()
+        ).clamp_max(1.0)
+        inclusion = inclusion_by_row.index_select(0, parent_rows)
+        return (
+            parent_rows,
+            claim_ids,
+            inclusion,
+            full_edge_count,
+            int(len(edges)),
+        )
+
     def _terminal_values(
         self,
         last_claim: torch.Tensor,
@@ -227,11 +286,23 @@ class GPUDeepCFRPlusTraverser:
             dtype=torch.long,
             device=self.device,
         )
+        current_path_probability = torch.ones(
+            batch_size,
+            dtype=torch.float32,
+            device=self.device,
+        )
 
         layers: List[Dict[str, torch.Tensor | int | str]] = []
         strategy_features: List[torch.Tensor] = []
         strategy_targets: List[torch.Tensor] = []
         strategy_masks: List[torch.Tensor] = []
+        strategy_path_probabilities: List[torch.Tensor] = []
+        full_claim_edges = torch.zeros(
+            (),
+            dtype=torch.long,
+            device=self.device,
+        )
+        sampled_claim_edges = 0
 
         for depth in range(self.k + 1):
             if current_hid.numel() == 0:
@@ -260,9 +331,23 @@ class GPUDeepCFRPlusTraverser:
             )
 
             if actor == traverser:
-                claim_edges = legal_mask[:, 1:].nonzero(as_tuple=False)
-                parent_rows = claim_edges[:, 0]
-                claim_ids = claim_edges[:, 1]
+                (
+                    parent_rows,
+                    claim_ids,
+                    child_inclusion,
+                    layer_full_edges,
+                    layer_sampled_edges,
+                ) = self._claim_edges(legal_mask)
+                full_claim_edges += layer_full_edges
+                sampled_claim_edges += layer_sampled_edges
+                if self.action_baseline == "call":
+                    baseline_values = torch.where(
+                        legal_mask[:, 0],
+                        terminal_values,
+                        torch.zeros_like(terminal_values),
+                    )
+                else:
+                    baseline_values = torch.zeros_like(terminal_values)
                 layers.append(
                     {
                         "kind": "traverser",
@@ -271,8 +356,11 @@ class GPUDeepCFRPlusTraverser:
                         "regret_values": regret_values,
                         "strategy": strategy,
                         "call_values": terminal_values,
+                        "baseline_values": baseline_values,
                         "child_parent_rows": parent_rows,
                         "child_cols": claim_ids + 1,
+                        "child_inclusion": child_inclusion,
+                        "path_probability": current_path_probability,
                     }
                 )
 
@@ -281,11 +369,16 @@ class GPUDeepCFRPlusTraverser:
                     torch.ones_like(claim_ids) << claim_ids
                 )
                 current_last = claim_ids
+                current_path_probability = (
+                    current_path_probability.index_select(0, parent_rows)
+                    * child_inclusion
+                )
                 continue
 
             strategy_features.append(features)
             strategy_targets.append(strategy)
             strategy_masks.append(legal_mask)
+            strategy_path_probabilities.append(current_path_probability)
 
             sampled_cols = torch.multinomial(strategy, 1).squeeze(1)
             continues = sampled_cols > 0
@@ -316,11 +409,16 @@ class GPUDeepCFRPlusTraverser:
                 torch.ones_like(claim_ids) << claim_ids
             )
             current_last = claim_ids
+            current_path_probability = current_path_probability.index_select(
+                0,
+                parent_rows,
+            )
 
         next_values: torch.Tensor | None = None
         regret_features: List[torch.Tensor] = []
         regret_targets: List[torch.Tensor] = []
         regret_masks: List[torch.Tensor] = []
+        regret_weights: List[torch.Tensor] = []
         iteration = float(self.trainer.iteration)
         previous_scale = (iteration - 1.0) / iteration
         instant_scale = 1.0 / iteration
@@ -341,15 +439,27 @@ class GPUDeepCFRPlusTraverser:
 
             strategy = layer["strategy"]
             legal_mask = layer["legal_mask"]
-            action_values = torch.zeros_like(strategy)
+            # Horvitz-Thompson action-value estimate. Unsampled actions retain
+            # the baseline; sampled actions receive the inverse-inclusion
+            # correction. With inclusion=1 this is exactly full expansion.
+            baseline_values = layer["baseline_values"]
+            action_values = (
+                baseline_values[:, None] * legal_mask
+            )
             call_legal = legal_mask[:, 0]
             action_values[call_legal, 0] = layer["call_values"][call_legal]
             child_parent_rows = layer["child_parent_rows"]
             if next_values is not None and next_values.numel():
+                child_baselines = baseline_values.index_select(
+                    0,
+                    child_parent_rows,
+                )
                 action_values[
                     child_parent_rows,
                     layer["child_cols"],
-                ] = next_values
+                ] = child_baselines + (
+                    next_values - child_baselines
+                ) / layer["child_inclusion"]
 
             node_values = (strategy * action_values).sum(dim=1)
             instant_regret = (action_values - node_values[:, None]) * legal_mask
@@ -360,21 +470,35 @@ class GPUDeepCFRPlusTraverser:
             regret_features.append(layer["features"])
             regret_targets.append(targets)
             regret_masks.append(legal_mask)
+            # Deeper infosets exist in the sampled traversal only when every
+            # preceding traverser action was selected. Inverse path reach
+            # restores their contribution to the full-expansion regression
+            # objective.
+            regret_weights.append(
+                layer["path_probability"].clamp_min(1e-12).reciprocal()
+            )
             next_values = node_values
 
         regret_count = 0
+        regret_weight_sum = 0.0
+        regret_weight_square_sum = 0.0
+        max_regret_weight = 0.0
         if regret_features:
             features = torch.cat(regret_features, dim=0)
             targets = torch.cat(regret_targets, dim=0)
             masks = torch.cat(regret_masks, dim=0)
+            weights = torch.cat(regret_weights, dim=0)
             regret_count = int(features.shape[0])
+            regret_weight_sum = float(weights.sum().item())
+            regret_weight_square_sum = float(weights.square().sum().item())
+            max_regret_weight = float(weights.max().item())
             self.trainer._add_device_records(
                 self.trainer.regret_buffers[traverser],
                 self.trainer.regret_validation_buffers[traverser],
                 features,
                 targets,
                 masks,
-                1.0,
+                weights,
             )
 
         strategy_count = 0
@@ -382,9 +506,13 @@ class GPUDeepCFRPlusTraverser:
             features = torch.cat(strategy_features, dim=0)
             targets = torch.cat(strategy_targets, dim=0)
             masks = torch.cat(strategy_masks, dim=0)
+            path_weights = torch.cat(
+                strategy_path_probabilities,
+                dim=0,
+            ).clamp_min(1e-12).reciprocal()
             strategy_count = int(features.shape[0])
             actor_pid = 1 - traverser
-            weight = (
+            iteration_weight = (
                 1.0
                 if self.trainer.strategy_weighting == "uniform"
                 else float(self.trainer.iteration)
@@ -395,10 +523,16 @@ class GPUDeepCFRPlusTraverser:
                 features,
                 targets,
                 masks,
-                weight,
+                path_weights * iteration_weight,
             )
 
         return {
             "regret_records": regret_count,
             "strategy_records": strategy_count,
+            "full_claim_edges": int(full_claim_edges.item()),
+            "sampled_claim_edges": sampled_claim_edges,
+            "regret_weight_sum": regret_weight_sum,
+            "regret_weight_square_sum": regret_weight_square_sum,
+            "regret_weight_count": regret_count,
+            "max_regret_weight": max_regret_weight,
         }
