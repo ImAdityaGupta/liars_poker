@@ -209,21 +209,62 @@ st.markdown(
     }
     /* 7. INPUT GRID SIZE */
     div[data-testid="stForm"] {
-        padding: 0.45rem 0.6rem 0.55rem !important;
-        border-radius: 8px !important;
+        padding: 0.7rem 0.8rem 0.8rem !important;
+        border: 1px solid #aeb3b8 !important;
+        border-radius: 5px !important;
+        background: #f3f4f5 !important;
+        box-shadow: inset 0 1px 0 #ffffff, 0 2px 0 #d3d6d8;
     }
     form[data-testid="stForm"] .stButton button[kind="secondary"] {
-        height: 29px;
+        height: 34px;
         width: 100%;
-        margin: 1px auto;
+        margin: 2px auto;
         padding: 0.1rem 0.25rem;
-        font-size: 0.8rem;
-        box-shadow: 1px 1px 0px #e0e0e0;
+        border: 1px solid #9aa0a6;
+        border-radius: 3px;
+        background: linear-gradient(#ffffff, #eceff1);
+        color: #202124;
+        font-family: 'Courier New', monospace;
+        font-size: 0.86rem;
+        font-weight: 800;
+        box-shadow: 0 2px 0 #c4c7c9;
     }
-    button[data-baseweb="tab"] {
-        height: 34px !important;
-        padding: 0 0.75rem !important;
-        font-size: 0.85rem !important;
+    form[data-testid="stForm"] .stButton button[kind="secondary"]:hover {
+        border-color: #555b60;
+        background: #ffffff;
+        transform: translateY(-1px);
+        box-shadow: 0 3px 0 #b7bbbe;
+    }
+    form[data-testid="stForm"] .stButton button[kind="secondary"]:disabled {
+        border-color: #d4d7d9;
+        background: #e9ebec;
+        color: #afb3b6;
+        box-shadow: none;
+    }
+    .calc-title {
+        margin: 0 0 0.35rem;
+        color: #3c4043;
+        font-size: 0.82rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+    .calc-label {
+        min-height: 34px;
+        display: flex;
+        align-items: center;
+        color: #5f6368;
+        font-family: 'Courier New', monospace;
+        font-size: 0.78rem;
+        font-weight: 800;
+    }
+    .calc-header {
+        min-height: 20px;
+        text-align: center;
+        color: #777;
+        font-family: 'Courier New', monospace;
+        font-size: 0.72rem;
+        font-weight: 700;
     }
     div[data-testid="stAlert"] {
         padding: 0.55rem 0.75rem !important;
@@ -340,6 +381,8 @@ def init_state():
         st.session_state.score_human = 0
         st.session_state.score_bot = 0
         st.session_state.score_recorded = False
+    if "reveal_bot" not in st.session_state:
+        st.session_state.reveal_bot = False
 
 def reset_game(*, begin_episode: bool = True) -> None:
     if st.session_state.env:
@@ -348,6 +391,7 @@ def reset_game(*, begin_episode: bool = True) -> None:
             st.session_state.policy.begin_episode(st.session_state.bot_rng)
         st.session_state.game_over = False
         st.session_state.score_recorded = False
+        st.session_state.reveal_bot = False
 
 init_state()
 
@@ -461,18 +505,25 @@ with human_col:
     st.markdown("<div class='big-label'>Your Hand</div>", unsafe_allow_html=True)
     st.markdown(render_hand_html(human_hand, spec), unsafe_allow_html=True)
 with bot_col:
-    bot_label_col, reveal_col = st.columns([0.45, 0.55])
-    with bot_label_col:
-        st.markdown("<div class='big-label'>Bot</div>", unsafe_allow_html=True)
-    with reveal_col:
-        reveal = st.checkbox("Reveal", value=game_over, disabled=game_over, key="reveal_chk")
-    show_bot = reveal or game_over
+    st.markdown("<div class='big-label'>Bot</div>", unsafe_allow_html=True)
+    show_bot = st.session_state.reveal_bot or game_over
     st.markdown(render_hand_html(bot_hand, spec, hidden=not show_bot), unsafe_allow_html=True)
 with controls_col:
     st.markdown("<div class='big-label'>Game</div>", unsafe_allow_html=True)
     if st.button("Reset Score", use_container_width=True):
         st.session_state.score_human = 0
         st.session_state.score_bot = 0
+    if game_over:
+        reveal_label = "Cards Revealed"
+    else:
+        reveal_label = "Hide Cards" if st.session_state.reveal_bot else "Reveal Cards"
+    if st.button(
+        reveal_label,
+        disabled=game_over or not game_started,
+        use_container_width=True,
+    ):
+        st.session_state.reveal_bot = not st.session_state.reveal_bot
+        st.rerun()
     if not game_started:
         if st.button("Start Game", type="primary", use_container_width=True):
             reset_game(begin_episode=True)
@@ -549,39 +600,46 @@ with col_game:
                     st.rerun()
 
             with st.form(key="input-grid", clear_on_submit=False):
-                tab_labels = []
-                if single_kinds:
-                    tab_labels.append("Rank claims")
-                if has_two_pair:
-                    tab_labels.append("TwoPair")
-                if has_full_house:
-                    tab_labels.append("FullHouse")
-                tabs = st.tabs(tab_labels)
-                tab_index = 0
+                has_combo_claims = has_two_pair or has_full_house
+                if single_kinds and has_combo_claims:
+                    rank_col, combo_col = st.columns([1.25, 1.0], gap="medium")
+                elif single_kinds:
+                    rank_col = st.container()
+                    combo_col = None
+                else:
+                    rank_col = None
+                    combo_col = st.container()
 
-                if single_kinds:
-                    with tabs[tab_index]:
-                        tab_index += 1
-                        cols = st.columns(len(single_kinds), gap="small")
-                        for i, kind in enumerate(single_kinds):
-                            cols[i].caption(kind)
-
+                if rank_col is not None:
+                    with rank_col:
+                        st.markdown("<div class='calc-title'>Rank claims</div>", unsafe_allow_html=True)
+                        header_cols = st.columns(
+                            [1.25] + [1.0] * spec.ranks,
+                            gap="small",
+                        )
+                        header_cols[0].markdown(
+                            "<div class='calc-header'>TYPE</div>",
+                            unsafe_allow_html=True,
+                        )
                         for rank in range(1, spec.ranks + 1):
-                            row_cols = st.columns(len(single_kinds), gap="small")
-                            for i, kind in enumerate(single_kinds):
+                            header_cols[rank].markdown(
+                                f"<div class='calc-header'>{rank}</div>",
+                                unsafe_allow_html=True,
+                            )
+
+                        for kind in single_kinds:
+                            row_cols = st.columns(
+                                [1.25] + [1.0] * spec.ranks,
+                                gap="small",
+                            )
+                            row_cols[0].markdown(
+                                f"<div class='calc-label'>{kind}</div>",
+                                unsafe_allow_html=True,
+                            )
+                            for rank in range(1, spec.ranks + 1):
                                 idx = claim_map.get((kind, rank))
-                                if idx is None:
-                                    row_cols[i].write("")
-                                    continue
-                                suffix_map = {
-                                    "RankHigh": "H",
-                                    "Pair": "P",
-                                    "Trips": "T",
-                                    "Quads": "Q",
-                                }
-                                suffix = suffix_map.get(kind, kind[0].upper())
-                                if row_cols[i].form_submit_button(
-                                    f"{rank}{suffix}",
+                                if row_cols[rank].form_submit_button(
+                                    str(rank),
                                     key=f"btn_{idx}",
                                     disabled=idx not in legal,
                                     use_container_width=True,
@@ -590,62 +648,96 @@ with col_game:
                                     st.session_state.obs = obs
                                     st.rerun()
 
-                if has_two_pair:
-                    with tabs[tab_index]:
-                        tab_index += 1
-                        pair_map = {}
-                        for idx, (kind, rank_idx) in enumerate(rules.claims):
-                            if kind == "TwoPair":
-                                low, high = rules.two_pair_ranks[rank_idx]
-                                pair_map[(low, high)] = idx
+                if combo_col is not None:
+                    with combo_col:
+                        if has_two_pair:
+                            st.markdown("<div class='calc-title'>Two pair</div>", unsafe_allow_html=True)
+                            pair_map = {}
+                            for idx, (kind, rank_idx) in enumerate(rules.claims):
+                                if kind == "TwoPair":
+                                    low, high = rules.two_pair_ranks[rank_idx]
+                                    pair_map[(low, high)] = idx
 
-                        cols = st.columns(max(1, spec.ranks - 1), gap="small")
-                        for low in range(1, spec.ranks):
-                            cols[low - 1].caption(f"low {low}")
-                        for high in range(2, spec.ranks + 1):
-                            row_cols = st.columns(max(1, spec.ranks - 1), gap="small")
+                            header_cols = st.columns(
+                                [0.85] + [1.0] * max(1, spec.ranks - 1),
+                                gap="small",
+                            )
+                            header_cols[0].markdown(
+                                "<div class='calc-header'>H \\ L</div>",
+                                unsafe_allow_html=True,
+                            )
                             for low in range(1, spec.ranks):
-                                if low >= high:
-                                    row_cols[low - 1].write("")
-                                    continue
-                                idx = pair_map.get((low, high))
-                                if row_cols[low - 1].form_submit_button(
-                                    f"{high}-{low}",
-                                    key=f"btn_tp_{high}_{low}",
-                                    disabled=idx not in legal,
-                                    use_container_width=True,
-                                ):
-                                    obs = env.step(idx)
-                                    st.session_state.obs = obs
-                                    st.rerun()
+                                header_cols[low].markdown(
+                                    f"<div class='calc-header'>{low}</div>",
+                                    unsafe_allow_html=True,
+                                )
 
-                if has_full_house:
-                    with tabs[tab_index]:
-                        fh_map = {}
-                        for idx, (kind, rank_idx) in enumerate(rules.claims):
-                            if kind == "FullHouse":
-                                trip, pair = rules.full_house_ranks[rank_idx]
-                                fh_map[(trip, pair)] = idx
+                            for high in range(2, spec.ranks + 1):
+                                row_cols = st.columns(
+                                    [0.85] + [1.0] * max(1, spec.ranks - 1),
+                                    gap="small",
+                                )
+                                row_cols[0].markdown(
+                                    f"<div class='calc-label'>{high}</div>",
+                                    unsafe_allow_html=True,
+                                )
+                                for low in range(1, spec.ranks):
+                                    if low >= high:
+                                        row_cols[low].write("")
+                                        continue
+                                    idx = pair_map.get((low, high))
+                                    if row_cols[low].form_submit_button(
+                                        f"{high}-{low}",
+                                        key=f"btn_tp_{high}_{low}",
+                                        disabled=idx not in legal,
+                                        use_container_width=True,
+                                    ):
+                                        obs = env.step(idx)
+                                        st.session_state.obs = obs
+                                        st.rerun()
 
-                        header_cols = st.columns(spec.ranks + 1, gap="small")
-                        header_cols[0].caption("T / P")
-                        for pair in range(1, spec.ranks + 1):
-                            header_cols[pair].caption(str(pair))
+                        if has_full_house:
+                            st.markdown("<div class='calc-title'>Full house</div>", unsafe_allow_html=True)
+                            fh_map = {}
+                            for idx, (kind, rank_idx) in enumerate(rules.claims):
+                                if kind == "FullHouse":
+                                    trip, pair = rules.full_house_ranks[rank_idx]
+                                    fh_map[(trip, pair)] = idx
 
-                        for trip in range(1, spec.ranks + 1):
-                            row_cols = st.columns(spec.ranks + 1, gap="small")
-                            row_cols[0].caption(str(trip))
+                            header_cols = st.columns(
+                                [0.85] + [1.0] * spec.ranks,
+                                gap="small",
+                            )
+                            header_cols[0].markdown(
+                                "<div class='calc-header'>T \\ P</div>",
+                                unsafe_allow_html=True,
+                            )
                             for pair in range(1, spec.ranks + 1):
-                                if pair == trip:
-                                    row_cols[pair].write("")
-                                    continue
-                                idx = fh_map.get((trip, pair))
-                                if row_cols[pair].form_submit_button(
-                                    f"{trip}/{pair}",
-                                    key=f"btn_fh_{trip}_{pair}",
-                                    disabled=idx not in legal,
-                                    use_container_width=True,
-                                ):
-                                    obs = env.step(idx)
-                                    st.session_state.obs = obs
-                                    st.rerun()
+                                header_cols[pair].markdown(
+                                    f"<div class='calc-header'>{pair}</div>",
+                                    unsafe_allow_html=True,
+                                )
+
+                            for trip in range(1, spec.ranks + 1):
+                                row_cols = st.columns(
+                                    [0.85] + [1.0] * spec.ranks,
+                                    gap="small",
+                                )
+                                row_cols[0].markdown(
+                                    f"<div class='calc-label'>{trip}</div>",
+                                    unsafe_allow_html=True,
+                                )
+                                for pair in range(1, spec.ranks + 1):
+                                    if pair == trip:
+                                        row_cols[pair].write("")
+                                        continue
+                                    idx = fh_map.get((trip, pair))
+                                    if row_cols[pair].form_submit_button(
+                                        f"{trip}/{pair}",
+                                        key=f"btn_fh_{trip}_{pair}",
+                                        disabled=idx not in legal,
+                                        use_container_width=True,
+                                    ):
+                                        obs = env.step(idx)
+                                        st.session_state.obs = obs
+                                        st.rerun()
