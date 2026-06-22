@@ -295,6 +295,9 @@ class DeepCFRPlusTrainer:
         traversal_backend: str = "recursive",
         traversal_batch_size: int = 256,
         traverser_action_sample_count: int | None = None,
+        traverser_action_sample_fraction: float | None = None,
+        traverser_action_full_first: bool = False,
+        traverser_action_priority_count: int = 0,
         traverser_action_baseline: str = "none",
         device_replay: bool = False,
         fused_optimizer: bool | None = None,
@@ -356,6 +359,48 @@ class DeepCFRPlusTrainer:
             and self.traverser_action_sample_count <= 0
         ):
             raise ValueError("traverser_action_sample_count must be positive.")
+        self.traverser_action_sample_fraction = (
+            None
+            if traverser_action_sample_fraction is None
+            else float(traverser_action_sample_fraction)
+        )
+        if (
+            self.traverser_action_sample_fraction is not None
+            and not 0.0 < self.traverser_action_sample_fraction <= 1.0
+        ):
+            raise ValueError(
+                "traverser_action_sample_fraction must be in (0, 1]."
+            )
+        if (
+            self.traverser_action_sample_count is not None
+            and self.traverser_action_sample_fraction is not None
+        ):
+            raise ValueError(
+                "Specify either traverser_action_sample_count or "
+                "traverser_action_sample_fraction, not both."
+            )
+        self.traverser_action_full_first = bool(traverser_action_full_first)
+        self.traverser_action_priority_count = int(
+            traverser_action_priority_count
+        )
+        if self.traverser_action_priority_count < 0:
+            raise ValueError("traverser_action_priority_count cannot be negative.")
+        if (
+            self.traverser_action_priority_count
+            and self.traverser_action_sample_count is None
+        ):
+            raise ValueError(
+                "Priority sampling requires traverser_action_sample_count."
+            )
+        if (
+            self.traverser_action_sample_count is not None
+            and self.traverser_action_priority_count
+            > self.traverser_action_sample_count
+        ):
+            raise ValueError(
+                "traverser_action_priority_count cannot exceed "
+                "traverser_action_sample_count."
+            )
         if traverser_action_baseline not in {"none", "call"}:
             raise ValueError(
                 "traverser_action_baseline must be 'none' or 'call'."
@@ -365,6 +410,7 @@ class DeepCFRPlusTrainer:
             self.traversal_backend != "gpu_native"
             and (
                 self.traverser_action_sample_count is not None
+                or self.traverser_action_sample_fraction is not None
                 or self.traverser_action_baseline != "none"
             )
         ):
@@ -1087,6 +1133,9 @@ class DeepCFRPlusTrainer:
                 "traversal_backend": self.traversal_backend,
                 "traversal_batch_size": self.traversal_batch_size,
                 "traverser_action_sample_count": self.traverser_action_sample_count,
+                "traverser_action_sample_fraction": self.traverser_action_sample_fraction,
+                "traverser_action_full_first": self.traverser_action_full_first,
+                "traverser_action_priority_count": self.traverser_action_priority_count,
                 "traverser_action_baseline": self.traverser_action_baseline,
                 "device_replay": self.device_replay,
                 "fused_optimizer": self.fused_optimizer,
@@ -1137,6 +1186,9 @@ class DeepCFRPlusTrainer:
         config.setdefault("traversal_backend", "recursive")
         config.setdefault("traversal_batch_size", 256)
         config.setdefault("traverser_action_sample_count", None)
+        config.setdefault("traverser_action_sample_fraction", None)
+        config.setdefault("traverser_action_full_first", False)
+        config.setdefault("traverser_action_priority_count", 0)
         config.setdefault("traverser_action_baseline", "none")
         config.setdefault("device_replay", False)
         config.setdefault("fused_optimizer", None)

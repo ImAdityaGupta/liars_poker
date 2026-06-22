@@ -28,6 +28,9 @@ class GPUDeepCFRPlusTraverser:
         self.action_dim = self.encoder.action_dim
         self.ranks = self.spec.ranks
         self.action_sample_count = trainer.traverser_action_sample_count
+        self.action_sample_fraction = trainer.traverser_action_sample_fraction
+        self.action_full_first = trainer.traverser_action_full_first
+        self.action_priority_count = trainer.traverser_action_priority_count
         self.action_baseline = trainer.traverser_action_baseline
 
         deck_ranks = [
@@ -172,6 +175,8 @@ class GPUDeepCFRPlusTraverser:
     def _claim_edges(
         self,
         legal_mask: torch.Tensor,
+        regret_values: torch.Tensor,
+        traverser_decision: int,
     ) -> tuple[
         torch.Tensor,
         torch.Tensor,
@@ -182,8 +187,11 @@ class GPUDeepCFRPlusTraverser:
         claim_legal = legal_mask[:, 1:]
         full_edge_count = claim_legal.sum()
         if (
-            self.action_sample_count is None
-            or self.action_sample_count >= self.k
+            (
+                self.action_sample_count is None
+                and self.action_sample_fraction is None
+            )
+            or (self.action_full_first and traverser_decision == 0)
         ):
             edges = claim_legal.nonzero(as_tuple=False)
             return (
@@ -198,26 +206,84 @@ class GPUDeepCFRPlusTraverser:
                 full_edge_count,
             )
 
-        sample_count = min(self.action_sample_count, self.k)
-        scores = torch.rand(
-            claim_legal.shape,
-            dtype=torch.float32,
-            device=self.device,
-        ).masked_fill(~claim_legal, -1.0)
-        sampled_cols = scores.topk(sample_count, dim=1).indices
-        sampled_valid = claim_legal.gather(1, sampled_cols)
-        sampled_mask = torch.zeros_like(claim_legal)
-        sampled_mask.scatter_(1, sampled_cols, sampled_valid)
+        legal_counts = claim_legal.sum(dim=1)
+        if self.action_sample_fraction is not None:
+            sample_counts = torch.ceil(
+                legal_counts.float() * self.action_sample_fraction
+            ).long()
+        else:
+            sample_counts = torch.full_like(
+                legal_counts,
+                self.action_sample_count,
+            )
+        sample_counts = torch.minimum(
+            sample_counts.clamp_min(1),
+            legal_counts,
+        )
+
+        if self.action_priority_count:
+            priority_counts = torch.minimum(
+                torch.full_like(
+                    legal_counts,
+                    self.action_priority_count,
+                ),
+                sample_counts,
+            )
+            priority_scores = regret_values[:, 1:].masked_fill(
+                ~claim_legal,
+                -torch.inf,
+            )
+            priority_order = priority_scores.argsort(
+                dim=1,
+                descending=True,
+            )
+            priority_rank = priority_order.argsort(dim=1)
+            priority_mask = claim_legal & (
+                priority_rank < priority_counts[:, None]
+            )
+
+            random_counts = sample_counts - priority_counts
+            random_eligible = claim_legal & ~priority_mask
+            random_scores = torch.rand(
+                claim_legal.shape,
+                dtype=torch.float32,
+                device=self.device,
+            ).masked_fill(~random_eligible, -1.0)
+            random_order = random_scores.argsort(dim=1, descending=True)
+            random_rank = random_order.argsort(dim=1)
+            random_mask = random_eligible & (
+                random_rank < random_counts[:, None]
+            )
+            sampled_mask = priority_mask | random_mask
+
+            remaining_counts = legal_counts - priority_counts
+            random_inclusion = (
+                random_counts.float()
+                / remaining_counts.clamp_min(1).float()
+            )
+            inclusion_matrix = torch.where(
+                priority_mask,
+                torch.ones_like(priority_scores),
+                random_inclusion[:, None].expand_as(priority_scores),
+            )
+        else:
+            scores = torch.rand(
+                claim_legal.shape,
+                dtype=torch.float32,
+                device=self.device,
+            ).masked_fill(~claim_legal, -1.0)
+            order = scores.argsort(dim=1, descending=True)
+            rank = order.argsort(dim=1)
+            sampled_mask = claim_legal & (rank < sample_counts[:, None])
+            inclusion_by_row = (
+                sample_counts.float() / legal_counts.clamp_min(1).float()
+            )
+            inclusion_matrix = inclusion_by_row[:, None].expand_as(scores)
+
         edges = sampled_mask.nonzero(as_tuple=False)
         parent_rows = edges[:, 0]
         claim_ids = edges[:, 1]
-
-        legal_counts = claim_legal.sum(dim=1).clamp_min(1)
-        inclusion_by_row = (
-            torch.full_like(legal_counts, sample_count, dtype=torch.float32)
-            / legal_counts.float()
-        ).clamp_max(1.0)
-        inclusion = inclusion_by_row.index_select(0, parent_rows)
+        inclusion = inclusion_matrix[parent_rows, claim_ids]
         return (
             parent_rows,
             claim_ids,
@@ -302,7 +368,11 @@ class GPUDeepCFRPlusTraverser:
             dtype=torch.long,
             device=self.device,
         )
-        sampled_claim_edges = 0
+        sampled_claim_edges = torch.zeros(
+            (),
+            dtype=torch.long,
+            device=self.device,
+        )
 
         for depth in range(self.k + 1):
             if current_hid.numel() == 0:
@@ -337,7 +407,11 @@ class GPUDeepCFRPlusTraverser:
                     child_inclusion,
                     layer_full_edges,
                     layer_sampled_edges,
-                ) = self._claim_edges(legal_mask)
+                ) = self._claim_edges(
+                    legal_mask,
+                    regret_values,
+                    (depth - traverser) // 2,
+                )
                 full_claim_edges += layer_full_edges
                 sampled_claim_edges += layer_sampled_edges
                 if self.action_baseline == "call":
@@ -530,7 +604,7 @@ class GPUDeepCFRPlusTraverser:
             "regret_records": regret_count,
             "strategy_records": strategy_count,
             "full_claim_edges": int(full_claim_edges.item()),
-            "sampled_claim_edges": sampled_claim_edges,
+            "sampled_claim_edges": int(sampled_claim_edges.item()),
             "regret_weight_sum": regret_weight_sum,
             "regret_weight_square_sum": regret_weight_square_sum,
             "regret_weight_count": regret_count,
