@@ -35,6 +35,7 @@ class GPUDeepCFRPlusTraverser:
         self.action_sample_schedule = trainer.traverser_action_sample_schedule
         self.action_priority_count = trainer.traverser_action_priority_count
         self.action_baseline = trainer.traverser_action_baseline
+        self.action_sample_mode = trainer.traverser_action_sample_mode
         self.history = PackedHistory(self.k, self.device)
 
         deck_ranks = [
@@ -180,6 +181,7 @@ class GPUDeepCFRPlusTraverser:
         self,
         legal_mask: torch.Tensor,
         regret_values: torch.Tensor,
+        histories: torch.Tensor,
         traverser_decision: int,
     ) -> tuple[
         torch.Tensor,
@@ -251,11 +253,11 @@ class GPUDeepCFRPlusTraverser:
 
             random_counts = sample_counts - priority_counts
             random_eligible = claim_legal & ~priority_mask
-            random_scores = torch.rand(
-                claim_legal.shape,
-                dtype=torch.float32,
-                device=self.device,
-            ).masked_fill(~random_eligible, -1.0)
+            random_scores = self._sample_scores(
+                random_eligible,
+                histories,
+                traverser_decision,
+            )
             random_order = random_scores.argsort(dim=1, descending=True)
             random_rank = random_order.argsort(dim=1)
             random_mask = random_eligible & (
@@ -274,11 +276,11 @@ class GPUDeepCFRPlusTraverser:
                 random_inclusion[:, None].expand_as(priority_scores),
             )
         else:
-            scores = torch.rand(
-                claim_legal.shape,
-                dtype=torch.float32,
-                device=self.device,
-            ).masked_fill(~claim_legal, -1.0)
+            scores = self._sample_scores(
+                claim_legal,
+                histories,
+                traverser_decision,
+            )
             order = scores.argsort(dim=1, descending=True)
             rank = order.argsort(dim=1)
             sampled_mask = claim_legal & (rank < sample_counts[:, None])
@@ -298,6 +300,39 @@ class GPUDeepCFRPlusTraverser:
             full_edge_count,
             int(len(edges)),
         )
+
+    def _sample_scores(
+        self,
+        eligible: torch.Tensor,
+        histories: torch.Tensor,
+        traverser_decision: int,
+    ) -> torch.Tensor:
+        if self.action_sample_mode == "random":
+            return torch.rand(
+                eligible.shape,
+                dtype=torch.float32,
+                device=self.device,
+            ).masked_fill(~eligible, -1.0)
+
+        modulus = 2_147_483_647
+        claim_ids = torch.arange(
+            eligible.shape[1],
+            dtype=torch.long,
+            device=self.device,
+        )
+        history_codes = torch.remainder(
+            histories.long().unsqueeze(1),
+            modulus,
+        )
+        mixed = torch.remainder(
+            history_codes * 1_103_515_245
+            + claim_ids.unsqueeze(0) * 97_531
+            + int(traverser_decision) * 17_389
+            + int(self.trainer.iteration) * 7_919,
+            modulus,
+        )
+        scores = mixed.float() / float(modulus)
+        return scores.masked_fill(~eligible, -1.0)
 
     def _terminal_values(
         self,
@@ -450,6 +485,7 @@ class GPUDeepCFRPlusTraverser:
                 ) = self._claim_edges(
                     legal_mask,
                     regret_values,
+                    current_history,
                     (depth - traverser) // 2,
                 )
                 full_claim_edges += layer_full_edges

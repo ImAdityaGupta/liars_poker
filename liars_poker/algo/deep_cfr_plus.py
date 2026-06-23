@@ -300,6 +300,7 @@ class DeepCFRPlusTrainer:
         traverser_action_sample_schedule: Sequence[int] | None = None,
         traverser_action_priority_count: int = 0,
         traverser_action_baseline: str = "none",
+        traverser_action_sample_mode: str = "random",
         device_replay: bool = False,
         fused_optimizer: bool | None = None,
         amp_dtype: str | None = None,
@@ -438,6 +439,11 @@ class DeepCFRPlusTrainer:
                 "traverser_action_baseline must be 'none' or 'call'."
             )
         self.traverser_action_baseline = traverser_action_baseline
+        if traverser_action_sample_mode not in {"random", "hash"}:
+            raise ValueError(
+                "traverser_action_sample_mode must be 'random' or 'hash'."
+            )
+        self.traverser_action_sample_mode = traverser_action_sample_mode
         if (
             self.traversal_backend != "gpu_native"
             and (
@@ -445,6 +451,7 @@ class DeepCFRPlusTrainer:
                 or self.traverser_action_sample_fraction is not None
                 or self.traverser_action_sample_schedule is not None
                 or self.traverser_action_baseline != "none"
+                or self.traverser_action_sample_mode != "random"
             )
         ):
             raise ValueError(
@@ -1171,6 +1178,7 @@ class DeepCFRPlusTrainer:
                 "traverser_action_sample_schedule": self.traverser_action_sample_schedule,
                 "traverser_action_priority_count": self.traverser_action_priority_count,
                 "traverser_action_baseline": self.traverser_action_baseline,
+                "traverser_action_sample_mode": self.traverser_action_sample_mode,
                 "device_replay": self.device_replay,
                 "fused_optimizer": self.fused_optimizer,
                 "amp_dtype": self.amp_dtype,
@@ -1225,6 +1233,7 @@ class DeepCFRPlusTrainer:
         config.setdefault("traverser_action_sample_schedule", None)
         config.setdefault("traverser_action_priority_count", 0)
         config.setdefault("traverser_action_baseline", "none")
+        config.setdefault("traverser_action_sample_mode", "random")
         config.setdefault("device_replay", False)
         config.setdefault("fused_optimizer", None)
         config.setdefault("amp_dtype", None)
