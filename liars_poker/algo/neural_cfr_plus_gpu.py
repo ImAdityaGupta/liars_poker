@@ -320,10 +320,24 @@ class GPUDeepCFRPlusTraverser:
             dtype=torch.long,
             device=self.device,
         )
-        history_codes = torch.remainder(
-            histories.long().unsqueeze(1),
-            modulus,
-        )
+        history_words = histories.long()
+        if history_words.ndim == 1:
+            history_codes = torch.remainder(history_words, modulus)
+        else:
+            word_ids = torch.arange(
+                history_words.shape[1],
+                dtype=torch.long,
+                device=self.device,
+            )
+            word_mix = torch.remainder(
+                (word_ids + 1) * 1_000_003,
+                modulus,
+            )
+            history_codes = torch.remainder(
+                (torch.remainder(history_words, modulus) * word_mix).sum(dim=1),
+                modulus,
+            )
+        history_codes = history_codes.unsqueeze(1)
         mixed = torch.remainder(
             history_codes * 1_103_515_245
             + claim_ids.unsqueeze(0) * 97_531
