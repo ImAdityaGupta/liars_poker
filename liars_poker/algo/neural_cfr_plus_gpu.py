@@ -32,6 +32,7 @@ class GPUDeepCFRPlusTraverser:
         self.action_sample_count = trainer.traverser_action_sample_count
         self.action_sample_fraction = trainer.traverser_action_sample_fraction
         self.action_full_first = trainer.traverser_action_full_first
+        self.action_sample_schedule = trainer.traverser_action_sample_schedule
         self.action_priority_count = trainer.traverser_action_priority_count
         self.action_baseline = trainer.traverser_action_baseline
         self.history = PackedHistory(self.k, self.device)
@@ -104,6 +105,12 @@ class GPUDeepCFRPlusTraverser:
             dtype=torch.long,
             device=self.device,
         )
+
+    def _scheduled_action_sample_count(self, traverser_decision: int) -> int | None:
+        if self.action_sample_schedule is None:
+            return self.action_sample_count
+        idx = min(traverser_decision, len(self.action_sample_schedule) - 1)
+        return int(self.action_sample_schedule[idx])
 
     def _sample_deals(
         self,
@@ -183,9 +190,12 @@ class GPUDeepCFRPlusTraverser:
     ]:
         claim_legal = legal_mask[:, 1:]
         full_edge_count = claim_legal.sum()
+        scheduled_sample_count = self._scheduled_action_sample_count(
+            traverser_decision,
+        )
         if (
             (
-                self.action_sample_count is None
+                scheduled_sample_count is None
                 and self.action_sample_fraction is None
             )
             or (self.action_full_first and traverser_decision == 0)
@@ -211,7 +221,7 @@ class GPUDeepCFRPlusTraverser:
         else:
             sample_counts = torch.full_like(
                 legal_counts,
-                self.action_sample_count,
+                scheduled_sample_count,
             )
         sample_counts = torch.minimum(
             sample_counts.clamp_min(1),
