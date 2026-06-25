@@ -542,7 +542,7 @@ class GPUDeepCFRPlusTraverser:
             "edge_chunks": 0,
             "row_splits": 0,
         }
-        iteration = float(self.trainer.iteration)
+        iteration = max(float(self.trainer.iteration), 1.0)
         previous_scale = (iteration - 1.0) / iteration
         instant_scale = 1.0 / iteration
         live_budget = self.trainer.traversal_live_row_budget
@@ -1086,7 +1086,7 @@ class GPUDeepCFRPlusTraverser:
         regret_targets: List[torch.Tensor] = []
         regret_masks: List[torch.Tensor] = []
         regret_weights: List[torch.Tensor] = []
-        iteration = float(self.trainer.iteration)
+        iteration = max(float(self.trainer.iteration), 1.0)
         previous_scale = (iteration - 1.0) / iteration
         instant_scale = 1.0 / iteration
 
