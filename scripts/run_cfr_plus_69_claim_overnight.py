@@ -316,6 +316,25 @@ def create_trainer(device: torch.device, seed: int) -> DeepCFRPlusTrainer:
     return DeepCFRPlusTrainer(SPEC, **kwargs)
 
 
+def tensor_bytes(obj: Any) -> int:
+    if not torch.is_tensor(obj):
+        return 0
+    return int(obj.numel() * obj.element_size())
+
+
+def device_buffer_gib(trainer: DeepCFRPlusTrainer) -> float:
+    total = 0
+    for buffer in [
+        *trainer.regret_buffers,
+        *trainer.regret_validation_buffers,
+        *trainer.strategy_buffers,
+        *trainer.strategy_validation_buffers,
+    ]:
+        for name in ("features", "targets", "legal_masks", "weights"):
+            total += tensor_bytes(getattr(buffer, name, None))
+    return total / 2**30
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Run the 69-claim neural CFR+ overnight training job."
@@ -327,6 +346,15 @@ def parse_args() -> argparse.Namespace:
         type=str,
         default=None,
         help="Existing run directory to resume from. Uses latest_checkpoint.pt.",
+    )
+    parser.add_argument(
+        "--resume-checkpoint",
+        type=str,
+        default=None,
+        help=(
+            "Specific checkpoint .pt file to load. If omitted with --resume, "
+            "loads <run-dir>/latest_checkpoint.pt."
+        ),
     )
     parser.add_argument("--seed", type=int, default=int(TRAINER_KWARGS["seed"]))
     parser.add_argument("--policy-every-minutes", type=float, default=POLICY_SNAPSHOT_EVERY_MINUTES)
@@ -357,6 +385,16 @@ def main() -> None:
     )
 
     resume_dir = Path(args.resume).expanduser().resolve() if args.resume else None
+    resume_checkpoint = (
+        Path(args.resume_checkpoint).expanduser().resolve()
+        if args.resume_checkpoint
+        else None
+    )
+    if resume_checkpoint is not None and resume_dir is None:
+        if resume_checkpoint.parent.name == "checkpoints":
+            resume_dir = resume_checkpoint.parent.parent
+        else:
+            resume_dir = resume_checkpoint.parent
     run_dir = resume_dir if resume_dir is not None else make_run_dir(args)
     run_dir.mkdir(parents=True, exist_ok=True)
     checkpoint_path = run_dir / "latest_checkpoint.pt"
@@ -370,11 +408,24 @@ def main() -> None:
     measured_training_s = 0.0
 
     if resume_dir is not None:
-        if not checkpoint_path.exists():
-            raise FileNotFoundError(f"Cannot resume: missing {checkpoint_path}")
+        checkpoint_to_load = resume_checkpoint or checkpoint_path
+        if not checkpoint_to_load.exists():
+            raise FileNotFoundError(f"Cannot resume: missing {checkpoint_to_load}")
         print("resuming:", run_dir, flush=True)
-        trainer = DeepCFRPlusTrainer.load_checkpoint(checkpoint_path, device=device)
-        if state_path.exists():
+        print("loading checkpoint:", checkpoint_to_load, flush=True)
+        trainer = DeepCFRPlusTrainer.load_checkpoint(checkpoint_to_load, device=device)
+        sidecar_path = (
+            resume_checkpoint.with_suffix(".json")
+            if resume_checkpoint is not None
+            else None
+        )
+        if sidecar_path is not None and sidecar_path.exists():
+            state = read_json(sidecar_path)
+            measured_training_s = float(state.get("measured_training_s", 0.0))
+            completed_phase_resets = {
+                int(idx) for idx in state.get("completed_phase_resets", [])
+            }
+        elif state_path.exists():
             state = read_json(state_path)
             measured_training_s = float(state.get("measured_training_s", 0.0))
             completed_phase_resets = {
@@ -406,6 +457,12 @@ def main() -> None:
             },
         }
         write_json(manifest_path, manifest)
+
+    print(
+        "device replay buffers GiB:",
+        round(device_buffer_gib(trainer), 2),
+        flush=True,
+    )
 
     budget_s = 60.0 * 60.0 * float(args.hours)
     next_policy_s = next_after(measured_training_s, args.policy_every_minutes)
