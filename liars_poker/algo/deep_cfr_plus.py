@@ -866,7 +866,7 @@ class DeepCFRPlusTrainer:
         if n == 0:
             return
 
-        if not isinstance(training_buffer, DeviceReservoirBuffer):
+        if not isinstance(training_buffer, (DeviceReservoirBuffer, DeviceRecentBuffer)):
             features_np = features.detach().cpu().numpy().astype(np.float32, copy=False)
             targets_np = targets.detach().cpu().numpy().astype(np.float32, copy=False)
             masks_np = legal_masks.detach().cpu().numpy().astype(bool, copy=False)
