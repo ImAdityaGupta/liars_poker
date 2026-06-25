@@ -56,6 +56,47 @@ class RecentBuffer:
         self.size = min(self.size + 1, self.capacity)
         self.cursor = (self.cursor + 1) % self.capacity
 
+    def add_many(
+        self,
+        features: np.ndarray,
+        targets: np.ndarray,
+        legal_masks: np.ndarray,
+        weights: np.ndarray | float,
+        rng: random.Random | None = None,
+    ) -> None:
+        _ = rng
+        features = np.asarray(features, dtype=np.float32)
+        targets = np.asarray(targets, dtype=np.float32)
+        legal_masks = np.asarray(legal_masks, dtype=bool)
+        n = int(features.shape[0])
+        if n == 0:
+            return
+
+        weights_arr = (
+            np.full(n, float(weights), dtype=np.float32)
+            if np.isscalar(weights)
+            else np.asarray(weights, dtype=np.float32)
+        )
+
+        if n >= self.capacity:
+            self.features[:] = features[-self.capacity :]
+            self.targets[:] = targets[-self.capacity :]
+            self.legal_masks[:] = legal_masks[-self.capacity :]
+            self.weights[:] = weights_arr[-self.capacity :]
+            self.size = self.capacity
+            self.seen += n
+            self.cursor = 0
+            return
+
+        indices = (np.arange(n, dtype=np.int64) + self.cursor) % self.capacity
+        self.features[indices] = features
+        self.targets[indices] = targets
+        self.legal_masks[indices] = legal_masks
+        self.weights[indices] = weights_arr
+        self.cursor = (self.cursor + n) % self.capacity
+        self.size = min(self.capacity, self.size + n)
+        self.seen += n
+
     def sample(self, batch_size: int, rng: random.Random) -> Tuple[np.ndarray, ...]:
         n = min(batch_size, self.size)
         indices = np.fromiter((rng.randrange(self.size) for _ in range(n)), dtype=np.int64)
@@ -301,6 +342,10 @@ class DeepCFRPlusTrainer:
         traverser_action_priority_count: int = 0,
         traverser_action_baseline: str = "none",
         traverser_action_sample_mode: str = "random",
+        traversal_streaming: bool = False,
+        traversal_live_row_budget: int | None = None,
+        traverser_action_chunk_size: int | None = None,
+        traversal_record_flush_size: int = 131_072,
         device_replay: bool = False,
         fused_optimizer: bool | None = None,
         amp_dtype: str | None = None,
@@ -444,6 +489,30 @@ class DeepCFRPlusTrainer:
                 "traverser_action_sample_mode must be 'random' or 'hash'."
             )
         self.traverser_action_sample_mode = traverser_action_sample_mode
+        self.traversal_streaming = bool(traversal_streaming)
+        self.traversal_live_row_budget = (
+            None
+            if traversal_live_row_budget is None
+            else int(traversal_live_row_budget)
+        )
+        if (
+            self.traversal_live_row_budget is not None
+            and self.traversal_live_row_budget <= 0
+        ):
+            raise ValueError("traversal_live_row_budget must be positive.")
+        self.traverser_action_chunk_size = (
+            None
+            if traverser_action_chunk_size is None
+            else int(traverser_action_chunk_size)
+        )
+        if (
+            self.traverser_action_chunk_size is not None
+            and self.traverser_action_chunk_size <= 0
+        ):
+            raise ValueError("traverser_action_chunk_size must be positive.")
+        self.traversal_record_flush_size = int(traversal_record_flush_size)
+        if self.traversal_record_flush_size <= 0:
+            raise ValueError("traversal_record_flush_size must be positive.")
         if (
             self.traversal_backend != "gpu_native"
             and (
@@ -452,6 +521,7 @@ class DeepCFRPlusTrainer:
                 or self.traverser_action_sample_schedule is not None
                 or self.traverser_action_baseline != "none"
                 or self.traverser_action_sample_mode != "random"
+                or self.traversal_streaming
             )
         ):
             raise ValueError(
@@ -796,6 +866,59 @@ class DeepCFRPlusTrainer:
         if n == 0:
             return
 
+        if not isinstance(training_buffer, DeviceReservoirBuffer):
+            features_np = features.detach().cpu().numpy().astype(np.float32, copy=False)
+            targets_np = targets.detach().cpu().numpy().astype(np.float32, copy=False)
+            masks_np = legal_masks.detach().cpu().numpy().astype(bool, copy=False)
+            if torch.is_tensor(weights):
+                weights_np = (
+                    weights.detach()
+                    .cpu()
+                    .numpy()
+                    .astype(np.float32, copy=False)
+                )
+                if weights_np.ndim == 0:
+                    weights_np = np.full(n, float(weights_np), dtype=np.float32)
+            else:
+                weights_np = np.full(n, float(weights), dtype=np.float32)
+
+            if self.validation_fraction <= 0.0:
+                training_buffer.add_many(
+                    features_np,
+                    targets_np,
+                    masks_np,
+                    weights_np,
+                    self.rng,
+                )
+                return
+
+            use_validation = (
+                np.fromiter(
+                    (self.validation_rng.random() for _ in range(n)),
+                    dtype=np.float64,
+                    count=n,
+                )
+                < self.validation_fraction
+            )
+            if np.any(use_validation):
+                validation_buffer.add_many(
+                    features_np[use_validation],
+                    targets_np[use_validation],
+                    masks_np[use_validation],
+                    weights_np[use_validation],
+                    self.validation_rng,
+                )
+            use_training = ~use_validation
+            if np.any(use_training):
+                training_buffer.add_many(
+                    features_np[use_training],
+                    targets_np[use_training],
+                    masks_np[use_training],
+                    weights_np[use_training],
+                    self.rng,
+                )
+            return
+
         if torch.is_tensor(weights):
             weights_t = weights.to(self.device, dtype=torch.float32)
             if weights_t.ndim == 0:
@@ -1050,6 +1173,8 @@ class DeepCFRPlusTrainer:
             "regret_weight_square_sum": 0.0,
             "regret_weight_count": 0,
             "max_regret_weight": 0.0,
+            "streamed_edge_chunks": 0,
+            "streamed_row_splits": 0,
         }
         for traverser in (0, 1):
             self.regret_buffers[traverser].clear()
@@ -1076,6 +1201,8 @@ class DeepCFRPlusTrainer:
                         "regret_weight_sum",
                         "regret_weight_square_sum",
                         "regret_weight_count",
+                        "streamed_edge_chunks",
+                        "streamed_row_splits",
                     ):
                         action_sampling_totals[key] += traversal_stats.get(key, 0)
                     action_sampling_totals["max_regret_weight"] = max(
@@ -1179,6 +1306,10 @@ class DeepCFRPlusTrainer:
                 "traverser_action_priority_count": self.traverser_action_priority_count,
                 "traverser_action_baseline": self.traverser_action_baseline,
                 "traverser_action_sample_mode": self.traverser_action_sample_mode,
+                "traversal_streaming": self.traversal_streaming,
+                "traversal_live_row_budget": self.traversal_live_row_budget,
+                "traverser_action_chunk_size": self.traverser_action_chunk_size,
+                "traversal_record_flush_size": self.traversal_record_flush_size,
                 "device_replay": self.device_replay,
                 "fused_optimizer": self.fused_optimizer,
                 "amp_dtype": self.amp_dtype,
@@ -1234,6 +1365,10 @@ class DeepCFRPlusTrainer:
         config.setdefault("traverser_action_priority_count", 0)
         config.setdefault("traverser_action_baseline", "none")
         config.setdefault("traverser_action_sample_mode", "random")
+        config.setdefault("traversal_streaming", False)
+        config.setdefault("traversal_live_row_budget", None)
+        config.setdefault("traverser_action_chunk_size", None)
+        config.setdefault("traversal_record_flush_size", 131_072)
         config.setdefault("device_replay", False)
         config.setdefault("fused_optimizer", None)
         config.setdefault("amp_dtype", None)

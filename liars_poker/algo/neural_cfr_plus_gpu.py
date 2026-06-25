@@ -10,6 +10,72 @@ from liars_poker.core import card_rank, generate_deck
 from liars_poker.infoset import CALL
 
 
+class _DeviceRecordAccumulator:
+    def __init__(
+        self,
+        trainer,
+        buffer,
+        validation_buffer,
+        *,
+        flush_size: int,
+        commit_records: bool,
+    ) -> None:
+        self.trainer = trainer
+        self.buffer = buffer
+        self.validation_buffer = validation_buffer
+        self.flush_size = int(flush_size)
+        self.commit_records = bool(commit_records)
+        self.features: List[torch.Tensor] = []
+        self.targets: List[torch.Tensor] = []
+        self.masks: List[torch.Tensor] = []
+        self.weights: List[torch.Tensor] = []
+        self.pending = 0
+        self.count = 0
+
+    def append(
+        self,
+        features: torch.Tensor,
+        targets: torch.Tensor,
+        masks: torch.Tensor,
+        weights: torch.Tensor,
+    ) -> None:
+        rows = int(features.shape[0])
+        if rows == 0:
+            return
+        self.count += rows
+        if not self.commit_records:
+            return
+        self.features.append(features)
+        self.targets.append(targets)
+        self.masks.append(masks)
+        self.weights.append(weights)
+        self.pending += rows
+        if self.pending >= self.flush_size:
+            self.flush()
+
+    def flush(self) -> None:
+        if not self.commit_records or not self.features:
+            self.features.clear()
+            self.targets.clear()
+            self.masks.clear()
+            self.weights.clear()
+            self.pending = 0
+            return
+        self.trainer._add_device_records(
+            self.buffer,
+            self.validation_buffer,
+            torch.cat(self.features, dim=0),
+            torch.cat(self.targets, dim=0),
+            torch.cat(self.masks, dim=0),
+            torch.cat(self.weights, dim=0),
+        )
+        self.features.clear()
+        self.targets.clear()
+        self.masks.clear()
+        self.weights.clear()
+        self.pending = 0
+
+
 class GPUDeepCFRPlusTraverser:
     """Tensorized external-sampling traversal for neural CFR+."""
 
@@ -390,6 +456,376 @@ class GPUDeepCFRPlusTraverser:
             -torch.ones_like(count_a),
         )
 
+    def _stream_profile_row(
+        self,
+        profile_by_depth: Dict[int, Dict[str, object]],
+        depth: int,
+        actor: int,
+        traverser: int,
+    ) -> Dict[str, object]:
+        row = profile_by_depth.get(depth)
+        if row is None:
+            row = {
+                "depth": depth,
+                "actor": actor,
+                "traverser": traverser,
+                "calls": 0,
+                "active_rows_in": 0,
+                "active_rows_out": 0,
+                "peak_rows": 0,
+                "traverser_claim_edges_full": 0,
+                "traverser_claim_edges_expanded": 0,
+                "edge_chunks": 0,
+                "row_splits": 0,
+                "opponent_continuations": 0,
+                "regret_records": 0,
+                "strategy_records": 0,
+            }
+            profile_by_depth[depth] = row
+        return row
+
+    def _run_traversals_streaming(
+        self,
+        traverser: int,
+        batch_size: int,
+        *,
+        profile: bool,
+        commit_records: bool,
+    ) -> Dict[str, object]:
+        if profile and self.device.type == "cuda":
+            torch.cuda.reset_peak_memory_stats(self.device)
+
+        p1_counts, p2_counts, total_counts = self._sample_deals(batch_size)
+        current_deal = torch.arange(
+            batch_size,
+            dtype=torch.long,
+            device=self.device,
+        )
+        current_history = self.history.zeros(batch_size)
+        current_last = torch.full(
+            (batch_size,),
+            -1,
+            dtype=torch.long,
+            device=self.device,
+        )
+        current_path_probability = torch.ones(
+            batch_size,
+            dtype=torch.float32,
+            device=self.device,
+        )
+
+        regret_accumulator = _DeviceRecordAccumulator(
+            self.trainer,
+            self.trainer.regret_buffers[traverser],
+            self.trainer.regret_validation_buffers[traverser],
+            flush_size=self.trainer.traversal_record_flush_size,
+            commit_records=commit_records,
+        )
+        strategy_actor = 1 - traverser
+        strategy_accumulator = _DeviceRecordAccumulator(
+            self.trainer,
+            self.trainer.strategy_buffers[strategy_actor],
+            self.trainer.strategy_validation_buffers[strategy_actor],
+            flush_size=self.trainer.traversal_record_flush_size,
+            commit_records=commit_records,
+        )
+
+        profile_by_depth: Dict[int, Dict[str, object]] = {}
+        stats: Dict[str, float | int] = {
+            "full_claim_edges": 0,
+            "sampled_claim_edges": 0,
+            "regret_weight_sum": 0.0,
+            "regret_weight_square_sum": 0.0,
+            "regret_weight_count": 0,
+            "max_regret_weight": 0.0,
+            "peak_rows": batch_size,
+            "edge_chunks": 0,
+            "row_splits": 0,
+        }
+        iteration = float(self.trainer.iteration)
+        previous_scale = (iteration - 1.0) / iteration
+        instant_scale = 1.0 / iteration
+        live_budget = self.trainer.traversal_live_row_budget
+
+        def update_peak(rows: int) -> None:
+            stats["peak_rows"] = max(int(stats["peak_rows"]), int(rows))
+
+        def evaluate_frontier(
+            depth: int,
+            deal_idx: torch.Tensor,
+            histories: torch.Tensor,
+            last_claim: torch.Tensor,
+            path_probability: torch.Tensor,
+        ) -> torch.Tensor:
+            rows = self.history.rows(histories)
+            if rows == 0:
+                return torch.empty(0, dtype=torch.float32, device=self.device)
+            update_peak(rows)
+
+            if live_budget is not None and rows > live_budget:
+                values: List[torch.Tensor] = []
+                for start in range(0, rows, live_budget):
+                    end = min(start + live_budget, rows)
+                    idx = torch.arange(
+                        start,
+                        end,
+                        dtype=torch.long,
+                        device=self.device,
+                    )
+                    values.append(
+                        evaluate_frontier(
+                            depth,
+                            deal_idx.index_select(0, idx),
+                            self.history.select(histories, idx),
+                            last_claim.index_select(0, idx),
+                            path_probability.index_select(0, idx),
+                        )
+                    )
+                stats["row_splits"] = int(stats["row_splits"]) + 1
+                if profile:
+                    actor = depth & 1
+                    row = self._stream_profile_row(
+                        profile_by_depth,
+                        depth,
+                        actor,
+                        traverser,
+                    )
+                    row["row_splits"] = int(row["row_splits"]) + 1
+                return torch.cat(values, dim=0)
+
+            actor = depth & 1
+            if profile:
+                row = self._stream_profile_row(
+                    profile_by_depth,
+                    depth,
+                    actor,
+                    traverser,
+                )
+                row["calls"] = int(row["calls"]) + 1
+                row["active_rows_in"] = int(row["active_rows_in"]) + rows
+                row["peak_rows"] = max(int(row["peak_rows"]), rows)
+
+            features = self._features(
+                actor,
+                deal_idx,
+                histories,
+                p1_counts,
+                p2_counts,
+            )
+            legal_mask = self.legal_masks.index_select(0, last_claim + 1)
+            regret_values, strategy = self._regrets_and_strategy(
+                actor,
+                features,
+                legal_mask,
+            )
+            terminal_values = self._terminal_values(
+                last_claim,
+                deal_idx,
+                caller=actor,
+                traverser=traverser,
+                total_counts=total_counts,
+            )
+
+            if actor != traverser:
+                sampled_cols = torch.multinomial(strategy, 1).squeeze(1)
+                continues = sampled_cols > 0
+                parent_rows = continues.nonzero(as_tuple=False).squeeze(1)
+                values = terminal_values.clone()
+                if parent_rows.numel():
+                    claim_ids = sampled_cols.index_select(0, parent_rows) - 1
+                    child_values = evaluate_frontier(
+                        depth + 1,
+                        deal_idx.index_select(0, parent_rows),
+                        self.history.append(
+                            self.history.select(histories, parent_rows),
+                            claim_ids,
+                        ),
+                        claim_ids,
+                        path_probability.index_select(0, parent_rows),
+                    )
+                    values[continues] = child_values
+                iteration_weight = (
+                    1.0
+                    if self.trainer.strategy_weighting == "uniform"
+                    else float(self.trainer.iteration)
+                )
+                strategy_accumulator.append(
+                    features,
+                    strategy,
+                    legal_mask,
+                    path_probability.clamp_min(1e-12).reciprocal()
+                    * iteration_weight,
+                )
+                if profile:
+                    row["opponent_continuations"] = (
+                        int(row["opponent_continuations"]) + int(parent_rows.numel())
+                    )
+                    row["strategy_records"] = (
+                        int(row["strategy_records"]) + int(features.shape[0])
+                    )
+                    row["active_rows_out"] = (
+                        int(row["active_rows_out"]) + int(parent_rows.numel())
+                    )
+                return values
+
+            (
+                parent_rows,
+                claim_ids,
+                child_inclusion,
+                layer_full_edges,
+                layer_sampled_edges,
+            ) = self._claim_edges(
+                legal_mask,
+                regret_values,
+                histories,
+                (depth - traverser) // 2,
+            )
+            full_edges = int(layer_full_edges.item())
+            sampled_edges = int(layer_sampled_edges)
+            stats["full_claim_edges"] = int(stats["full_claim_edges"]) + full_edges
+            stats["sampled_claim_edges"] = (
+                int(stats["sampled_claim_edges"]) + sampled_edges
+            )
+
+            if self.action_baseline == "call":
+                baseline_values = torch.where(
+                    legal_mask[:, 0],
+                    terminal_values,
+                    torch.zeros_like(terminal_values),
+                )
+            else:
+                baseline_values = torch.zeros_like(terminal_values)
+            action_values = baseline_values[:, None] * legal_mask
+            call_legal = legal_mask[:, 0]
+            action_values[call_legal, 0] = terminal_values[call_legal]
+
+            edge_count = int(parent_rows.numel())
+            chunk_size = (
+                self.trainer.traverser_action_chunk_size
+                or self.trainer.traversal_live_row_budget
+                or max(edge_count, 1)
+            )
+            if edge_count:
+                for start in range(0, edge_count, chunk_size):
+                    end = min(start + chunk_size, edge_count)
+                    edge_idx = torch.arange(
+                        start,
+                        end,
+                        dtype=torch.long,
+                        device=self.device,
+                    )
+                    chunk_parent_rows = parent_rows.index_select(0, edge_idx)
+                    chunk_claim_ids = claim_ids.index_select(0, edge_idx)
+                    chunk_inclusion = child_inclusion.index_select(0, edge_idx)
+                    child_values = evaluate_frontier(
+                        depth + 1,
+                        deal_idx.index_select(0, chunk_parent_rows),
+                        self.history.append(
+                            self.history.select(histories, chunk_parent_rows),
+                            chunk_claim_ids,
+                        ),
+                        chunk_claim_ids,
+                        path_probability.index_select(0, chunk_parent_rows)
+                        * chunk_inclusion,
+                    )
+                    child_baselines = baseline_values.index_select(
+                        0,
+                        chunk_parent_rows,
+                    )
+                    action_values[
+                        chunk_parent_rows,
+                        chunk_claim_ids + 1,
+                    ] = child_baselines + (
+                        child_values - child_baselines
+                    ) / chunk_inclusion
+                    stats["edge_chunks"] = int(stats["edge_chunks"]) + 1
+
+            node_values = (strategy * action_values).sum(dim=1)
+            instant_regret = (action_values - node_values[:, None]) * legal_mask
+            old_scaled = torch.relu(regret_values) * legal_mask
+            targets = torch.relu(
+                previous_scale * old_scaled + instant_scale * instant_regret
+            ) * legal_mask
+            weights = path_probability.clamp_min(1e-12).reciprocal()
+            regret_accumulator.append(
+                features,
+                targets,
+                legal_mask,
+                weights,
+            )
+            stats["regret_weight_sum"] = (
+                float(stats["regret_weight_sum"]) + float(weights.sum().item())
+            )
+            stats["regret_weight_square_sum"] = (
+                float(stats["regret_weight_square_sum"])
+                + float(weights.square().sum().item())
+            )
+            stats["regret_weight_count"] = (
+                int(stats["regret_weight_count"]) + int(weights.numel())
+            )
+            stats["max_regret_weight"] = max(
+                float(stats["max_regret_weight"]),
+                float(weights.max().item()) if weights.numel() else 0.0,
+            )
+
+            if profile:
+                row["traverser_claim_edges_full"] = (
+                    int(row["traverser_claim_edges_full"]) + full_edges
+                )
+                row["traverser_claim_edges_expanded"] = (
+                    int(row["traverser_claim_edges_expanded"]) + sampled_edges
+                )
+                row["edge_chunks"] = int(row["edge_chunks"]) + (
+                    (edge_count + chunk_size - 1) // chunk_size
+                    if edge_count
+                    else 0
+                )
+                row["regret_records"] = (
+                    int(row["regret_records"]) + int(features.shape[0])
+                )
+                row["active_rows_out"] = (
+                    int(row["active_rows_out"]) + int(edge_count)
+                )
+            return node_values
+
+        root_values = evaluate_frontier(
+            0,
+            current_deal,
+            current_history,
+            current_last,
+            current_path_probability,
+        )
+        regret_accumulator.flush()
+        strategy_accumulator.flush()
+
+        result: Dict[str, object] = {
+            "regret_records": regret_accumulator.count,
+            "strategy_records": strategy_accumulator.count,
+            "full_claim_edges": int(stats["full_claim_edges"]),
+            "sampled_claim_edges": int(stats["sampled_claim_edges"]),
+            "regret_weight_sum": float(stats["regret_weight_sum"]),
+            "regret_weight_square_sum": float(stats["regret_weight_square_sum"]),
+            "regret_weight_count": int(stats["regret_weight_count"]),
+            "max_regret_weight": float(stats["max_regret_weight"]),
+            "streamed_edge_chunks": int(stats["edge_chunks"]),
+            "streamed_row_splits": int(stats["row_splits"]),
+        }
+        if profile:
+            result["depth_profile"] = list(profile_by_depth.values())
+            result["peak_rows"] = int(stats["peak_rows"])
+            result["root_values"] = root_values.detach().cpu()
+            result["peak_allocated_bytes"] = (
+                int(torch.cuda.max_memory_allocated(self.device))
+                if self.device.type == "cuda"
+                else 0
+            )
+            result["peak_reserved_bytes"] = (
+                int(torch.cuda.max_memory_reserved(self.device))
+                if self.device.type == "cuda"
+                else 0
+            )
+        return result
+
     def run_traversals(
         self,
         traverser: int,
@@ -398,6 +834,14 @@ class GPUDeepCFRPlusTraverser:
         profile: bool = False,
         commit_records: bool = True,
     ) -> Dict[str, object]:
+        if self.trainer.traversal_streaming:
+            return self._run_traversals_streaming(
+                traverser,
+                batch_size,
+                profile=profile,
+                commit_records=commit_records,
+            )
+
         use_cuda_events = profile and self.device.type == "cuda"
         if use_cuda_events:
             torch.cuda.reset_peak_memory_stats(self.device)
@@ -826,4 +1270,6 @@ class GPUDeepCFRPlusTraverser:
                 if self.device.type == "cuda"
                 else 0
             )
+            if next_values is not None:
+                result["root_values"] = next_values.detach().cpu()
         return result
