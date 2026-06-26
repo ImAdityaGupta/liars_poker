@@ -33,7 +33,7 @@ SPEC = GameSpec(
     suit_symmetry=True,
 )
 
-TOTAL_HOURS = 6.0
+TOTAL_HOURS = 5.0
 POLICY_SNAPSHOT_EVERY_MINUTES = 5.0
 CHECKPOINT_EVERY_MINUTES = 60.0
 PRINT_EVERY_MINUTES = 5.0
@@ -51,7 +51,7 @@ PHASES = [
         "start_minute": 0.0,
         "learning_rate": 1e-3,
         "traversals_per_player": 4096,
-        "regret_train_steps": 48,
+        "regret_train_steps": 24,
         "strategy_train_steps": 6,
         "reset_optimizers": False,
     },
@@ -60,7 +60,7 @@ PHASES = [
         "start_minute": 60.0,
         "learning_rate": 3e-4,
         "traversals_per_player": 8192,
-        "regret_train_steps": 48,
+        "regret_train_steps": 24,
         "strategy_train_steps": 6,
         "reset_optimizers": True,
     },
@@ -75,7 +75,7 @@ PHASES = [
     },
     {
         "name": "polish_lr_3e-5_trav16384",
-        "start_minute": 300.0,
+        "start_minute": 240.0,
         "learning_rate": 3e-5,
         "traversals_per_player": 16384,
         "regret_train_steps": 48,
@@ -95,7 +95,7 @@ TRAINER_KWARGS: dict[str, Any] = {
     "strategy_buffer_capacity": 2_000_000,
     "learning_rate": 1e-3,
     "batch_size": 4096,
-    "regret_train_steps": 48,
+    "regret_train_steps": 24,
     "strategy_train_steps": 6,
     "strategy_weighting": "linear",
     "regret_positive_weight": 0.5,
@@ -106,8 +106,8 @@ TRAINER_KWARGS: dict[str, Any] = {
     "traverser_action_sample_schedule": (24,),
     "traverser_action_sample_count": None,
     "traverser_action_sample_fraction": None,
-    "traverser_action_baseline": "call",
-    "traverser_action_sample_mode": "hash",
+    "traverser_action_baseline": "none",
+    "traverser_action_sample_mode": "random",
     "traversal_streaming": True,
     "traversal_live_row_budget": None,
     "traverser_action_chunk_size": 1_048_576,
