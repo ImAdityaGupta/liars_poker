@@ -17,6 +17,7 @@ from liars_poker.infoset import CALL
 from liars_poker.policies.base import Policy
 from liars_poker.policies.neural import InfosetEncoder, NeuralMLP, NeuralPolicy
 from liars_poker.policies.neural_q import NeuralQPolicy
+from liars_poker.policies.neural_regret import NeuralRegretMatchingPolicy
 from liars_poker.policies.action_conditioned import (
     ActionConditionedPolicy,
     ActionConditionedQPolicy,
@@ -207,7 +208,13 @@ class _FixedOpponent:
 
         if isinstance(
             policy,
-            (NeuralPolicy, NeuralQPolicy, ActionConditionedPolicy, ActionConditionedQPolicy),
+            (
+                NeuralPolicy,
+                NeuralQPolicy,
+                NeuralRegretMatchingPolicy,
+                ActionConditionedPolicy,
+                ActionConditionedQPolicy,
+            ),
         ):
             if policy.spec != spec:
                 raise ValueError("Opponent policy spec mismatch.")
@@ -220,7 +227,12 @@ class _FixedOpponent:
                 )
                 self.action_features = policy.action_features.to(device)
             else:
-                self.kind = "neural_q" if isinstance(policy, NeuralQPolicy) else "neural"
+                if isinstance(policy, NeuralQPolicy):
+                    self.kind = "neural_q"
+                elif isinstance(policy, NeuralRegretMatchingPolicy):
+                    self.kind = "neural_regret"
+                else:
+                    self.kind = "neural"
             self.models = [
                 copy.deepcopy(policy.model_p1).to(device).eval(),
                 copy.deepcopy(policy.model_p2).to(device).eval(),
@@ -232,7 +244,8 @@ class _FixedOpponent:
 
         raise TypeError(
             "NeuralBRTrainer currently supports DenseTabularPolicy, NeuralPolicy, "
-            "NeuralQPolicy, ActionConditionedPolicy, or ActionConditionedQPolicy opponents."
+            "NeuralQPolicy, NeuralRegretMatchingPolicy, ActionConditionedPolicy, "
+            "or ActionConditionedQPolicy opponents."
         )
 
     def probabilities(
@@ -262,6 +275,11 @@ class _FixedOpponent:
             if self.kind in {"neural_q", "action_conditioned_q"}:
                 best = values.masked_fill(~legal_mask, -torch.inf).argmax(dim=1)
                 probs = torch.zeros_like(values).scatter_(1, best[:, None], 1.0)
+            elif self.kind == "neural_regret":
+                probs = values.clamp_min(0.0) * legal_mask
+                no_positive = probs.sum(dim=1, keepdim=True) <= 0.0
+                uniform = legal_mask.float()
+                probs = torch.where(no_positive, uniform, probs)
             else:
                 probs = torch.softmax(
                     values.masked_fill(~legal_mask, -torch.inf),
