@@ -935,6 +935,22 @@ def main() -> None:
         )
         print("Interrupted; saving resumable state before exit.", flush=True)
 
+    except Exception as exc:
+        status = "failed"
+        append_jsonl(
+            events_path,
+            {
+                "event": "exception",
+                "utc": datetime.now(timezone.utc).isoformat(),
+                "measured_training_s": measured_training_s,
+                "iteration": trainer.iteration,
+                "error_type": type(exc).__name__,
+                "error": repr(exc),
+            },
+        )
+        print(f"Run failed with {type(exc).__name__}: {exc}", flush=True)
+        raise
+
     finally:
         final_label = f"{int(round(measured_training_s / 60.0)):04d}m_final"
         try:
