@@ -856,6 +856,29 @@ def main() -> None:
                         )
                     write_json(state_path, state)
                     write_monitor_plots(run_dir)
+
+                    # Keep a resumable state after every monitor without
+                    # retaining an extra full checkpoint on disk. Archived
+                    # checkpoint copies are still controlled by
+                    # CHECKPOINT_EVERY_MINUTES below.
+                    monitor_ckpt_s = atomic_checkpoint(trainer, checkpoint_path)
+                    append_jsonl(
+                        events_path,
+                        {
+                            "event": "monitor_checkpoint",
+                            "updated_utc": datetime.now(timezone.utc).isoformat(),
+                            "snapshot_label": label,
+                            "measured_training_s": measured_training_s,
+                            "measured_training_min": measured_training_s / 60.0,
+                            "iteration": trainer.iteration,
+                            "phase_index": int(state["phase_index"]),
+                            "phase": PHASES[int(state["phase_index"])],
+                            "checkpoint_path": str(checkpoint_path),
+                            "checkpoint_s": monitor_ckpt_s,
+                            "checkpoint_GiB": checkpoint_path.stat().st_size / 2**30,
+                        },
+                    )
+
                     next_monitor_s += 60.0 * MONITOR_EVERY_MINUTES
 
             if measured_training_s >= next_checkpoint_s:
