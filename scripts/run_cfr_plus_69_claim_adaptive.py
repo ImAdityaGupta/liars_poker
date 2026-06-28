@@ -41,7 +41,8 @@ CHECKPOINT_EVERY_MINUTES = 60.0
 PRINT_EVERY_MINUTES = 5.0
 VALIDATE_EVERY_MINUTES = 30.0
 VALIDATION_RECORDS = 4096
-CONTROLLER_TOLERANCE = 0.01
+AVERAGE_CONTROLLER_TOLERANCE = 0.0
+CURRENT_CONTROLLER_TOLERANCE = 0.01
 MIN_PHASE_MINUTES = 60.0
 PATIENCE_MONITORS = 4
 
@@ -526,13 +527,14 @@ def maybe_trigger_phase(
     if best_average is None or best_current is None:
         return False
 
-    tol = CONTROLLER_TOLERANCE
     recent_avg_not_bestish = all(
-        float(row["average_decision_estimate"]) > float(best_average) + tol
+        float(row["average_decision_estimate"])
+        > float(best_average) + AVERAGE_CONTROLLER_TOLERANCE
         for row in recent
     )
     latest_current_not_bestish = (
-        float(history[-1]["current_decision_estimate"]) > float(best_current) + tol
+        float(history[-1]["current_decision_estimate"])
+        > float(best_current) + CURRENT_CONTROLLER_TOLERANCE
     )
     if not (recent_avg_not_bestish and latest_current_not_bestish):
         return False
@@ -555,7 +557,8 @@ def maybe_trigger_phase(
             float(row["average_decision_estimate"]) for row in recent
         ],
         "latest_current_estimate": float(history[-1]["current_decision_estimate"]),
-        "tolerance": tol,
+        "average_tolerance": AVERAGE_CONTROLLER_TOLERANCE,
+        "current_tolerance": CURRENT_CONTROLLER_TOLERANCE,
     }
     append_jsonl(events_path, event)
     return True
@@ -570,6 +573,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-hours", type=float, default=None)
     parser.add_argument("--seed", type=int, default=int(TRAINER_KWARGS["seed"]))
     parser.add_argument("--br-device", type=str, default="cuda")
+    parser.add_argument(
+        "--force-next-phase",
+        action="store_true",
+        help=(
+            "After loading or creating the run, advance exactly one phase, apply "
+            "that phase's optimizer-reset rule, and checkpoint before continuing."
+        ),
+    )
     parser.add_argument(
         "--smoke-test",
         action="store_true",
@@ -662,7 +673,8 @@ def main() -> None:
                 "monitor_every_minutes": MONITOR_EVERY_MINUTES,
                 "long_br_every_minutes": LONG_BR_EVERY_MINUTES,
                 "checkpoint_every_minutes": CHECKPOINT_EVERY_MINUTES,
-                "tolerance": CONTROLLER_TOLERANCE,
+                "average_tolerance": AVERAGE_CONTROLLER_TOLERANCE,
+                "current_tolerance": CURRENT_CONTROLLER_TOLERANCE,
                 "min_phase_minutes": MIN_PHASE_MINUTES,
                 "patience_monitors": PATIENCE_MONITORS,
                 "smoke_test": bool(args.smoke_test),
@@ -705,6 +717,51 @@ def main() -> None:
     )
     print("run_dir:", run_dir, flush=True)
     print("pause with:", f"touch {pause_path}", flush=True)
+
+    if args.force_next_phase:
+        old_phase_index = int(state["phase_index"])
+        if old_phase_index >= len(PHASES) - 1:
+            print("[force phase] already at final phase; no change", flush=True)
+        else:
+            new_phase_index = old_phase_index + 1
+            new_phase = PHASES[new_phase_index]
+            state["phase_index"] = new_phase_index
+            state["phase_started_s"] = measured_training_s
+            apply_phase(
+                trainer,
+                new_phase,
+                reset=bool(new_phase["reset_optimizers"]),
+            )
+            state["completed_phase_resets"] = sorted(
+                set(state.get("completed_phase_resets", []))
+                | ({new_phase_index} if new_phase["reset_optimizers"] else set())
+            )
+            state["measured_training_s"] = measured_training_s
+            state["iteration"] = trainer.iteration
+            force_ckpt_s = atomic_checkpoint(trainer, checkpoint_path)
+            write_json(state_path, state)
+            append_jsonl(
+                events_path,
+                {
+                    "event": "manual_phase_advance",
+                    "utc": datetime.now(timezone.utc).isoformat(),
+                    "measured_training_s": measured_training_s,
+                    "measured_training_min": measured_training_s / 60.0,
+                    "iteration": trainer.iteration,
+                    "old_phase_index": old_phase_index,
+                    "old_phase": PHASES[old_phase_index],
+                    "new_phase_index": new_phase_index,
+                    "new_phase": new_phase,
+                    "checkpoint_path": str(checkpoint_path),
+                    "checkpoint_s": force_ckpt_s,
+                    "checkpoint_GiB": checkpoint_path.stat().st_size / 2**30,
+                },
+            )
+            print(
+                f"[force phase] {old_phase_index} -> {new_phase_index} "
+                f"{new_phase['name']}",
+                flush=True,
+            )
 
     status = "running"
     try:
