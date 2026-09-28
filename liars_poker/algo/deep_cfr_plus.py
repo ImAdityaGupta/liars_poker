@@ -331,6 +331,7 @@ class DeepCFRPlusTrainer:
         strategy_train_steps: int = 50,
         strategy_weighting: str = "linear",
         regret_positive_weight: float = 0.5,
+        regret_target_mode: str = "clip_each_record",
         validation_fraction: float = 0.0,
         validation_buffer_capacity: int = 10_000,
         traversal_backend: str = "recursive",
@@ -390,11 +391,20 @@ class DeepCFRPlusTrainer:
             raise ValueError("strategy_weighting must be 'linear' or 'uniform'.")
         self.strategy_weighting = strategy_weighting
         self.regret_positive_weight = float(regret_positive_weight)
+        if regret_target_mode not in {"clip_each_record", "aggregate_then_clip"}:
+            raise ValueError("Unknown regret_target_mode.")
+        self.regret_target_mode = regret_target_mode
         self.validation_fraction = float(validation_fraction)
         self.validation_buffer_capacity = int(validation_buffer_capacity)
         if traversal_backend not in {"recursive", "gpu_native"}:
             raise ValueError("traversal_backend must be 'recursive' or 'gpu_native'.")
         self.traversal_backend = traversal_backend
+        if self.regret_target_mode == "aggregate_then_clip" and (
+            self.device.type != "cpu" or self.traversal_backend != "gpu_native"
+        ):
+            raise ValueError(
+                "aggregate_then_clip is an experimental CPU gpu_native option."
+            )
         self.traversal_batch_size = int(traversal_batch_size)
         self.traverser_action_sample_count = (
             None
@@ -1002,6 +1012,9 @@ class DeepCFRPlusTrainer:
         return self._traverse(history + (action,), p1_hand, p2_hand, traverser)
 
     def _train_regret(self, pid: int) -> float:
+        if self.regret_target_mode == "aggregate_then_clip":
+            self._aggregate_regret_targets(self.regret_buffers[pid])
+            self._aggregate_regret_targets(self.regret_validation_buffers[pid])
         return self._train_model(
             self.regret_nets[pid],
             self.regret_optimizers[pid],
@@ -1009,6 +1022,32 @@ class DeepCFRPlusTrainer:
             self.regret_train_steps,
             strategy_loss=False,
         )
+
+    @staticmethod
+    def _aggregate_regret_targets(buffer: DeviceRecentBuffer) -> None:
+        """For a CPU experiment, mean raw updates per infoset before clipping.
+
+        Repeating the aggregate target on every visit keeps the production
+        replay sampling and importance weights unchanged during fitting.
+        """
+        n = buffer.size
+        if not n:
+            return
+        _, inverse = torch.unique(
+            buffer.features[:n], dim=0, return_inverse=True
+        )
+        groups = int(inverse.max().item()) + 1
+        weights = buffer.weights[:n].double()
+        totals = torch.zeros(groups, dtype=torch.float64, device=buffer.device)
+        totals.index_add_(0, inverse, weights)
+        weighted = torch.zeros(
+            (groups, buffer.action_dim), dtype=torch.float64, device=buffer.device
+        )
+        weighted.index_add_(
+            0, inverse, buffer.targets[:n].double() * weights[:, None]
+        )
+        grouped = torch.relu(weighted / totals.clamp_min(1e-12)[:, None])
+        buffer.targets[:n] = grouped.index_select(0, inverse).float() * buffer.legal_masks[:n]
 
     def _train_strategy(self, pid: int) -> float:
         return self._train_model(
@@ -1295,6 +1334,7 @@ class DeepCFRPlusTrainer:
                 "strategy_train_steps": self.strategy_train_steps,
                 "strategy_weighting": self.strategy_weighting,
                 "regret_positive_weight": self.regret_positive_weight,
+                "regret_target_mode": self.regret_target_mode,
                 "validation_fraction": self.validation_fraction,
                 "validation_buffer_capacity": self.validation_buffer_capacity,
                 "traversal_backend": self.traversal_backend,
@@ -1357,6 +1397,7 @@ class DeepCFRPlusTrainer:
         else:
             config.pop("hidden_sizes", None)
         config.setdefault("traversal_backend", "recursive")
+        config.setdefault("regret_target_mode", "clip_each_record")
         config.setdefault("traversal_batch_size", 256)
         config.setdefault("traverser_action_sample_count", None)
         config.setdefault("traverser_action_sample_fraction", None)

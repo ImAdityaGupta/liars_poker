@@ -1,0 +1,398 @@
+5/10/25 - Spent around 1h trying to get more mathematical intuition for various optimizers: sgd, sgd+momentum, rmsprop, adam, adamw. Still need to understand regularization.
+6/10/25 - Spent around 2h continuing to go through 0.3 exercises.
+7/10/25 - pass
+8/10/25 - Finished 0.3.
+9/10/25 - pass (went to CAISH social though)
+10/10/25 - pass
+11/10/25 - did a little bit of 0.4 + set up RL with bluff poker again (using codex). more flexible in terms of number of cards, rules.
+12/10/25 - added tabular 'solver' (up to approximating transition probabilities via monte carlo).
+13/10/25 - pass
+14/10/25 - tried to experiment with various eta schedules; got some nice ui to explore given strategies. want to be a bit more rigorous with eta schedules going forward.
+
+2/11/25 - Sat down and wrote the pseudocode for the algorithm I need to exactly solve fixed opponent policy.
+9/11/25 - Big update. Fully implemented exact solver via pseudocode I'd dreamt up. Modified so that would work going first and going second. Using with harmonic eta for small games - eg 3 cards per suit, 2 suits, only high cards and pairs. Seems to converge which is great! But clear areas for improvement, since taking a while:
+	1) The exact computation is really slow because I'm using dicts and tuples everywhere. Fine to get started, since it's a complex algo and wanted to make sure everything was working, but not great forever. ~10x speedup available probably.
+	2) Can use minimax techniques: alpha-beta pruning, move ordering (always call first I guess?). Could get 10x-100x speedup since this is an algorithmic improvement.
+	3) Currently using prob_dist_at_infoset to figure out relative prob of using different policies at some gamestate for CommitOnce policies. This works, but is really slow, especially as number of iterations in eta grows large. Probably want to have a function that converts CommitOnce to Tabular, even if expensive. 2x-3x speedup.
+	4) Instead of fictitious self-play, do Double Oracle (ie solve a tabular nash equilibrium problem within computed policies). This could lead to much faster convergence. ~5x speedup.
+	5) Start with a better seed, e.g. always tell-truth. ~5x speedup.
+
+	These don't necessarily compound but could be looking at 25,000x - 100,000x speedup. Could allow full solving of 13 card suit, 1 card each game.
+
+?/11/25 [post fact] - I did some stuff with double oracle, and it maybe worked? Getting nash equilibria (I think) but not subgame perfect.. but maybe this is ok. In any case the Double Oracle was very vibecoded and will have to be done again
+
+BIG BREAK
+
+29/12/25 - Few good things done on Liar's Poker.
+	1) Remembered exactly how everything fit together.
+	2) Figured out good workflow with Codex + web Gemini. I brainstorm with Gemini, ask it to write prompt, then get Codex to actually implement.
+	3) Used this to revamp saving and loading models.
+	4) Also using this to create test notebooks, which serve extra feature of being self-contained files which help me re-understand the repo.
+
+30/12/25
+Plan:
+	1) Understand where I left of in terms of how to create good agents - FSP for sure, and maybe Double Oracle?
+	2) Properly re-understand the pseudocode I wrote for exact best response.
+	3) Make exact best response efficient (via Codex); use a test notebook to verify correctness.
+	4) Take FSP into its own file.
+	5) For some small specs, create decent bots and have them permanently stored somewhere! Can use these as benchmarks.
+	6) Be able myself to play against these bots so I can vibe-eval them.
+Done so far:
+	1) FSP yes, DO not yet.
+	2) Mostly makes sense.
+	3) Verification notebook set up. Got like a 1.3x speedup (that passes correctness checks!) through just asking web GPT-5.2. Then did a bunch of back and forth with web Gemini, web GPT and myself to design a better plan. This had some bugs but was eventually able to diagnose: as a result, have a much more efficient exact solver. NOTE: actually not that much quicker, because severely limited by repeated sampling of prob_dist_at_infoset. Could definitely do this better but not priority right now.
+	4) Done.
+	5) In progress.
+	6) Kinda done via new_policy_explorer.
+
+31/12/25
+
+Plan:
+	1) Still stupidly slow. Really deeply thinking about how to do prob_dist_at_infoset; this could be a bit of a distraction but I'm determined to get it done.
+	2) Then for some small specs, use fsp to create good benchmarks.
+
+Done so far:
+	1) Found nice binary structure that works to replace prob_dist_at_infoset. Will create another efficient br that hopefully is actually fast now. Restriction is space size: will do hand size 2, 7 cards.
+	1 cont) But still need to get the proper mixing done with multiple of these tables, which will take some thinking. Once done, however, we can really get all small states very close to NE via fsp.
+	1 cont) FINALLY DONE! For smallish games, can fully do fsp loop super quickly.
+	2) in progress.
+
+1/1/26
+Plan:
+	1) Cleanup: tabular, various brs, fsps.
+	2) Use dense_fsp to create good benchmarks for small specs.
+	3) Get br_mc working against arbitrary Policy; this is already kinda done so just revisit br_mc.py and understand it / check it still works.
+	4) Investigate a *bunch* of other options to fsp. Start with DO, then think on.
+
+Done so far:
+	1) Done, big commit pushed.
+	2) In progress.
+	3) Done! Can probably make more efficient but not priority right now.
+
+2/1/26
+
+What I did:
+
+	1) Benchmarks almost all done.
+	2) Update UI so can play against it.
+	3) Got major PSRO / Double Oracle update through - now have to test it.
+
+3/1/26
+Plan:
+	1) Understand psro code! There's not too much of it.
+	2) Use it on small-ish specs and see if it's better than fsp.
+	3) Potentially set off some medium-ish specs with psro if promising?
+	4) Start Neural methods, code NeuralPolicy.
+What I did:
+	1) I understood + simplified psro code.
+	2) Seems like can get a decent boost over fsp, but it requires some hyperparameter tuning.
+	3) Not worth it right now, would max give like 1 OOM improvement but is finicky.
+	4) Not quite there yet.
+
+4/1/26 - 7/1/26
+1) Focus shifted to maths, backtracking MARS project.
+2) Implemented TwoPair, Trips, but due to computation constraints can't really go much further.
+3) Set off runs for few more variants:
+	a) Interesting development that (ranks=4, suits=4, hand_size=4, claim_kinds=[RankHigh Pair TwoPair Trips]) seems to converge very slowly indeed - why? More complex game maybe?
+4) Experimenting with messing around with different eta controls.
+5) CFR/CFR+ still to be explored and the obvious next step.
+
+Ongoing questions:
+1) With FSP, how to incorporate starting with policies that are pretty good to begin with? Rather than starting from random.
+
+	a) Especially with very simple games, see *very* straight lines on log-log plot of exploitability vs episodes. Maybe suggests the best response is basically the same each iteration? In which case can maybe do better than basic_eta_control.
+
+		i.) Actually saw very basic tweaks on basic_eta_control do better on small specs, but doesn't seem to generalise.
+
+	b) Might be good to warm-start with TellTruth? Policy that calls if what opponent has said is not verifiable given what we have.
+
+	c) Interesting phenomenon, to do with complex specs (like the one 2pair rank4 one) where exploitability goes up for a while (initial seed = uniform random) before returning. So either initial mix probs not useful OR exploitability is not only metric of policies worth thinking about.
+
+2) GPU? Making things more efficient?
+
+8/1/26 - 9/1/26
+
+1) Implemented CFR and CFR+. Bottom line: they work, and are significantly better iteration-wise than FSP. Using DenseTabularPolicy as backbone, and then implemented CFR / CFR+ efficiently. Ends up taking about as long as FSP per iteration, just converges in many fewer iterations.
+
+2) Tested CFR and CFR+ on the interesting spec - (ranks=4, suits=4, hand_size=4, claim_kinds=[RankHigh Pair TwoPair Trips]) - and it's clear that FSP << CFR < CFR+ in terms of what's good.
+
+Next steps: clear that Neural policy and scaling up is next. Maybe a UI improvement first.
+
+ --- BREAK FOR EXAMS ---
+
+13/6/26
+
+Ok, been a while. First trying to understand and refamiliarize myself with the repo. I think I get it, I had clearly concluded CFR(+) was the way and was spamming on vast.ai big runs and recording low exploitabilities. Since I had already made CFR+ fairly efficient, this wasn't too bad computationally, but naturally I was not able to scale very far (excel sheet bluff_poker.xlsx shows this).
+
+Things done:
+
+ - Got neural policy going, which is CFR but with function approximators for both the advantage calculation and the averaging step. For now, running on medium-size games since we have exact baselines from eg CFR(+). Using very basic MLPs to begin with.
+ - Initial results were a bit strange. We did get some form of convergence, so the network learns something, but it is quite slow to converge (to be expected when comparing to the exact FSP or CFR baselines) and seems to plateau at quite high exploitabilities (~0.1).
+ - The speed of convergence is not that bad, but the plateauing is more concerning.
+ - What is causing it? Could be a variety of factors:
+  1) External sampling error - maybe the monte carlo rollouts of games just have too high variance.
+  2a) Errors with the advantage neural net: maybe it's bad at prediction.
+	- Could be because of moving target too, as we keep changing the strategy the regrets change.
+  2b) CFR has big discontinuity at 0 so it's possible the advantage neural net is good on say MSE but bad when it counts.
+  3) The neural net that averages the strategy is bad.
+
+ - To test 1 vs 2 vs 3, first did tabular external sampling CFR, so idea is we have monte carlo rollouts but no neural nets and instead exact tables of regrets. This worked extremely well (surprising? maybe) so suggests 1 is not the issue.
+ - Also for small specs you can just do a proper posterior-aware average as we have done in the past, so can test exploitability of neural-net-predicted average strategy vs the actual average strategy. Minimal difference, so probably not 3.
+ - Big L for 2. So the advantage neural net is bad. Why? So many params and hyperparams. The right combination has to be found: learning rate schedulers, neural net architecture, number of traversals vs number of optimizer steps, even what encoding to use.
+ - Tested (2) directly by using tabular external sampling CFR to generate dataset and then try to predict advantage values using neural nets. Bottom line: we can do this reasonably well but still have bad exploitability.
+
+In hindsight this isn't too surprising. Esp in small-ish games (< 18 legal claims), a few key decisions could decide exploitability, whereas looking at MSE or similar weights everything equally.
+
+What is more surprising is that when measuring current exploitability, each network doesn't do very well, but the average network gets much better! I guess this is the thesis of CFR but still, nice to see.
+
+Main conclusion: Deep CFRs limitation is the advantage function; Monte Carlo traversal and strategy averaging seem fine.
+
+14/6/26 - 20/6/26
+
+Lots done. Almost all on the 18-claim spec: GameSpec(
+    ranks=4, suits=4, hand_size=2,
+    claim_kinds=('RankHigh', 'Pair', 'TwoPair', 'Trips'),
+    suit_symmetry=True,
+)
+
+1) Advantage-network experiments
+
+Ran many controlled experiments over equal wall-clock budgets. Eventually moved to vast.ai gpu (rtx 3090) to make things quicker.
+
+Tested:
+
+- learning rates
+- traversals per iteration
+- optimizer steps
+- network architecture (width, depth)
+- replay ratios and adaptive fitting schedules
+- different kinds of infoset encodings
+- variations on losses: MSE, Huber, sign-augmented and positive-weighted losses
+- raw regret, normalized regret, sign-plus-magnitude and direct-strategy targets
+
+Important findings:
+
+- Positive-weighted MSE consistently beat ordinary masked MSE. `advantage_positive_weight=0.5` became the preferred setting.
+- Larger networks helped. On GPU, `2048×2048` was a reasonable winner over `1024×1024`; much larger/deeper networks cost considerably more without clear improvement.
+- More optimizer steps can improve approximation per iteration, but often lose per unit wall time because fewer CFR iterations are completed.
+- Fixed 100 advantage steps remained a sensible wall-clock baseline.
+- Strategy training could be reduced to 50 steps without obvious harm; averaging seems easier than advantage prediction.
+- Alternative regret parameterizations were mostly disappointing. Raw positive-weighted regrets remained strongest.
+- Richer encodings sometimes helped, particularly on easy games, but the benefit did not generalize convincingly enough to replace the simple encoding (no need for human heuristics).
+- Held-out MSE is useful but not sufficient: similar MSE values can induce very different strategies and exploitabilities.
+- Current-strategy exploitability is also a poor proxy for final average-strategy quality.
+- A cosine learning-rate schedule from `1e-3` to `1e-4` produced a modest improvement, but wasn't crazy good: will need more experimentation, esp. with scaling up.
+
+2) Neural CFR+
+
+Implemented and tested online neural CFR+:
+
+- alternating player updates
+- clipped nonnegative cumulative regrets
+- linear average-strategy weighting
+- frozen regret snapshots during each outer iteration
+- separate average-strategy network
+
+Results:
+
+- exceptionally smooth current and average exploitability curves;
+- very low clipped-regret validation error;
+- current and average strategies much closer in quality than in ordinary Deep CFR;
+- slower initial convergence than the best Deep CFR setup, but potentially a more reliable long-run trajectory.
+
+The two big issues with deep cfr are non-monotonicity (sometimes?) and fact that more compute doesn't seem to reliably turn into better policies (plateau is quick). Neural cfr+ seems promising.
+
+3) GPU-native Deep CFR
+
+Reworked Deep CFR substantially for GPU use:
+
+- batched external-sampling traversal; thousands of simultaneous traversal lanes; GPU-native inference during traversal;device-resident replay buffers; fused optimizers; large fitting batches; separate advantage and strategy architectures; exact trainer checkpoint/resume support.
+
+Even on CPU, batched traversal was around an order of magnitude faster than the old recursive implementation. On an RTX 3090, traversal throughput reached millions of generated records per second and ceased to be the main bottleneck.
+
+GPU findings:
+
+- FP32 was at least as good as BF16 for the current network sizes and often faster overall.
+- Traversal batch sizes up to 8192 were cheap in memory and extremely fast.
+- Fitting became the dominant neural cost.
+- Batch size 4096 gave the best wall-clock learning among 4096, 8192 and 16384 despite lower raw sample throughput.
+- Wider networks were now affordable, but very large networks still reduced the number of CFR iterations enough to offset their extra capacity.
+
+Current (best) Deep CFR reference configuration on 18-claim spec:
+
+```
+advantage_hidden_sizes=(2048, 2048)
+strategy_hidden_sizes=(512, 512)
+learning_rate=1e-3
+batch_size=4096
+advantage_train_steps=100
+strategy_train_steps=50
+advantage_positive_weight=0.5
+traversals_per_player=1024
+traversal_batch_size=1024
+strategy_weighting='linear'
+alternating_updates=True
+highest_regret_fallback=True
+device_replay=True
+amp_dtype=None
+```
+
+Basically, traversal becomes very cheap compared to fitting.
+
+4) Exact evaluation improvements
+
+Exact evaluation remained essential while working on medium-size games, but was becoming a wall-clock bottleneck. Improved `compile_neural_to_dense`, reducing dense compilation on the reference game from roughly three minutes to around ten seconds.
+
+Separated GPU training from CPU evaluation so that training new policy was unaffected by evaluating it. Also implemented a proper dense exact evaluator for two fixed policies. Previously, exact evaluation between arbitrary fixed dense policies relied on a slow generic recursive evaluator.
+
+5) Reference Deep CFR runs
+
+Ran longer reference training on r4_s4_h2_hp2pt_ss (same 18-claim spec as before). The reference run reached exploitability around 0.084, but clearly plateaued. This reinforced that the average network is adequate and the advantage-learning process remains the limiting component.
+
+6) Approximate best responses
+
+At some point exact exploitability becomes infeasible due to size. Implemented a neural DQN-style approximate best responder and calibrated it against games with known exact exploitability (18-claim spec). Key findings:
+
+- Monte Carlo evaluation of a fixed neural responder was highly accurate. With enough games, MC error was very low (to be expected, CLT).
+- But sometimes the neural net would just find a suboptimal policy and chill there.
+- After 15 minutes, the original DQN responder recovered only about 86% of known exploitability and plateaued with an oracle gap around `0.012`.
+- Simple power-law extrapolation predicted the responder's own plateau rather than the true best-response ceiling. It cannot safely repair a weak responder.
+
+This is very annoying. We would like our best responders to be fairly close to the network's actual exploitability, but this isn't the case with DQN. Next tested:
+ - whether we can distill into a neural net of current size a good br
+ - whether other methods of training can get us closer to a better br.
+
+7) Exact BR distillation
+
+Directly trained neural net on exact-BR action labels. And we found we can do it, great. Typically our neural policies will have exploitability ~0.1, maybe best case 0.05, but I'd expect this to go up as we scale, so we only need best responder to be within 0.01, maybe 0.005. We could do this: the best exact oracle gap was about 0.0024. Again open question whether this holds up at scale.
+
+We now know the main DQN problem is bootstrapped targets / variance.
+
+8) Complete-return fitted best response
+
+Implemented a stronger approximate responder based on fully observed terminal returns. So every time responder has to make a decision, we consider all possible legal actions and monte carlo from there to get an idea of which actions are good / bad. Not recursive since we only do this expansion once per decision.
+
+Results were much stronger than DQN:
+
+- after 15 minutes, three seeds recovered about 94–97% of exact exploitability;
+- exact oracle gaps were approximately 0.0024–0.0052;
+- curves continued improving rather than clearly hitting the DQN plateau;
+- performance approached exact-BR distillation quality.
+
+Main conclusion: TD bootstrapping and off-policy target propagation caused much of the DQN failure. Complete terminal returns provide a far better responder-training signal. Also, not too bad for scaling, since scales in number of claims * average length of game, which isn't crazy!
+
+9) PPO responder and future search
+
+Also implemented a PPO best responder with:
+
+- separate actor and value networks;
+- clipped PPO updates;
+- value baseline;
+- entropy regularization;
+- role-specific training against a fixed opponent.
+
+Results: better than DQN but not crazy good. So going forwards will probably stick to fitted brs, but may use an ensemble too.
+
+21/6/26
+
+Implemented neural cfr+ and neural fsp, both in a gpu-native fashion. As seemed to be the case before, neural cfr+ seems much better than neural cfr, and that's without much tuning of params (using the same ones we found worked well with neural cfr). Will test neural fsp too but given cost of approximate br being quite high I don't expect this to be very good.
+
+So we reach a point where it is likely we have most of the path to the full game! Looks like:
+
+ - train policy via neural cfr+
+ - evaluate via fitted best response + possible ensemble of models
+ - open question whether to use action-conditioned networks to improve efficiency of training
+ - can maybe get even better best responders via some version of search, though this just gives more peace of mind.
+
+
+Neural cfr+: Did some parameter tuning. Seems like lower fitting -> high iterations is good!
+
+GameSpec(
+    ranks=5,
+    suits=4,
+    hand_size=3,
+    claim_kinds=("RankHigh", "Pair", "TwoPair", "Trips", "Quads"),
+    suit_symmetry=True,
+)
+
+This is the next spec I want to analyse after the current 18-claim one.
+
+
+22/6/26 - 23/6/26
+
+Ok so things have progressed a little. 18 claim version goes to ~0.02 exploitability quickly with correct choice of params on neural cfr+:
+
+TRAINER_KWARGS = {
+    "regret_hidden_sizes": (2048, 2048),
+    "strategy_hidden_sizes": (512, 512),
+
+    "learning_rate": 1e-3,
+    "batch_size": 4096,
+
+    "regret_train_steps": 24,
+    "strategy_train_steps": 6,
+    "regret_positive_weight": 0.5,
+    "strategy_weighting": "linear",
+
+    "regret_buffer_capacity": 500_000,
+    "strategy_buffer_capacity": 2_000_000,
+    "validation_fraction": 0.02,
+    "validation_buffer_capacity": 20_000,
+
+    "traversal_backend": "gpu_native",
+    "traversal_batch_size": 1024,
+    "device_replay": True,
+    "fused_optimizer": True,
+    "amp_dtype": None,
+    "compile_models": False,
+}
+TRAVERSALS_PER_PLAYER = 1024
+
+This seems pretty good, and I started to expand to larger specs. One issue we found is that our current method of finding what the regret targets should be essentially play through every possible legal move we can make, while sampling one move opponent could make at each step, and then doing this many times (1024). This gives us a square root optimisation to exact cfr+, but won't scale all the way up to the full game. So then must do some kind of action sampling.
+
+Initial experiments showed that maybe action sampling was catastrophic (on 18 claim spec). But further investigation showed that maybe this was because we were comparing with equal traversals per player and this just means much less data for the lower sample variants which isn't really a fair comparison. So reran experiments and even with roughly equal number of observed of action-edges, it's just much better to do full expansion.
+
+
+
+Then the big thing we attempted to run was this spec for 12 hours (69 claims):
+
+spec = GameSpec(
+    ranks=6,
+    suits=4,
+    hand_size=4,
+    claim_kinds=('RankHigh', 'Pair', 'TwoPair', 'Trips', 'FullHouse', 'Quads'),
+    suit_symmetry=True,
+)
+
+Then also periodically ran approximate BRs in a consistent manner (used GPU to train).
+
+Unfortunately, exploitability values were lowest around 400 minutes and then started trending upwards. I thought maybe this was to do with action sampling, so ran another long test of 6h on the 18 claim version with exact averaging and exact exploitability and saw a very similar trend: after about 90m of training we hit a floor and then consistently rose from then on. In the 18 claim version it just happened to be that this floor was much closer to 0 than in the 69 claim one; approximate BR suggests min exploitability of at least 0.28 for the 69 claim version (possibly higher) while the 18 claim version had exact exploitability < 0.02 at best point.
+
+
+The big question now is how to leverage more compute to make better policies. I would have hoped that more training would make CFR+ average policies better; they seem to hit a wall beyond a point and:
+
+a) I don't know how to get past this wall
+b) running tests takes ages since we care about long term behaviour.
+
+
+Possible influencing factors:
+
+ - learning rate is currently constant, could  make it smaller over time
+ - might need to increase number of traversals over time
+ - some fundamental limit in cfr+ with function approximation
+ - might need to retrain strategy network from scratch each time?
+
+
+Late June 2026 (retrospective added September 2026)
+
+The answer after the earlier writeup is more nuanced than "more compute does not help":
+
+- The small tabular games remain the reliable exact baseline. For example, the r4_s4_h4, 18-claim CFR+ benchmark has exact exploitability around 0.0009. The 18-claim neural game is a different spec (r4_s4_h2); optimized neural CFR+ reached about 0.024 exact exploitability at 45 minutes, and later low-LR forks reached roughly 0.014-0.015. A 1e-4 learning-rate drop helped; optimizer reset alone did not. These results do not imply larger games are solved.
+- The 30-claim r5_s4_h3 game was used as an intermediate learning-rate screen. In a single-seed, 60-minute comparison, the best 5-minute approximate-BR estimate was around 0.015 at a 50-minute snapshot. This is discovered exploitability, not an exact exploitability or a cross-seed conclusion. See artifacts/cfr_plus_30_claim_lr_schedule_screen/.
+- The original long 69-claim r6_s4_h4 run used random action sampling (cap 16), 256 traversals/player, LR 1e-3, 24 regret and 6 strategy fit steps. With 60 minutes of responder training per selected snapshot, discovered exploitability was about 0.301 at 200m, 0.282 at 400m, and 0.301 at 720m. The 400m policy looked best by this measure; the exact exploitability is unknown. See artifacts/cfr_plus_approx_reference_runs/r6_s4_h4_hp2ptfhq_ss___20260622-152749/approx_br_selected_60m/60m_summary.csv.
+- Follow-up work added optional streamed/chunked traversal and tried more ambitious 69-claim schedules. A fixed-iteration sanity check exposed a serious failure with hash action sampling (near 0.9 discovered exploitability versus around 0.4 for random sampling); subsequent runs used random sampling. Streaming controls peak live expansion but does not eliminate the cost of traversing many edges.
+- The later adaptive 69-claim run monitored average and current policies with 2-minute BRs every 15 minutes and longer 10-minute BRs every 30 minutes, and allowed manual/automatic phase changes. Its approximate-BR curves flattened and then worsened. The ~0.19 short-BR readings cannot be compared directly with the old ~0.28 reading trained for 60 minutes. The branch-fork experiment from a shared 120-minute checkpoint tested cap 24 only, LR drop only, and their combination; the available partial results did not establish a new winner. See artifacts/cfr_plus_69_claim_adaptive/ and artifacts/cfr_plus_69_claim_branch_forks/.
+- Saved policies and resumable trainer checkpoints are different. The representative policy snapshots in the local copy load, but the copied adaptive/fork .pt checkpoints fail a ZIP-container check and should not be treated as resumable. The VM is gone. A clean next comparison needs valid artifacts, matched and sufficiently long BR training, and ideally multiple training and responder seeds.
+- The intended 368-claim game remains future work: current rules implement claim families only through Quads. The 69-claim game is still a scaling experiment, not essentially solved.
+
+For a runnable map of the game, exact tabular and neural CFR+ paths, and the existing evaluation artifacts, see notebooks/sep_2026/repo_reorientation.ipynb.

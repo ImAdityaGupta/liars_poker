@@ -1,0 +1,210 @@
+[
+  {
+    "clip_mode": "clip_each_record",
+    "cap": "full",
+    "seed": 17,
+    "iteration": 1,
+    "current_exploitability": 0.741293848883501,
+    "learned_average_exploitability": 0.7671493707456127,
+    "shadow_average_exploitability": 0.7681481472467198,
+    "root_shadow_policy_tv": 0.4150555895441334,
+    "regret_loss": 0.3221193253993988,
+    "strategy_loss": 0.8391497731208801,
+    "sampled_edge_fraction": 1.0,
+    "regret_records": [
+      43,
+      17
+    ],
+    "shadow_update_l1": [
+      44.38888972157405,
+      17.766980726976595
+    ],
+    "root_target_n": 8,
+    "root_target_mean_abs_error": 0.27965534358664795,
+    "root_target_mean_signed_error": 0.21463476671940754,
+    "root_fitted_to_exact_target_mae": 0.13412735660870867,
+    "last_iteration_wall_s": 0.43763440009206533
+  },
+  {
+    "clip_mode": "clip_each_record",
+    "cap": "full",
+    "seed": 17,
+    "iteration": 2,
+    "current_exploitability": 0.7212321994283073,
+    "learned_average_exploitability": 0.7650315355396109,
+    "shadow_average_exploitability": 0.7477761459937764,
+    "root_shadow_policy_tv": 0.46404785011144334,
+    "regret_loss": 0.06555354036390781,
+    "strategy_loss": 0.7750596106052399,
+    "sampled_edge_fraction": 1.0,
+    "regret_records": [
+      30,
+      12
+    ],
+    "shadow_update_l1": [
+      51.7861558164618,
+      7.107828079411426
+    ],
+    "root_target_n": 8,
+    "root_target_mean_abs_error": 0.08574445294946692,
+    "root_target_mean_signed_error": 0.048736155200493,
+    "root_fitted_to_exact_target_mae": 0.08160108997662825,
+    "last_iteration_wall_s": 0.13589769997633994
+  },
+  {
+    "clip_mode": "clip_each_record",
+    "cap": 2,
+    "seed": 17,
+    "iteration": 1,
+    "current_exploitability": 0.751108751270239,
+    "learned_average_exploitability": 0.7666989930485322,
+    "shadow_average_exploitability": 0.7681481472467198,
+    "root_shadow_policy_tv": 0.41635171489651607,
+    "regret_loss": 0.41052430868148804,
+    "strategy_loss": 1.0285756886005402,
+    "sampled_edge_fraction": 0.4606741573033708,
+    "regret_records": [
+      20,
+      12
+    ],
+    "shadow_update_l1": [
+      44.38888972157405,
+      17.404047118339893
+    ],
+    "root_target_n": 8,
+    "root_target_mean_abs_error": 0.4476543355360627,
+    "root_target_mean_signed_error": 0.3580247050151229,
+    "root_fitted_to_exact_target_mae": 0.13487176470872425,
+    "last_iteration_wall_s": 0.1687534999800846
+  },
+  {
+    "clip_mode": "clip_each_record",
+    "cap": 2,
+    "seed": 17,
+    "iteration": 2,
+    "current_exploitability": 0.7251454193103033,
+    "learned_average_exploitability": 0.7646558767134182,
+    "shadow_average_exploitability": 0.7567885492157354,
+    "root_shadow_policy_tv": 0.41107804706095324,
+    "regret_loss": 0.08412827551364899,
+    "strategy_loss": 0.8202932476997375,
+    "sampled_edge_fraction": 0.5,
+    "regret_records": [
+      21,
+      13
+    ],
+    "shadow_update_l1": [
+      40.54558018502895,
+      17.646917751332122
+    ],
+    "root_target_n": 8,
+    "root_target_mean_abs_error": 0.17752686875409945,
+    "root_target_mean_signed_error": 0.13862163770706054,
+    "root_fitted_to_exact_target_mae": 0.06389987641001922,
+    "last_iteration_wall_s": 0.14424619998317212
+  },
+  {
+    "clip_mode": "aggregate_then_clip",
+    "cap": "full",
+    "seed": 17,
+    "iteration": 1,
+    "current_exploitability": 0.716343715134157,
+    "learned_average_exploitability": 0.7673084473738148,
+    "shadow_average_exploitability": 0.7681481472467198,
+    "root_shadow_policy_tv": 0.3759192426726683,
+    "regret_loss": 0.30200302600860596,
+    "strategy_loss": 0.8574937283992767,
+    "sampled_edge_fraction": 1.0,
+    "regret_records": [
+      43,
+      16
+    ],
+    "shadow_update_l1": [
+      44.38888972157405,
+      19.97970637584087
+    ],
+    "root_target_n": 8,
+    "root_target_mean_abs_error": 0.20056584390915105,
+    "root_target_mean_signed_error": 0.09933127361453245,
+    "root_fitted_to_exact_target_mae": 0.13148438545564808,
+    "last_iteration_wall_s": 0.16821499995421618
+  },
+  {
+    "clip_mode": "aggregate_then_clip",
+    "cap": "full",
+    "seed": 17,
+    "iteration": 2,
+    "current_exploitability": 0.6565273054645133,
+    "learned_average_exploitability": 0.7655222029173432,
+    "shadow_average_exploitability": 0.7300355721064102,
+    "root_shadow_policy_tv": 0.4380310021497504,
+    "regret_loss": 0.05070960894227028,
+    "strategy_loss": 0.830894261598587,
+    "sampled_edge_fraction": 1.0,
+    "regret_records": [
+      25,
+      16
+    ],
+    "shadow_update_l1": [
+      44.633662696661574,
+      6.599611809691463
+    ],
+    "root_target_n": 8,
+    "root_target_mean_abs_error": 0.04758632529486728,
+    "root_target_mean_signed_error": 0.031173956244316167,
+    "root_fitted_to_exact_target_mae": 0.07705508888081808,
+    "last_iteration_wall_s": 0.13512039999477565
+  },
+  {
+    "clip_mode": "aggregate_then_clip",
+    "cap": 2,
+    "seed": 17,
+    "iteration": 1,
+    "current_exploitability": 0.7046341160352565,
+    "learned_average_exploitability": 0.7674729731284495,
+    "shadow_average_exploitability": 0.7681481472467198,
+    "root_shadow_policy_tv": 0.53514329142809,
+    "regret_loss": 0.29175353050231934,
+    "strategy_loss": 1.117781639099121,
+    "sampled_edge_fraction": 0.46153846153846156,
+    "regret_records": [
+      20,
+      13
+    ],
+    "shadow_update_l1": [
+      44.38888972157405,
+      13.576811279325211
+    ],
+    "root_target_n": 8,
+    "root_target_mean_abs_error": 0.30271604774864735,
+    "root_target_mean_signed_error": 0.19629629351612596,
+    "root_fitted_to_exact_target_mae": 0.14023661673482918,
+    "last_iteration_wall_s": 0.14873319992329925
+  },
+  {
+    "clip_mode": "aggregate_then_clip",
+    "cap": 2,
+    "seed": 17,
+    "iteration": 2,
+    "current_exploitability": 0.6942838989381506,
+    "learned_average_exploitability": 0.766074425096178,
+    "shadow_average_exploitability": 0.7233363226882137,
+    "root_shadow_policy_tv": 0.37694507025009666,
+    "regret_loss": 0.0736053790897131,
+    "strategy_loss": 0.9219663739204407,
+    "sampled_edge_fraction": 0.5,
+    "regret_records": [
+      17,
+      11
+    ],
+    "shadow_update_l1": [
+      45.087181631709406,
+      17.938347995285827
+    ],
+    "root_target_n": 8,
+    "root_target_mean_abs_error": 0.1533533295981859,
+    "root_target_mean_signed_error": 0.038403051529737255,
+    "root_fitted_to_exact_target_mae": 0.07755531475550215,
+    "last_iteration_wall_s": 0.15281210001558065
+  }
+]

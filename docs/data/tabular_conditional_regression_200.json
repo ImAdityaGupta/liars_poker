@@ -1,0 +1,407 @@
+[
+  {
+    "method": "exact dense CFR+",
+    "iteration": 1,
+    "exploitability": 0.7681481472467198
+  },
+  {
+    "method": "exact dense CFR+",
+    "iteration": 25,
+    "exploitability": 0.07273884929415941
+  },
+  {
+    "method": "exact dense CFR+",
+    "iteration": 50,
+    "exploitability": 0.048350227715431515
+  },
+  {
+    "method": "exact dense CFR+",
+    "iteration": 75,
+    "exploitability": 0.029522983145835457
+  },
+  {
+    "method": "exact dense CFR+",
+    "iteration": 100,
+    "exploitability": 0.021774389279535455
+  },
+  {
+    "method": "exact dense CFR+",
+    "iteration": 125,
+    "exploitability": 0.015252282616241342
+  },
+  {
+    "method": "exact dense CFR+",
+    "iteration": 150,
+    "exploitability": 0.010616945690456792
+  },
+  {
+    "method": "exact dense CFR+",
+    "iteration": 175,
+    "exploitability": 0.007807591526312718
+  },
+  {
+    "method": "exact dense CFR+",
+    "iteration": 200,
+    "exploitability": 0.005981935292767027
+  },
+  {
+    "method": "cap=full clip=after seed=17",
+    "iteration": 1,
+    "exploitability": 0.7681481472467198
+  },
+  {
+    "method": "cap=full clip=after seed=17",
+    "iteration": 25,
+    "exploitability": 0.09636854674841056
+  },
+  {
+    "method": "cap=full clip=after seed=17",
+    "iteration": 50,
+    "exploitability": 0.06731930654975349
+  },
+  {
+    "method": "cap=full clip=after seed=17",
+    "iteration": 75,
+    "exploitability": 0.05181587362125262
+  },
+  {
+    "method": "cap=full clip=after seed=17",
+    "iteration": 100,
+    "exploitability": 0.0392407089808664
+  },
+  {
+    "method": "cap=full clip=after seed=17",
+    "iteration": 125,
+    "exploitability": 0.029784384946537568
+  },
+  {
+    "method": "cap=full clip=after seed=17",
+    "iteration": 150,
+    "exploitability": 0.025024062288336202
+  },
+  {
+    "method": "cap=full clip=after seed=17",
+    "iteration": 175,
+    "exploitability": 0.022566265507073968
+  },
+  {
+    "method": "cap=full clip=after seed=17",
+    "iteration": 200,
+    "exploitability": 0.019288566752689862
+  },
+  {
+    "method": "cap=full clip=after seed=23",
+    "iteration": 1,
+    "exploitability": 0.7681481472467198
+  },
+  {
+    "method": "cap=full clip=after seed=23",
+    "iteration": 25,
+    "exploitability": 0.09267286850917467
+  },
+  {
+    "method": "cap=full clip=after seed=23",
+    "iteration": 50,
+    "exploitability": 0.04757968217003028
+  },
+  {
+    "method": "cap=full clip=after seed=23",
+    "iteration": 75,
+    "exploitability": 0.03937309204102801
+  },
+  {
+    "method": "cap=full clip=after seed=23",
+    "iteration": 100,
+    "exploitability": 0.028495356780185332
+  },
+  {
+    "method": "cap=full clip=after seed=23",
+    "iteration": 125,
+    "exploitability": 0.025618556389765512
+  },
+  {
+    "method": "cap=full clip=after seed=23",
+    "iteration": 150,
+    "exploitability": 0.020713222818487864
+  },
+  {
+    "method": "cap=full clip=after seed=23",
+    "iteration": 175,
+    "exploitability": 0.016433178855952413
+  },
+  {
+    "method": "cap=full clip=after seed=23",
+    "iteration": 200,
+    "exploitability": 0.013230294256119546
+  },
+  {
+    "method": "cap=full clip=before seed=17",
+    "iteration": 1,
+    "exploitability": 0.7681481472467198
+  },
+  {
+    "method": "cap=full clip=before seed=17",
+    "iteration": 25,
+    "exploitability": 0.09786533520493013
+  },
+  {
+    "method": "cap=full clip=before seed=17",
+    "iteration": 50,
+    "exploitability": 0.0725785421301357
+  },
+  {
+    "method": "cap=full clip=before seed=17",
+    "iteration": 75,
+    "exploitability": 0.052938225764817215
+  },
+  {
+    "method": "cap=full clip=before seed=17",
+    "iteration": 100,
+    "exploitability": 0.042210926140833216
+  },
+  {
+    "method": "cap=full clip=before seed=17",
+    "iteration": 125,
+    "exploitability": 0.04050845814337367
+  },
+  {
+    "method": "cap=full clip=before seed=17",
+    "iteration": 150,
+    "exploitability": 0.03739776822231167
+  },
+  {
+    "method": "cap=full clip=before seed=17",
+    "iteration": 175,
+    "exploitability": 0.03352378192202665
+  },
+  {
+    "method": "cap=full clip=before seed=17",
+    "iteration": 200,
+    "exploitability": 0.029930494968053667
+  },
+  {
+    "method": "cap=full clip=before seed=23",
+    "iteration": 1,
+    "exploitability": 0.7681481472467198
+  },
+  {
+    "method": "cap=full clip=before seed=23",
+    "iteration": 25,
+    "exploitability": 0.13850784043479258
+  },
+  {
+    "method": "cap=full clip=before seed=23",
+    "iteration": 50,
+    "exploitability": 0.09395708968913352
+  },
+  {
+    "method": "cap=full clip=before seed=23",
+    "iteration": 75,
+    "exploitability": 0.07716505999377343
+  },
+  {
+    "method": "cap=full clip=before seed=23",
+    "iteration": 100,
+    "exploitability": 0.0559513094642865
+  },
+  {
+    "method": "cap=full clip=before seed=23",
+    "iteration": 125,
+    "exploitability": 0.04588397980196879
+  },
+  {
+    "method": "cap=full clip=before seed=23",
+    "iteration": 150,
+    "exploitability": 0.04019331924668634
+  },
+  {
+    "method": "cap=full clip=before seed=23",
+    "iteration": 175,
+    "exploitability": 0.03691046545438281
+  },
+  {
+    "method": "cap=full clip=before seed=23",
+    "iteration": 200,
+    "exploitability": 0.0331805786602033
+  },
+  {
+    "method": "cap=2 clip=after seed=17",
+    "iteration": 1,
+    "exploitability": 0.7681481472467198
+  },
+  {
+    "method": "cap=2 clip=after seed=17",
+    "iteration": 25,
+    "exploitability": 0.1939017352185246
+  },
+  {
+    "method": "cap=2 clip=after seed=17",
+    "iteration": 50,
+    "exploitability": 0.1440232604185221
+  },
+  {
+    "method": "cap=2 clip=after seed=17",
+    "iteration": 75,
+    "exploitability": 0.09324573144687198
+  },
+  {
+    "method": "cap=2 clip=after seed=17",
+    "iteration": 100,
+    "exploitability": 0.08612560622619903
+  },
+  {
+    "method": "cap=2 clip=after seed=17",
+    "iteration": 125,
+    "exploitability": 0.07591751035973093
+  },
+  {
+    "method": "cap=2 clip=after seed=17",
+    "iteration": 150,
+    "exploitability": 0.06112101288257943
+  },
+  {
+    "method": "cap=2 clip=after seed=17",
+    "iteration": 175,
+    "exploitability": 0.055771998618750596
+  },
+  {
+    "method": "cap=2 clip=after seed=17",
+    "iteration": 200,
+    "exploitability": 0.04993858836554277
+  },
+  {
+    "method": "cap=2 clip=after seed=23",
+    "iteration": 1,
+    "exploitability": 0.7681481472467198
+  },
+  {
+    "method": "cap=2 clip=after seed=23",
+    "iteration": 25,
+    "exploitability": 0.188861583407538
+  },
+  {
+    "method": "cap=2 clip=after seed=23",
+    "iteration": 50,
+    "exploitability": 0.10500502543341939
+  },
+  {
+    "method": "cap=2 clip=after seed=23",
+    "iteration": 75,
+    "exploitability": 0.07141881689274743
+  },
+  {
+    "method": "cap=2 clip=after seed=23",
+    "iteration": 100,
+    "exploitability": 0.07345634996425643
+  },
+  {
+    "method": "cap=2 clip=after seed=23",
+    "iteration": 125,
+    "exploitability": 0.07415444232471069
+  },
+  {
+    "method": "cap=2 clip=after seed=23",
+    "iteration": 150,
+    "exploitability": 0.07178114134494251
+  },
+  {
+    "method": "cap=2 clip=after seed=23",
+    "iteration": 175,
+    "exploitability": 0.06666971947889477
+  },
+  {
+    "method": "cap=2 clip=after seed=23",
+    "iteration": 200,
+    "exploitability": 0.06091203247076327
+  },
+  {
+    "method": "cap=2 clip=before seed=17",
+    "iteration": 1,
+    "exploitability": 0.7681481472467198
+  },
+  {
+    "method": "cap=2 clip=before seed=17",
+    "iteration": 25,
+    "exploitability": 0.2760361033783276
+  },
+  {
+    "method": "cap=2 clip=before seed=17",
+    "iteration": 50,
+    "exploitability": 0.1918509198076599
+  },
+  {
+    "method": "cap=2 clip=before seed=17",
+    "iteration": 75,
+    "exploitability": 0.16179059757310021
+  },
+  {
+    "method": "cap=2 clip=before seed=17",
+    "iteration": 100,
+    "exploitability": 0.1340478077258478
+  },
+  {
+    "method": "cap=2 clip=before seed=17",
+    "iteration": 125,
+    "exploitability": 0.11247656964540687
+  },
+  {
+    "method": "cap=2 clip=before seed=17",
+    "iteration": 150,
+    "exploitability": 0.09784411074578969
+  },
+  {
+    "method": "cap=2 clip=before seed=17",
+    "iteration": 175,
+    "exploitability": 0.09061162224241603
+  },
+  {
+    "method": "cap=2 clip=before seed=17",
+    "iteration": 200,
+    "exploitability": 0.08931736104998311
+  },
+  {
+    "method": "cap=2 clip=before seed=23",
+    "iteration": 1,
+    "exploitability": 0.7681481472467198
+  },
+  {
+    "method": "cap=2 clip=before seed=23",
+    "iteration": 25,
+    "exploitability": 0.26336538341129545
+  },
+  {
+    "method": "cap=2 clip=before seed=23",
+    "iteration": 50,
+    "exploitability": 0.180005593144261
+  },
+  {
+    "method": "cap=2 clip=before seed=23",
+    "iteration": 75,
+    "exploitability": 0.1416596497924849
+  },
+  {
+    "method": "cap=2 clip=before seed=23",
+    "iteration": 100,
+    "exploitability": 0.12412142332630682
+  },
+  {
+    "method": "cap=2 clip=before seed=23",
+    "iteration": 125,
+    "exploitability": 0.11100701172013139
+  },
+  {
+    "method": "cap=2 clip=before seed=23",
+    "iteration": 150,
+    "exploitability": 0.10011385538488327
+  },
+  {
+    "method": "cap=2 clip=before seed=23",
+    "iteration": 175,
+    "exploitability": 0.08854020250431871
+  },
+  {
+    "method": "cap=2 clip=before seed=23",
+    "iteration": 200,
+    "exploitability": 0.08324636838726218
+  }
+]

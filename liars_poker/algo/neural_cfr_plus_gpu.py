@@ -743,8 +743,12 @@ class GPUDeepCFRPlusTraverser:
             node_values = (strategy * action_values).sum(dim=1)
             instant_regret = (action_values - node_values[:, None]) * legal_mask
             old_scaled = torch.relu(regret_values) * legal_mask
-            targets = torch.relu(
+            raw_targets = (
                 previous_scale * old_scaled + instant_scale * instant_regret
+            )
+            targets = (
+                raw_targets if self.trainer.regret_target_mode == "aggregate_then_clip"
+                else torch.relu(raw_targets)
             ) * legal_mask
             weights = path_probability.clamp_min(1e-12).reciprocal()
             regret_accumulator.append(
@@ -1148,8 +1152,12 @@ class GPUDeepCFRPlusTraverser:
             node_values = (strategy * action_values).sum(dim=1)
             instant_regret = (action_values - node_values[:, None]) * legal_mask
             old_scaled = torch.relu(layer["regret_values"]) * legal_mask
-            targets = torch.relu(
+            raw_targets = (
                 previous_scale * old_scaled + instant_scale * instant_regret
+            )
+            targets = (
+                raw_targets if self.trainer.regret_target_mode == "aggregate_then_clip"
+                else torch.relu(raw_targets)
             ) * legal_mask
             regret_features.append(layer["features"])
             regret_targets.append(targets)
