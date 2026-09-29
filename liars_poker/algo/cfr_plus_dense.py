@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import Callable, List, Tuple
 
 import numpy as np
 
@@ -203,7 +203,12 @@ class CFRPlusDense:
             win_mass = M - sat_mass
         return 2.0 * win_mass - M
 
-    def _update_player(self, player: int, weight: float) -> np.ndarray:
+    def _update_player(
+        self,
+        player: int,
+        weight: float,
+        increment_transform: Callable[[int, np.ndarray, np.ndarray], np.ndarray] | None = None,
+    ) -> np.ndarray:
         V = np.zeros((self.H, self.n_hands), dtype=self.dtype)
         Lp = self.L0 if player == 0 else self.L1
         Lopp = self.L1 if player == 0 else self.L0
@@ -235,7 +240,10 @@ class CFRPlusDense:
                     sigma = self.S[hid, :, cols]
                     V_state = np.sum(action_vals * sigma, axis=0)
 
-                    R[hid, :, cols] += (action_vals - V_state[None, :])
+                    increment = action_vals - V_state[None, :]
+                    if increment_transform is not None:
+                        increment = increment_transform(hid, Lopp[hid], increment)
+                    R[hid, :, cols] += increment
                     R[hid, :, cols] = np.maximum(R[hid, :, cols], 0.0)
                     SS[hid, :, cols] += weight * (Lp[hid][None, :] * sigma)
                     V[hid] = V_state

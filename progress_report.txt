@@ -21,7 +21,7 @@
 
 ?/11/25 [post fact] - I did some stuff with double oracle, and it maybe worked? Getting nash equilibria (I think) but not subgame perfect.. but maybe this is ok. In any case the Double Oracle was very vibecoded and will have to be done again
 
-BIG BREAK
+BIG BREAK 
 
 29/12/25 - Few good things done on Liar's Poker.
 	1) Remembered exactly how everything fit together.
@@ -84,16 +84,16 @@ Plan:
 	3) Potentially set off some medium-ish specs with psro if promising?
 	4) Start Neural methods, code NeuralPolicy.
 What I did:
-	1) I understood + simplified psro code.
-	2) Seems like can get a decent boost over fsp, but it requires some hyperparameter tuning.
+	1) I understood + simplified psro code. 
+	2) Seems like can get a decent boost over fsp, but it requires some hyperparameter tuning. 
 	3) Not worth it right now, would max give like 1 OOM improvement but is finicky.
 	4) Not quite there yet.
 
 4/1/26 - 7/1/26
-1) Focus shifted to maths, backtracking MARS project.
-2) Implemented TwoPair, Trips, but due to computation constraints can't really go much further.
+1) Focus shifted to maths, backtracking MARS project. 
+2) Implemented TwoPair, Trips, but due to computation constraints can't really go much further. 
 3) Set off runs for few more variants:
-	a) Interesting development that (ranks=4, suits=4, hand_size=4, claim_kinds=[RankHigh Pair TwoPair Trips]) seems to converge very slowly indeed - why? More complex game maybe?
+ 	a) Interesting development that (ranks=4, suits=4, hand_size=4, claim_kinds=[RankHigh Pair TwoPair Trips]) seems to converge very slowly indeed - why? More complex game maybe?
 4) Experimenting with messing around with different eta controls.
 5) CFR/CFR+ still to be explored and the obvious next step.
 
@@ -126,13 +126,13 @@ Ok, been a while. First trying to understand and refamiliarize myself with the r
 
 Things done:
 
- - Got neural policy going, which is CFR but with function approximators for both the advantage calculation and the averaging step. For now, running on medium-size games since we have exact baselines from eg CFR(+). Using very basic MLPs to begin with.
+ - Got neural policy going, which is CFR but with function approximators for both the advantage calculation and the averaging step. For now, running on medium-size games since we have exact baselines from eg CFR(+). Using very basic MLPs to begin with. 
  - Initial results were a bit strange. We did get some form of convergence, so the network learns something, but it is quite slow to converge (to be expected when comparing to the exact FSP or CFR baselines) and seems to plateau at quite high exploitabilities (~0.1).
  - The speed of convergence is not that bad, but the plateauing is more concerning.
  - What is causing it? Could be a variety of factors:
-  1) External sampling error - maybe the monte carlo rollouts of games just have too high variance.
+  1) External sampling error - maybe the monte carlo rollouts of games just have too high variance. 
   2a) Errors with the advantage neural net: maybe it's bad at prediction.
-	- Could be because of moving target too, as we keep changing the strategy the regrets change.
+  	- Could be because of moving target too, as we keep changing the strategy the regrets change.
   2b) CFR has big discontinuity at 0 so it's possible the advantage neural net is good on say MSE but bad when it counts.
   3) The neural net that averages the strategy is bad.
 
@@ -141,7 +141,7 @@ Things done:
  - Big L for 2. So the advantage neural net is bad. Why? So many params and hyperparams. The right combination has to be found: learning rate schedulers, neural net architecture, number of traversals vs number of optimizer steps, even what encoding to use.
  - Tested (2) directly by using tabular external sampling CFR to generate dataset and then try to predict advantage values using neural nets. Bottom line: we can do this reasonably well but still have bad exploitability.
 
-In hindsight this isn't too surprising. Esp in small-ish games (< 18 legal claims), a few key decisions could decide exploitability, whereas looking at MSE or similar weights everything equally.
+In hindsight this isn't too surprising. Esp in small-ish games (< 18 legal claims), a few key decisions could decide exploitability, whereas looking at MSE or similar weights everything equally. 
 
 What is more surprising is that when measuring current exploitability, each network doesn't do very well, but the average network gets much better! I guess this is the thesis of CFR but still, nice to see.
 
@@ -237,7 +237,7 @@ device_replay=True
 amp_dtype=None
 ```
 
-Basically, traversal becomes very cheap compared to fitting.
+Basically, traversal becomes very cheap compared to fitting. 
 
 4) Exact evaluation improvements
 
@@ -260,13 +260,13 @@ At some point exact exploitability becomes infeasible due to size. Implemented a
 
 This is very annoying. We would like our best responders to be fairly close to the network's actual exploitability, but this isn't the case with DQN. Next tested:
  - whether we can distill into a neural net of current size a good br
- - whether other methods of training can get us closer to a better br.
+ - whether other methods of training can get us closer to a better br. 
 
 7) Exact BR distillation
 
 Directly trained neural net on exact-BR action labels. And we found we can do it, great. Typically our neural policies will have exploitability ~0.1, maybe best case 0.05, but I'd expect this to go up as we scale, so we only need best responder to be within 0.01, maybe 0.005. We could do this: the best exact oracle gap was about 0.0024. Again open question whether this holds up at scale.
 
-We now know the main DQN problem is bootstrapped targets / variance.
+We now know the main DQN problem is bootstrapped targets / variance. 
 
 8) Complete-return fitted best response
 
@@ -350,7 +350,7 @@ TRAVERSALS_PER_PLAYER = 1024
 
 This seems pretty good, and I started to expand to larger specs. One issue we found is that our current method of finding what the regret targets should be essentially play through every possible legal move we can make, while sampling one move opponent could make at each step, and then doing this many times (1024). This gives us a square root optimisation to exact cfr+, but won't scale all the way up to the full game. So then must do some kind of action sampling.
 
-Initial experiments showed that maybe action sampling was catastrophic (on 18 claim spec). But further investigation showed that maybe this was because we were comparing with equal traversals per player and this just means much less data for the lower sample variants which isn't really a fair comparison. So reran experiments and even with roughly equal number of observed of action-edges, it's just much better to do full expansion.
+Initial experiments showed that maybe action sampling was catastrophic (on 18 claim spec). But further investigation showed that maybe this was because we were comparing with equal traversals per player and this just means much less data for the lower sample variants which isn't really a fair comparison. So reran experiments and even with roughly equal number of observed of action-edges, it's just much better to do full expansion. 
 
 
 
@@ -385,14 +385,94 @@ Possible influencing factors:
 
 Late June 2026 (retrospective added September 2026)
 
-The answer after the earlier writeup is more nuanced than "more compute does not help":
+Ok so using codex to figure out what additional stuff i did in a week near end of june:
 
-- The small tabular games remain the reliable exact baseline. For example, the r4_s4_h4, 18-claim CFR+ benchmark has exact exploitability around 0.0009. The 18-claim neural game is a different spec (r4_s4_h2); optimized neural CFR+ reached about 0.024 exact exploitability at 45 minutes, and later low-LR forks reached roughly 0.014-0.015. A 1e-4 learning-rate drop helped; optimizer reset alone did not. These results do not imply larger games are solved.
-- The 30-claim r5_s4_h3 game was used as an intermediate learning-rate screen. In a single-seed, 60-minute comparison, the best 5-minute approximate-BR estimate was around 0.015 at a 50-minute snapshot. This is discovered exploitability, not an exact exploitability or a cross-seed conclusion. See artifacts/cfr_plus_30_claim_lr_schedule_screen/.
-- The original long 69-claim r6_s4_h4 run used random action sampling (cap 16), 256 traversals/player, LR 1e-3, 24 regret and 6 strategy fit steps. With 60 minutes of responder training per selected snapshot, discovered exploitability was about 0.301 at 200m, 0.282 at 400m, and 0.301 at 720m. The 400m policy looked best by this measure; the exact exploitability is unknown. See artifacts/cfr_plus_approx_reference_runs/r6_s4_h4_hp2ptfhq_ss___20260622-152749/approx_br_selected_60m/60m_summary.csv.
-- Follow-up work added optional streamed/chunked traversal and tried more ambitious 69-claim schedules. A fixed-iteration sanity check exposed a serious failure with hash action sampling (near 0.9 discovered exploitability versus around 0.4 for random sampling); subsequent runs used random sampling. Streaming controls peak live expansion but does not eliminate the cost of traversing many edges.
-- The later adaptive 69-claim run monitored average and current policies with 2-minute BRs every 15 minutes and longer 10-minute BRs every 30 minutes, and allowed manual/automatic phase changes. Its approximate-BR curves flattened and then worsened. The ~0.19 short-BR readings cannot be compared directly with the old ~0.28 reading trained for 60 minutes. The branch-fork experiment from a shared 120-minute checkpoint tested cap 24 only, LR drop only, and their combination; the available partial results did not establish a new winner. See artifacts/cfr_plus_69_claim_adaptive/ and artifacts/cfr_plus_69_claim_branch_forks/.
-- Saved policies and resumable trainer checkpoints are different. The representative policy snapshots in the local copy load, but the copied adaptive/fork .pt checkpoints fail a ZIP-container check and should not be treated as resumable. The VM is gone. A clean next comparison needs valid artifacts, matched and sufficiently long BR training, and ideally multiple training and responder seeds.
-- The intended 368-claim game remains future work: current rules implement claim families only through Quads. The 69-claim game is still a scaling experiment, not essentially solved.
+1) there are a few classes of games we are considering
 
-For a runnable map of the game, exact tabular and neural CFR+ paths, and the existing evaluation artifacts, see notebooks/sep_2026/repo_reorientation.ipynb.
+ Game                 Small tabular games
+ Where we got to      Essentially solved. Saved exact CFR+ benchmarks include the 18-claim, 4-card-per-player
+                      game at 0.00091 exact exploitability, and several other small variants around 0.001–
+                      0.002. A somewhat harder 3-rank, 4-card game reached about 0.009.
+ How certain are we?  High: these use exact best responses. See the small-game benchmark runs (/C:/Users/
+                      adidh/Documents/liars_poker/artifacts/benchmark_runs/cfr_plus_runs).
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ Game                 18 claims, 2 cards per player
+ Where we got to      Our main neural proving ground. Neural CFR+ reached roughly 0.014–0.02 exact
+                      exploitability. Dropping the learning rate helped markedly; an optimizer reset alone did
+                      not.
+ How certain are we?  High: exact evaluation is still practical here. The LR fork notebook (/C:/Users/adidh/
+                      Documents/liars_poker/notebooks/june_2026/cfr_plus_18_claim_lr_reset_forks.ipynb) is the
+                      relevant experiment.
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ Game                 30 claims, 3 cards per player
+ Where we got to      Neural CFR+ produced promising policies. In the LR schedule screen (/C:/Users/adidh/
+                      Documents/liars_poker/artifacts/cfr_plus_30_claim_lr_schedule_screen/
+                      r5_s4_h3_hp2ptq_ss___20260626-003941/br_evaluations.jsonl), five-minute responders found
+                      exploitability around 0.015 at the best snapshot and roughly 0.023–0.034 at the ends of
+                      the four runs.
+ How certain are we?  Medium: those are discovered exploitabilities. A stronger responder could find more, so
+                      I would call this “promising, perhaps close,” not solved.
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ Game                 69 claims, 4 cards per player
+ Where we got to      We can train and evaluate it, but it remains substantially exploitable. In the most
+                      thoroughly checked old run, the best snapshot was around 400 training minutes, where a
+                      60-minute responder found 0.282. Later runs improved some short-responder readings and
+                      explored sampling/LR changes, but did not establish a better long-responder result.
+ How certain are we?  Limited: exact evaluation is impractical, and responder budgets differed across runs.
+                      See the 60-minute BR comparison (/C:/Users/adidh/Documents/liars_poker/artifacts/
+                      cfr_plus_approx_reference_runs/r6_s4_h4_hp2ptfhq_ss___20260622-152749/
+                      approx_br_selected_60m/60m_summary.csv).
+
+
+2) We are generally struggling to scale up neural net methods, and it is unclear exactly why we are failing. For some reason more training is not leading to better policies!
+
+3) In general, when using approximate BRs, more training *probably* doesn't change the ordering of which strategies are better - though probs best to test this explicitly at some point
+
+4) codex created notebooks/sep_2026/repo_reorientation.ipynb.
+
+September 27 2026
+
+Goals:
+	- Figure out where we are, reorient myself.
+	- Try and do the gpu cfr+ stuff from scratch / solve the issue.
+	- Begin scaling! 
+	I want to think deeply about why we couldn't scale: clearly more trianing time was detrimental beyond a point. We need to carefully think about this - could be an implementation flaw, as deep learning is famously good at hiding these small implementation flawsa and kinda working anyway! I remember I was quite sad that we didn't get significantl better exploitability over time, so it is really a mystery as to why we aren't getting much better. fundamentally, i know some version of this approach shold work, since people have used similar methods for heads up no limit poker. can you try and diagnose + think of next steps?
+
+
+September 28 2026
+
+Ok so I figured out some of what was going wrong by training a few different versions of 18-claim games. One is definitely this issue of clipping and taking means - we are getting quite biased estimates of the advantage. Think about a ReLU bias under Gaussian noise. Gemini: 
+
+`When you pass a noisy, unbiased estimate $\hat{X} \sim \mathcal{N}(X, \sigma^2)$ through a non-linear function like $\text{ReLU}(x) = \max(0, x)$, Jensen's inequality guarantees that the estimate becomes positively biased:$$\mathbb{E}[\text{ReLU}(\hat{X})] \ge \text{ReLU}(\mathbb{E}[\hat{X}]) = \text{ReLU}(X)$$The exact analytical expression for the expected value of $\text{ReLU}(\hat{X})$ is:$$\mathbb{E}[\text{ReLU}(\hat{X})] = X \Phi\left(\frac{X}{\sigma}\right) + \sigma \phi\left(\frac{X}{\sigma}\right)$$`
+
+Can try to reduce this via aggregation (essentially reducing the sigma in the above expression) when we are still at a small scale because you expect to see the same infoset a decent amount of the time, but when we scale, you will never see the same hand being dealt to you twice, approximately. So kinda suggests the plus part of CFR+ might be busted?
+
+This aggregation is a big help at mid scale btw, and can see this in the 18 claim experiments. There's definitely something really dumb going on in the fitting / general gpu stuff though, almost certainly - I just haven't been able to dig deep into it yet. One obvious one is you don't want to generate so many traversals that your regret buffer overflows before you fit your regret network! This didn't end up happening for the experiments but we weren't too far off. Also, since we were fitting regret networks on such small amount of data relative to what was being generated, I think that when you clip each record, there's basically no difference between 1024 traversals and 4096 traversals since both lead to way more than 24k or so strategy rows.
+
+In general variance reduction seems like *the key* to scaling, but unsure how this will work going forwards.
+
+Also understood things about how q_t(I, a) and g_t(I, a) worked - the opp reach + chance probabilities and the conditional advantage. Basically exact cfr+ gets these both exactly and adds them to tabular regrets, then clips every iteration, while neural cfr+ essentially doesn't model q_t at all even implicitly [note: except for very niche point that visiting same infostate multiple times means regret network will train on it more, but like this is just increasing the weight here and not changing the target itself], it just has a noisy version of g_t based on Monte Carlo, and *separately* does some rescaling by iteration number t just so that the neural nets don't have to predict a target of a different scale. 
+
+This might be ok if q_t doesn't vary much? But I think it does! So going to test:
+
+0: baseline exact cfr+
+1a: exact g_t, estimate q_t by doing traversals K and counting how many times you hit I
+1b: exact g_t, set q_t=1 / q_t the same everywhere.
+2: exact q_t, estimate g_t via Monte Carlo (I guess same K as before?)
+3: estimate of both q_t and g_t as in 1a and 2
+4: estimate of g_t and set q_t=1.
+
+In all of the above, we don't have regret or strategy networks - we do this in a tabular way.
+
+
+Sep 29 2026
+
+We found out some key things:
+	- rescaling the neural cfr+ target by 1/t seems to have dramatically hurt.
+	- aggregation before clipping helps a lot (but as we scale up, there essentially is no clipping so this is at best a mid-scale optimisation)
+	- it is quite important to model q_t, though it seems hard to get this into a neural form.
+	- there is still a late-stage plateau that seems quite hard to get past. not too sure what is causing it / how to fix.
+
+	
+
+

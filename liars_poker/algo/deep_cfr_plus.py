@@ -332,6 +332,8 @@ class DeepCFRPlusTrainer:
         strategy_weighting: str = "linear",
         regret_positive_weight: float = 0.5,
         regret_target_mode: str = "clip_each_record",
+        regret_increment_reach_mode: str = "none",
+        regret_accumulation_mode: str = "normalized",
         validation_fraction: float = 0.0,
         validation_buffer_capacity: int = 10_000,
         traversal_backend: str = "recursive",
@@ -394,6 +396,12 @@ class DeepCFRPlusTrainer:
         if regret_target_mode not in {"clip_each_record", "aggregate_then_clip"}:
             raise ValueError("Unknown regret_target_mode.")
         self.regret_target_mode = regret_target_mode
+        if regret_increment_reach_mode not in {"none", "visit_fraction", "visit_count"}:
+            raise ValueError("Unknown regret_increment_reach_mode.")
+        self.regret_increment_reach_mode = regret_increment_reach_mode
+        if regret_accumulation_mode not in {"normalized", "cumulative"}:
+            raise ValueError("Unknown regret_accumulation_mode.")
+        self.regret_accumulation_mode = regret_accumulation_mode
         self.validation_fraction = float(validation_fraction)
         self.validation_buffer_capacity = int(validation_buffer_capacity)
         if traversal_backend not in {"recursive", "gpu_native"}:
@@ -404,6 +412,25 @@ class DeepCFRPlusTrainer:
         ):
             raise ValueError(
                 "aggregate_then_clip is an experimental CPU gpu_native option."
+            )
+        if self.regret_increment_reach_mode in {"visit_fraction", "visit_count"} and (
+            self.regret_target_mode != "aggregate_then_clip"
+            or self.validation_fraction != 0.0
+        ):
+            raise ValueError(
+                "visit-based updates require aggregate_then_clip and validation_fraction=0."
+            )
+        if (self.regret_increment_reach_mode == "visit_count"
+                and self.regret_accumulation_mode != "cumulative"):
+            raise ValueError("visit_count requires cumulative regret accumulation.")
+        if self.regret_accumulation_mode == "cumulative" and (
+            self.regret_target_mode != "aggregate_then_clip"
+            or self.device.type != "cpu"
+            or self.traversal_backend != "gpu_native"
+        ):
+            raise ValueError(
+                "cumulative regrets currently require CPU gpu_native "
+                "aggregate_then_clip."
             )
         self.traversal_batch_size = int(traversal_batch_size)
         self.traverser_action_sample_count = (
@@ -499,6 +526,12 @@ class DeepCFRPlusTrainer:
                 "traverser_action_sample_mode must be 'random' or 'hash'."
             )
         self.traverser_action_sample_mode = traverser_action_sample_mode
+        if self.regret_increment_reach_mode in {"visit_fraction", "visit_count"} and (
+            self.traverser_action_sample_count is not None
+            or self.traverser_action_sample_fraction is not None
+            or self.traverser_action_sample_schedule is not None
+        ):
+            raise ValueError("visit-based updates require full traverser-action expansion")
         self.traversal_streaming = bool(traversal_streaming)
         self.traversal_live_row_budget = (
             None
@@ -1000,8 +1033,13 @@ class DeepCFRPlusTrainer:
 
             old_scaled = np.maximum(self._snapshot_regret_values_from_features(traverser, features), 0.0)
             old_scaled[~legal_mask] = 0.0
-            target = ((self.iteration - 1.0) / self.iteration) * old_scaled
-            target += instant_regret / self.iteration
+            if self.regret_accumulation_mode == "cumulative":
+                target = (
+                    old_scaled if self.iteration > 1 else np.zeros_like(old_scaled)
+                ) + instant_regret
+            else:
+                target = ((self.iteration - 1.0) / self.iteration) * old_scaled
+                target += instant_regret / self.iteration
             target = np.maximum(target, 0.0).astype(np.float32)
             target[~legal_mask] = 0.0
             self._add_regret_record(traverser, features, target, legal_mask)
@@ -1011,10 +1049,19 @@ class DeepCFRPlusTrainer:
         action = self._sample_action(legal, strategy)
         return self._traverse(history + (action,), p1_hand, p2_hand, traverser)
 
-    def _train_regret(self, pid: int) -> float:
+    def _train_regret(self, pid: int, traversals_per_player: int) -> float:
         if self.regret_target_mode == "aggregate_then_clip":
-            self._aggregate_regret_targets(self.regret_buffers[pid])
-            self._aggregate_regret_targets(self.regret_validation_buffers[pid])
+            reach_weighted = self.regret_increment_reach_mode in {"visit_fraction", "visit_count"}
+            self._aggregate_regret_targets(
+                self.regret_buffers[pid],
+                model=self.regret_nets[pid] if reach_weighted else None,
+                iteration=self.iteration,
+                roots=traversals_per_player if reach_weighted else None,
+                accumulation_mode=self.regret_accumulation_mode,
+                reach_mode=self.regret_increment_reach_mode,
+            )
+            if not reach_weighted:
+                self._aggregate_regret_targets(self.regret_validation_buffers[pid])
         return self._train_model(
             self.regret_nets[pid],
             self.regret_optimizers[pid],
@@ -1024,8 +1071,16 @@ class DeepCFRPlusTrainer:
         )
 
     @staticmethod
-    def _aggregate_regret_targets(buffer: DeviceRecentBuffer) -> None:
-        """For a CPU experiment, mean raw updates per infoset before clipping.
+    def _aggregate_regret_targets(
+        buffer: DeviceRecentBuffer,
+        *,
+        model: NeuralMLP | None = None,
+        iteration: int = 1,
+        roots: int | None = None,
+        accumulation_mode: str = "normalized",
+        reach_mode: str = "visit_fraction",
+    ) -> None:
+        """Mean raw updates per infoset; optionally scale fresh regret by visits or visits/K.
 
         Repeating the aggregate target on every visit keeps the production
         replay sampling and importance weights unchanged during fitting.
@@ -1033,7 +1088,11 @@ class DeepCFRPlusTrainer:
         n = buffer.size
         if not n:
             return
-        _, inverse = torch.unique(
+        if roots is not None and (roots <= 0 or buffer.seen != n or model is None):
+            raise ValueError("visit-based updates require all records from this iteration")
+        if roots is not None and reach_mode not in {"visit_fraction", "visit_count"}:
+            raise ValueError("Unknown visit-based reach mode")
+        unique, inverse = torch.unique(
             buffer.features[:n], dim=0, return_inverse=True
         )
         groups = int(inverse.max().item()) + 1
@@ -1046,7 +1105,29 @@ class DeepCFRPlusTrainer:
         weighted.index_add_(
             0, inverse, buffer.targets[:n].double() * weights[:, None]
         )
-        grouped = torch.relu(weighted / totals.clamp_min(1e-12)[:, None])
+        grouped_raw = weighted / totals.clamp_min(1e-12)[:, None]
+        if roots is not None:
+            counts = torch.bincount(inverse, minlength=groups)
+            if int(counts.max().item()) > roots:
+                raise ValueError("An infoset has more visits than sampled roots")
+            old_parts = []
+            with torch.inference_mode():
+                for start in range(0, groups, 8192):
+                    old_parts.append(torch.relu(model(unique[start:start + 8192])).double())
+            old = torch.cat(old_parts, dim=0)
+            visit_multiplier = counts.double()
+            if reach_mode == "visit_fraction":
+                visit_multiplier = visit_multiplier / roots
+            if accumulation_mode == "cumulative":
+                if iteration <= 1:
+                    old.zero_()
+                fresh = grouped_raw - old
+                grouped_raw = old + visit_multiplier[:, None] * fresh
+            else:
+                previous_scale = (iteration - 1.0) / iteration
+                fresh = grouped_raw - previous_scale * old
+                grouped_raw = previous_scale * old + visit_multiplier[:, None] * fresh
+        grouped = torch.relu(grouped_raw)
         buffer.targets[:n] = grouped.index_select(0, inverse).float() * buffer.legal_masks[:n]
 
     def _train_strategy(self, pid: int) -> float:
@@ -1257,7 +1338,7 @@ class DeepCFRPlusTrainer:
             traversal_s += time.perf_counter() - start
 
             start = time.perf_counter()
-            regret_losses[traverser] = self._train_regret(traverser)
+            regret_losses[traverser] = self._train_regret(traverser, traversals_per_player)
             self._synchronize()
             regret_training_s += time.perf_counter() - start
 
@@ -1335,6 +1416,8 @@ class DeepCFRPlusTrainer:
                 "strategy_weighting": self.strategy_weighting,
                 "regret_positive_weight": self.regret_positive_weight,
                 "regret_target_mode": self.regret_target_mode,
+                "regret_increment_reach_mode": self.regret_increment_reach_mode,
+                "regret_accumulation_mode": self.regret_accumulation_mode,
                 "validation_fraction": self.validation_fraction,
                 "validation_buffer_capacity": self.validation_buffer_capacity,
                 "traversal_backend": self.traversal_backend,
@@ -1398,6 +1481,8 @@ class DeepCFRPlusTrainer:
             config.pop("hidden_sizes", None)
         config.setdefault("traversal_backend", "recursive")
         config.setdefault("regret_target_mode", "clip_each_record")
+        config.setdefault("regret_increment_reach_mode", "none")
+        config.setdefault("regret_accumulation_mode", "normalized")
         config.setdefault("traversal_batch_size", 256)
         config.setdefault("traverser_action_sample_count", None)
         config.setdefault("traverser_action_sample_fraction", None)

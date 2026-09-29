@@ -75,7 +75,9 @@ def atomic_checkpoint(trainer: DeepCFRPlusTrainer, path: Path) -> None:
     tmp.replace(path)
 
 
-def make_trainer(mode: str, seed: int) -> DeepCFRPlusTrainer:
+def make_trainer(mode: str, seed: int, reach_mode: str = "none",
+                 regret_buffer_capacity: int = 500_000,
+                 accumulation_mode: str = "normalized") -> DeepCFRPlusTrainer:
     return DeepCFRPlusTrainer(
         SPEC,
         device="cpu",
@@ -84,7 +86,7 @@ def make_trainer(mode: str, seed: int) -> DeepCFRPlusTrainer:
         # The target-order question is the variable being tested here.
         regret_hidden_sizes=(512, 512),
         strategy_hidden_sizes=(256, 256),
-        regret_buffer_capacity=500_000,
+        regret_buffer_capacity=regret_buffer_capacity,
         strategy_buffer_capacity=2_000_000,
         learning_rate=1e-3,
         batch_size=1024,
@@ -92,6 +94,8 @@ def make_trainer(mode: str, seed: int) -> DeepCFRPlusTrainer:
         strategy_train_steps=6,
         regret_positive_weight=0.5,
         regret_target_mode=mode,
+        regret_increment_reach_mode=reach_mode,
+        regret_accumulation_mode=accumulation_mode,
         strategy_weighting="linear",
         traversal_backend="gpu_native",
         traversal_batch_size=512,
@@ -113,7 +117,9 @@ def load_rows(path: Path) -> list[dict]:
 
 def run_arm(root: Path, mode: str, seed: int, arm_hours: float,
             snapshot_minutes: float, checkpoint_minutes: float,
-            traversals: int, resume: bool) -> None:
+            traversals: int, resume: bool, reach_mode: str = "none",
+            regret_buffer_capacity: int = 500_000,
+            accumulation_mode: str = "normalized") -> None:
     arm = root / f"{mode}__seed_{seed}"
     arm.mkdir(parents=True, exist_ok=True)
     training_path = arm / "training.jsonl"
@@ -135,6 +141,9 @@ def run_arm(root: Path, mode: str, seed: int, arm_hours: float,
             return
         trainer = DeepCFRPlusTrainer.load_checkpoint(checkpoint_path, device="cpu")
         if (trainer.seed != seed or trainer.regret_target_mode != mode
+                or trainer.regret_increment_reach_mode != reach_mode
+                or trainer.regret_accumulation_mode != accumulation_mode
+                or trainer.regret_buffers[0].capacity != regret_buffer_capacity
                 or trainer.iteration != int(state["iteration"])):
             raise ValueError(f"Checkpoint and resume state disagree for {arm.name}")
         next_snapshot_s = float(state.get(
@@ -149,23 +158,30 @@ def run_arm(root: Path, mode: str, seed: int, arm_hours: float,
         ))
         print(f"[resume] {arm.name}: {measured_s / 60:.1f}m iter={trainer.iteration}", flush=True)
     else:
-        trainer = make_trainer(mode, seed)
+        trainer = make_trainer(
+            mode, seed, reach_mode, regret_buffer_capacity, accumulation_mode
+        )
         atomic_json(manifest_path, {
             "run_type": "cfr_plus_18_target_order_cpu",
             "spec": SPEC.to_json(),
             "mode": mode,
+            "regret_increment_reach_mode": reach_mode,
+            "regret_accumulation_mode": accumulation_mode,
             "seed": seed,
             "arm_hours": arm_hours,
             "traversals_per_player": traversals,
             "trainer": {
                 "regret_hidden_sizes": [512, 512],
                 "strategy_hidden_sizes": [256, 256],
+                "regret_buffer_capacity": regret_buffer_capacity,
                 "batch_size": 1024,
                 "regret_train_steps": 24,
                 "strategy_train_steps": 6,
                 "learning_rate": 1e-3,
                 "traversal_batch_size": 512,
                 "regret_target_mode": mode,
+                "regret_increment_reach_mode": reach_mode,
+                "regret_accumulation_mode": accumulation_mode,
             },
         })
 
@@ -177,11 +193,19 @@ def run_arm(root: Path, mode: str, seed: int, arm_hours: float,
         iteration_start = time.perf_counter()
         record = trainer.run_iteration(traversals_per_player=traversals)
         iteration_s = time.perf_counter() - iteration_start
+        if not (np.isfinite(record.get("regret_loss", [])).all()
+                and np.isfinite(record.get("strategy_loss", [])).all()):
+            raise FloatingPointError(
+                f"Non-finite fitting loss at iteration {trainer.iteration}; "
+                "preserving the previous checkpoint"
+            )
         measured_s += iteration_s
         timing = record.get("timing", {})
         row = {
             "utc": datetime.now(timezone.utc).isoformat(),
             "mode": mode,
+            "regret_increment_reach_mode": reach_mode,
+            "regret_accumulation_mode": accumulation_mode,
             "seed": seed,
             "iteration": trainer.iteration,
             "measured_training_s": measured_s,
@@ -244,6 +268,8 @@ def run_arm(root: Path, mode: str, seed: int, arm_hours: float,
     summary = {
         "status": "complete",
         "mode": mode,
+        "regret_increment_reach_mode": reach_mode,
+        "regret_accumulation_mode": accumulation_mode,
         "seed": seed,
         "iteration": trainer.iteration,
         "measured_training_s": measured_s,
@@ -264,6 +290,10 @@ def main() -> None:
     parser.add_argument("--checkpoint-minutes", type=float, default=15.0)
     parser.add_argument("--seeds", default="17,23")
     parser.add_argument("--modes", default=",".join(MODES))
+    parser.add_argument("--reach-mode", choices=("none", "visit_fraction", "visit_count"), default="none")
+    parser.add_argument("--regret-buffer-capacity", type=int, default=500_000)
+    parser.add_argument("--regret-accumulation-mode", choices=("normalized", "cumulative"),
+                        default="normalized")
     parser.add_argument("--torch-threads", type=int, default=0)
     parser.add_argument("--evaluate-after", action="store_true")
     parser.add_argument("--output-root", type=Path)
@@ -271,8 +301,8 @@ def main() -> None:
     args = parser.parse_args()
     if torch.cuda.is_available():
         raise SystemExit("This script is intentionally CPU-only; use the GPU runner for CUDA.")
-    if args.hours_per_arm <= 0 or args.traversals <= 0:
-        raise SystemExit("hours-per-arm and traversals must be positive")
+    if args.hours_per_arm <= 0 or args.traversals <= 0 or args.regret_buffer_capacity <= 0:
+        raise SystemExit("hours-per-arm, traversals, and regret-buffer-capacity must be positive")
     if args.torch_threads < 0:
         raise SystemExit("torch-threads must be nonnegative")
     if args.torch_threads:
@@ -282,6 +312,10 @@ def main() -> None:
         mode not in MODES for mode in selected_modes
     ):
         raise SystemExit(f"modes must be a nonempty subset of {MODES}")
+    if args.reach_mode in {"visit_fraction", "visit_count"} and selected_modes != ["aggregate_then_clip"]:
+        raise SystemExit("visit-based updates require only aggregate_then_clip mode")
+    if args.reach_mode == "visit_count" and args.regret_accumulation_mode != "cumulative":
+        raise SystemExit("visit_count requires cumulative regret accumulation")
 
     run_id = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
     root = args.output_root or (REPO_ROOT / "artifacts" / "cfr_plus_18_target_order_cpu" / run_id)
@@ -294,7 +328,10 @@ def main() -> None:
         if (manifest.get("spec") != SPEC.to_json()
                 or int(manifest.get("traversals_per_player", -1)) != args.traversals
                 or float(manifest.get("snapshot_minutes", -1)) != args.snapshot_minutes
-                or float(manifest.get("checkpoint_minutes", -1)) != args.checkpoint_minutes):
+                or float(manifest.get("checkpoint_minutes", -1)) != args.checkpoint_minutes
+                or manifest.get("regret_increment_reach_mode", "none") != args.reach_mode
+                or manifest.get("regret_accumulation_mode", "normalized")
+                != args.regret_accumulation_mode):
             raise SystemExit("Resume arguments differ from the original run manifest")
         if not set(selected_modes).issubset(manifest.get("modes", [])):
             raise SystemExit("Selected modes are absent from the original run manifest")
@@ -313,6 +350,8 @@ def main() -> None:
             "created_utc": datetime.now(timezone.utc).isoformat(),
             "spec": SPEC.to_json(),
             "modes": selected_modes,
+            "regret_increment_reach_mode": args.reach_mode,
+            "regret_accumulation_mode": args.regret_accumulation_mode,
             "seeds": [int(x) for x in args.seeds.split(",")],
             "hours_per_arm": args.hours_per_arm,
             "traversals_per_player": args.traversals,
@@ -326,7 +365,9 @@ def main() -> None:
             run_arm(
                 root, mode, seed, args.hours_per_arm,
                 args.snapshot_minutes, args.checkpoint_minutes,
-                args.traversals, args.resume,
+                args.traversals, args.resume, args.reach_mode,
+                args.regret_buffer_capacity,
+                args.regret_accumulation_mode,
             )
     print("all arms complete", flush=True)
     if args.evaluate_after:

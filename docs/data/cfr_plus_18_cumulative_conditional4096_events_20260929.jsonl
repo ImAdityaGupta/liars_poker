@@ -1,0 +1,7 @@
+{"event": "policy_snapshot", "label": "0015m", "iteration": 356, "measured_training_s": 901.7269504684955}
+{"event": "policy_snapshot", "label": "0030m", "iteration": 705, "measured_training_s": 1800.9455207269639}
+{"event": "policy_snapshot", "label": "0045m", "iteration": 1060, "measured_training_s": 2700.8346877181903}
+{"event": "policy_snapshot", "label": "0060m", "iteration": 1416, "measured_training_s": 3600.9548172825016}
+{"event": "policy_snapshot", "label": "0075m", "iteration": 1771, "measured_training_s": 4501.402690940071}
+{"event": "policy_snapshot", "label": "0090m", "iteration": 2129, "measured_training_s": 5400.048846450169}
+{"event": "policy_snapshot", "label": "0105m", "iteration": 2492, "measured_training_s": 6301.725544848479}

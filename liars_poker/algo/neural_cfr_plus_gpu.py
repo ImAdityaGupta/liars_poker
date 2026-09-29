@@ -743,9 +743,13 @@ class GPUDeepCFRPlusTraverser:
             node_values = (strategy * action_values).sum(dim=1)
             instant_regret = (action_values - node_values[:, None]) * legal_mask
             old_scaled = torch.relu(regret_values) * legal_mask
-            raw_targets = (
-                previous_scale * old_scaled + instant_scale * instant_regret
-            )
+            if self.trainer.regret_accumulation_mode == "cumulative":
+                prior = old_scaled if iteration > 1 else torch.zeros_like(old_scaled)
+                raw_targets = prior + instant_regret
+            else:
+                raw_targets = (
+                    previous_scale * old_scaled + instant_scale * instant_regret
+                )
             targets = (
                 raw_targets if self.trainer.regret_target_mode == "aggregate_then_clip"
                 else torch.relu(raw_targets)
@@ -1152,9 +1156,13 @@ class GPUDeepCFRPlusTraverser:
             node_values = (strategy * action_values).sum(dim=1)
             instant_regret = (action_values - node_values[:, None]) * legal_mask
             old_scaled = torch.relu(layer["regret_values"]) * legal_mask
-            raw_targets = (
-                previous_scale * old_scaled + instant_scale * instant_regret
-            )
+            if self.trainer.regret_accumulation_mode == "cumulative":
+                prior = old_scaled if iteration > 1 else torch.zeros_like(old_scaled)
+                raw_targets = prior + instant_regret
+            else:
+                raw_targets = (
+                    previous_scale * old_scaled + instant_scale * instant_regret
+                )
             targets = (
                 raw_targets if self.trainer.regret_target_mode == "aggregate_then_clip"
                 else torch.relu(raw_targets)
