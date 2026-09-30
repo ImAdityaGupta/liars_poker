@@ -16,7 +16,7 @@ One important difference from the bridge remains: this faster runner fits a **ne
 
 ## Six arms
 
-Write `g_hat` for the mean conditional advantage at a visited information set. The following rule applies once per iteration to a visited row. `t` is the CFR iteration number.
+Write `g_hat` for the mean conditional advantage at a visited information set. The following rule applies once per iteration to a visited row. `t` is the CFR iteration number. The table stores regrets exactly as updated, but `g_hat` is still a noisy estimate; these are not exact CFR updates.
 
 | Arm | Regret rule | Weight of iteration `t` in the average |
 | --- | --- | --- |
@@ -38,7 +38,7 @@ The [DCFR paper](https://arxiv.org/abs/1809.04040) motivates separate positive a
 | V vs A | Clipping and average weighting both change | The CFR+ package helps under this sampling scheme; the comparison alone cannot identify which part. |
 | A vs B | Average weights only | Give later strategy records more weight in a neural follow-up. |
 | B vs C | Discount old positive regret | Old sampled regret is worth forgetting faster. |
-| B vs D | Signed regret and sign-specific discount | Keeping negative evidence may be useful. |
+| B vs D | Signed regret plus different positive and negative discounts | A gain motivates separating negative-regret handling from discount strength in a follow-up; this comparison alone does not isolate either. |
 | D vs E | Discount all rows versus visited rows | If D wins, a neural implementation needs a way to decay predictions at unvisited states. |
 
 The average is itself fitted from a 2,000,000-record strategy replay buffer, so single snapshot differences may reflect average-network noise. Compare trajectories and windowed values, and use a second seed or an exact-average confirmation if two arms are close. A tabular win is not yet a neural win: a network must also fit the chosen state over many iterations.
