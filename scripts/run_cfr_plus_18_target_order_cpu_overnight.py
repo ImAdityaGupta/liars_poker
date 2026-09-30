@@ -39,7 +39,7 @@ SPEC = GameSpec(
     suit_symmetry=True,
 )
 
-MODES = ("clip_each_record", "aggregate_then_clip")
+MODES = ("clip_each_record", "aggregate_then_clip", "clip_on_read")
 
 
 def json_default(value):
@@ -92,7 +92,7 @@ def make_trainer(mode: str, seed: int, reach_mode: str = "none",
         batch_size=1024,
         regret_train_steps=24,
         strategy_train_steps=6,
-        regret_positive_weight=0.5,
+        regret_positive_weight=0.0 if mode == "clip_on_read" else 0.5,
         regret_target_mode=mode,
         regret_increment_reach_mode=reach_mode,
         regret_accumulation_mode=accumulation_mode,
@@ -141,6 +141,7 @@ def run_arm(root: Path, mode: str, seed: int, arm_hours: float,
             return
         trainer = DeepCFRPlusTrainer.load_checkpoint(checkpoint_path, device="cpu")
         if (trainer.seed != seed or trainer.regret_target_mode != mode
+                or trainer.regret_positive_weight != (0.0 if mode == "clip_on_read" else 0.5)
                 or trainer.regret_increment_reach_mode != reach_mode
                 or trainer.regret_accumulation_mode != accumulation_mode
                 or trainer.regret_buffers[0].capacity != regret_buffer_capacity
@@ -180,10 +181,20 @@ def run_arm(root: Path, mode: str, seed: int, arm_hours: float,
                 "learning_rate": 1e-3,
                 "traversal_batch_size": 512,
                 "regret_target_mode": mode,
+                "regret_positive_weight": trainer.regret_positive_weight,
                 "regret_increment_reach_mode": reach_mode,
                 "regret_accumulation_mode": accumulation_mode,
             },
         })
+        if mode == "clip_on_read":
+            # A restart before the first timed checkpoint can resume from zero.
+            atomic_checkpoint(trainer, checkpoint_path)
+            atomic_json(state_path, {
+                "status": "running", "mode": mode, "seed": seed,
+                "iteration": trainer.iteration, "measured_training_s": 0.0,
+                "next_snapshot_s": next_snapshot_s,
+                "next_checkpoint_s": next_checkpoint_s,
+            })
 
     start = time.perf_counter()
     target_s = arm_hours * 3600.0

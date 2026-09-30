@@ -9,6 +9,8 @@ from typing import Dict, Sequence, Tuple
 import numpy as np
 import torch
 
+from liars_poker.algo.cfr_plus_targets import make_regret_target
+from liars_poker.algo.regret_readers import NetworkRegretReader
 from liars_poker.algo.deep_cfr import (
     DeviceReservoirBuffer,
     ReservoirBuffer,
@@ -20,6 +22,15 @@ from liars_poker.env import resolve_call_winner, rules_for_spec
 from liars_poker.infoset import CALL, InfoSet
 from liars_poker.policies.neural import InfosetEncoder, NeuralMLP, NeuralPolicy
 from liars_poker.policies.tabular_dense import DenseTabularPolicy
+
+
+_CUDA_AGGREGATE_SPEC = GameSpec(
+    ranks=4,
+    suits=4,
+    hand_size=2,
+    claim_kinds=("RankHigh", "Pair", "TwoPair", "Trips"),
+    suit_symmetry=True,
+)
 
 
 class RecentBuffer:
@@ -310,7 +321,7 @@ class DeviceRecentBuffer:
 
 
 class DeepCFRPlusTrainer:
-    """External-sampling neural CFR+ with clipped cumulative-regret targets."""
+    """External-sampling neural CFR+ with configurable regret targets."""
 
     CHECKPOINT_VERSION = 2
 
@@ -389,12 +400,10 @@ class DeepCFRPlusTrainer:
         self.batch_size = int(batch_size)
         self.regret_train_steps = int(regret_train_steps)
         self.strategy_train_steps = int(strategy_train_steps)
-        if strategy_weighting not in {"linear", "uniform"}:
-            raise ValueError("strategy_weighting must be 'linear' or 'uniform'.")
+        if strategy_weighting not in {"linear", "uniform", "quadratic"}:
+            raise ValueError("strategy_weighting must be uniform, linear, or quadratic.")
         self.strategy_weighting = strategy_weighting
         self.regret_positive_weight = float(regret_positive_weight)
-        if regret_target_mode not in {"clip_each_record", "aggregate_then_clip"}:
-            raise ValueError("Unknown regret_target_mode.")
         self.regret_target_mode = regret_target_mode
         if regret_increment_reach_mode not in {"none", "visit_fraction", "visit_count"}:
             raise ValueError("Unknown regret_increment_reach_mode.")
@@ -407,31 +416,7 @@ class DeepCFRPlusTrainer:
         if traversal_backend not in {"recursive", "gpu_native"}:
             raise ValueError("traversal_backend must be 'recursive' or 'gpu_native'.")
         self.traversal_backend = traversal_backend
-        if self.regret_target_mode == "aggregate_then_clip" and (
-            self.device.type != "cpu" or self.traversal_backend != "gpu_native"
-        ):
-            raise ValueError(
-                "aggregate_then_clip is an experimental CPU gpu_native option."
-            )
-        if self.regret_increment_reach_mode in {"visit_fraction", "visit_count"} and (
-            self.regret_target_mode != "aggregate_then_clip"
-            or self.validation_fraction != 0.0
-        ):
-            raise ValueError(
-                "visit-based updates require aggregate_then_clip and validation_fraction=0."
-            )
-        if (self.regret_increment_reach_mode == "visit_count"
-                and self.regret_accumulation_mode != "cumulative"):
-            raise ValueError("visit_count requires cumulative regret accumulation.")
-        if self.regret_accumulation_mode == "cumulative" and (
-            self.regret_target_mode != "aggregate_then_clip"
-            or self.device.type != "cpu"
-            or self.traversal_backend != "gpu_native"
-        ):
-            raise ValueError(
-                "cumulative regrets currently require CPU gpu_native "
-                "aggregate_then_clip."
-            )
+        self._validate_regret_target_mode(self.regret_target_mode, self.regret_positive_weight)
         self.traversal_batch_size = int(traversal_batch_size)
         self.traverser_action_sample_count = (
             None
@@ -605,6 +590,7 @@ class DeepCFRPlusTrainer:
             ).to(self.device)
             for _ in range(2)
         ]
+        self.regret_reader = NetworkRegretReader(self.regret_nets, self._forward)
         self.strategy_nets = [
             NeuralMLP(
                 self.encoder.input_dim,
@@ -662,6 +648,43 @@ class DeepCFRPlusTrainer:
             )
             for _ in range(2)
         ]
+
+    def _validate_regret_target_mode(self, mode: str, positive_weight: float) -> None:
+        if mode not in {"clip_each_record", "aggregate_then_clip", "clip_on_read"}:
+            raise ValueError("Unknown regret_target_mode.")
+        if mode == "clip_on_read" and positive_weight != 0.0:
+            raise ValueError("clip_on_read requires regret_positive_weight=0 (plain MSE).")
+        cuda_aggregate_supported = (
+            self.device.type == "cuda" and self.spec == _CUDA_AGGREGATE_SPEC
+        )
+        if mode == "aggregate_then_clip" and (
+            self.traversal_backend != "gpu_native"
+            or (self.device.type != "cpu" and not cuda_aggregate_supported)
+        ):
+            raise ValueError(
+                "aggregate_then_clip requires gpu_native traversal on CPU "
+                "or CUDA with the 18-claim reference spec."
+            )
+        if self.regret_increment_reach_mode in {"visit_fraction", "visit_count"} and (
+            mode != "aggregate_then_clip" or self.validation_fraction != 0.0
+        ):
+            raise ValueError(
+                "visit-based updates require aggregate_then_clip and validation_fraction=0."
+            )
+        if (self.regret_increment_reach_mode == "visit_count"
+                and self.regret_accumulation_mode != "cumulative"):
+            raise ValueError("visit_count requires cumulative regret accumulation.")
+        if self.regret_accumulation_mode == "cumulative" and mode not in {
+            "aggregate_then_clip", "clip_on_read"
+        }:
+            raise ValueError("cumulative regrets require aggregate_then_clip or clip_on_read.")
+
+    def set_regret_target_mode(self, mode: str, *, regret_positive_weight: float) -> None:
+        """Change the target/loss at an iteration boundary, preserving model state."""
+        weight = float(regret_positive_weight)
+        self._validate_regret_target_mode(mode, weight)
+        self.regret_target_mode = mode
+        self.regret_positive_weight = weight
 
     def _make_optimizer(self, model: NeuralMLP) -> torch.optim.Optimizer:
         kwargs = {"lr": self.learning_rate}
@@ -723,7 +746,7 @@ class DeepCFRPlusTrainer:
         x = torch.from_numpy(features).to(self.device)
         with torch.inference_mode():
             with self._autocast():
-                values = self._forward(self.regret_nets[pid], x)
+                values = self.regret_values_tensor(pid, x)
             values = values.float().cpu().numpy()
         return values.astype(np.float32, copy=False)
 
@@ -731,6 +754,15 @@ class DeepCFRPlusTrainer:
         # Collection and fitting never overlap. The live network is therefore
         # already frozen for the complete traversal phase.
         return self._regret_values_from_features(pid, features)
+
+    def make_regret_record(self, old_raw, advantage, legal_mask):
+        """Convert a sampled advantage into the regret record for this trainer."""
+        return make_regret_target(
+            old_raw, advantage, legal_mask,
+            iteration=self.iteration,
+            accumulation_mode=self.regret_accumulation_mode,
+            target_mode=self.regret_target_mode,
+        )
 
     def _strategy_from_features(
         self,
@@ -762,6 +794,10 @@ class DeepCFRPlusTrainer:
         strategy = self._strategy_from_features(infoset.pid, features, legal)
         return {action: float(strategy[self._action_col(action)]) for action in legal}
 
+    def regret_values_tensor(self, pid: int, features: torch.Tensor) -> torch.Tensor:
+        """Read current raw regrets from the active network or table source."""
+        return self.regret_reader.read(pid, features)
+
     def current_policy_dense(self, *, batch_size: int = 16_384) -> DenseTabularPolicy:
         """Compile the current clipped-regret strategy in batched infoset blocks."""
 
@@ -781,7 +817,6 @@ class DeepCFRPlusTrainer:
         with torch.inference_mode():
             for pid in (0, 1):
                 actor_hids = np.flatnonzero((dense.popcount & 1) == pid)
-                model = self.regret_nets[pid]
                 for start in range(0, len(actor_hids), histories_per_batch):
                     hids = actor_hids[start : start + histories_per_batch]
                     history_bits = (
@@ -807,7 +842,7 @@ class DeepCFRPlusTrainer:
                         features.reshape(-1, input_dim)
                     ).to(self.device)
                     with self._autocast():
-                        values = self._forward(model, x)
+                        values = self.regret_values_tensor(pid, x)
                     values = values.float().reshape(
                         len(hids),
                         n_hands,
@@ -838,7 +873,7 @@ class DeepCFRPlusTrainer:
         x = torch.from_numpy(self.encoder.encode(infoset.hand, infoset.history)).to(self.device)
         with torch.inference_mode():
             with self._autocast():
-                values = self._forward(self.regret_nets[infoset.pid], x)
+                values = self.regret_values_tensor(infoset.pid, x)
             values = values.float().cpu().numpy()
         return {action: float(values[self._action_col(action)]) for action in legal}
 
@@ -867,6 +902,13 @@ class DeepCFRPlusTrainer:
         else:
             self.regret_buffers[pid].add(features, targets, legal_mask, 1.0)
 
+    def _strategy_record_weight(self) -> float:
+        if self.strategy_weighting == "uniform":
+            return 1.0
+        if self.strategy_weighting == "quadratic":
+            return float(self.iteration) ** 2
+        return float(self.iteration)
+
     def _add_strategy_record(
         self,
         pid: int,
@@ -874,7 +916,7 @@ class DeepCFRPlusTrainer:
         strategy: np.ndarray,
         legal_mask: np.ndarray,
     ) -> None:
-        weight = 1.0 if self.strategy_weighting == "uniform" else float(self.iteration)
+        weight = self._strategy_record_weight()
         if isinstance(self.strategy_buffers[pid], DeviceReservoirBuffer):
             features = torch.as_tensor(features, device=self.device)
             strategy = torch.as_tensor(strategy, device=self.device)
@@ -1031,17 +1073,8 @@ class DeepCFRPlusTrainer:
             instant_regret = np.zeros(self.encoder.action_dim, dtype=np.float32)
             instant_regret[legal_mask] = action_values[legal_mask] - node_value
 
-            old_scaled = np.maximum(self._snapshot_regret_values_from_features(traverser, features), 0.0)
-            old_scaled[~legal_mask] = 0.0
-            if self.regret_accumulation_mode == "cumulative":
-                target = (
-                    old_scaled if self.iteration > 1 else np.zeros_like(old_scaled)
-                ) + instant_regret
-            else:
-                target = ((self.iteration - 1.0) / self.iteration) * old_scaled
-                target += instant_regret / self.iteration
-            target = np.maximum(target, 0.0).astype(np.float32)
-            target[~legal_mask] = 0.0
+            old_raw = self._snapshot_regret_values_from_features(traverser, features)
+            target = self.make_regret_record(old_raw, instant_regret, legal_mask)
             self._add_regret_record(traverser, features, target, legal_mask)
             return node_value
 
@@ -1176,6 +1209,8 @@ class DeepCFRPlusTrainer:
                 per_sample = -(y * torch.log_softmax(masked_logits, dim=1)).sum(dim=1)
             else:
                 mask_float = mask.float()
+                # clip_on_read requires zero positive weight: otherwise the
+                # sign of a noisy sample biases its fitted conditional mean.
                 entry_weight = 1.0 + self.regret_positive_weight * (y > 1e-6).float()
                 squared = (pred - y).square() * mask_float * entry_weight
                 denom = (mask_float * entry_weight).sum(dim=1).clamp_min(1.0)

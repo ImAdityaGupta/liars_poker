@@ -298,7 +298,8 @@ def plot_rows(root: Path, arms: list[dict], rows: list[dict], *, exact: bool,
     colours = {(budget, mode): palette[(2 * index + offset) % len(palette)]
                for index, budget in enumerate(budgets)
                for mode, offset in (("clip_each_record", 0),
-                                    ("aggregate_then_clip", 1))}
+                                    ("aggregate_then_clip", 1),
+                                    ("clip_on_read", 2))}
     styles = {17: ("-", "o"), 23: ("--", "s")}
     fig, axes = plt.subplots(1, max(1, len(budgets)),
                              figsize=(7 * max(1, len(budgets)), 5.4),
@@ -565,9 +566,12 @@ def main() -> None:
     extra_run = args.extra_run.resolve() if args.extra_run else None
     tabular_fork = args.tabular_fork.resolve() if args.tabular_fork else None
     manifest = json.loads((root / "parallel_manifest.json").read_text())
+    extra_arms_path = root / "extra_arms.json"
+    extra_arms = (json.loads(extra_arms_path.read_text(encoding="utf-8"))
+                  if extra_arms_path.exists() else [])
     # The N/K arms are archived in the experiment report and omitted from this
     # live dashboard; keep the visit-count and conditional runs visible.
-    arms = [arm for arm in manifest["arms"]
+    arms = [arm for arm in [*manifest["arms"], *extra_arms]
             if arm.get("reach_mode") != "visit_fraction"]
     final_minute = target_minutes(root, arms)
     activity = {"active": {}, "failures": {}}

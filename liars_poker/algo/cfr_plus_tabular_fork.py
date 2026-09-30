@@ -13,6 +13,7 @@ from pathlib import Path
 import torch
 
 from liars_poker.algo.deep_cfr_plus import DeepCFRPlusTrainer
+from liars_poker.algo.regret_readers import TableRegretReader
 
 
 class TabularRegretFork(DeepCFRPlusTrainer):
@@ -64,30 +65,16 @@ class TabularRegretFork(DeepCFRPlusTrainer):
         rows = (1 << self.encoder.k) * self.n_rank_hands
         self.regret_table = torch.empty((rows, self.encoder.action_dim), dtype=torch.float32)
         self.table_initialized = torch.zeros(rows, dtype=torch.bool)
+        self.regret_reader = TableRegretReader(
+            self.regret_table,
+            self.table_initialized,
+            self._table_indices,
+            seed_from_network=lambda pid, x: self._forward(self.regret_nets[pid], x),
+            before_read=self._before_table_read,
+        )
 
-    def _forward(self, model, x: torch.Tensor) -> torch.Tensor:
-        if self.regret_table is not None and (
-            model is self.regret_nets[0] or model is self.regret_nets[1]
-        ):
-            single = x.ndim == 1
-            features = x.unsqueeze(0) if single else x
-            keys = self._table_indices(features)
-            missing = ~self.table_initialized.index_select(0, keys)
-            if missing.any():
-                missing_rows = missing.nonzero(as_tuple=False).squeeze(1)
-                unique, inverse = torch.unique(keys.index_select(0, missing_rows),
-                                               return_inverse=True)
-                first = torch.full((len(unique),), len(keys), dtype=torch.long)
-                first.scatter_reduce_(0, inverse, missing_rows, reduce="amin")
-                with torch.inference_mode():
-                    predictions = super()._forward(
-                        model, features.index_select(0, first)
-                    ).float().relu()
-                    self.regret_table[unique] = predictions
-                    self.table_initialized[unique] = True
-            values = self.regret_table.index_select(0, keys)
-            return values[0] if single else values
-        return super()._forward(model, x)
+    def _before_table_read(self, keys: torch.Tensor) -> None:
+        """Hook for table variants that discount old rows when read."""
 
     def _train_regret(self, pid: int, traversals_per_player: int) -> float:
         _ = traversals_per_player

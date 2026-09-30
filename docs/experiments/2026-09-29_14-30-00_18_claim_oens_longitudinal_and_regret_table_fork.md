@@ -22,17 +22,15 @@ For each visited information set:
 
 The comparisons separate the local stages: O→E is the intended update, E→S is sampling error, and S→N is fitting error. E→N compares the final fitted result with the exact one-step target. The audit also reports total-variation and KL distances with equal, reach, and `1/[-log(q)]` weights. These are local policy distances at one update, not direct exploitability estimates. A low distance does not guarantee that strategically important states are weighted enough, and one seed cannot establish a predictive relationship.
 
-### Normal-run results through 360 minutes
+### Completed normal run and what the audit showed
 
-The planned initial run completed 360 measured training minutes at iteration 8,727. Its exact average-policy exploitability was 0.02212 and current-policy exploitability was 0.08704. The average had reached 0.02073 at minute 345 and was 0.02564 at minute 330, so the last stretch was not monotonic. The much higher current-policy value reinforces that current exploitability is a noisy companion metric, not a substitute for the average-policy result.
+The seed-31 trainer ran to its **435-minute checkpoint**, iteration **10,286**, then was stopped on 30 September 2026 because the average policy had stopped improving. Its best saved average-policy exact exploitability was **0.02029 at 195 minutes**; the 435-minute value was **0.02566**. The current policy ended at **0.08772** and remained much noisier. The last complete checkpoint and all 29 monitor rows remain under `artifacts/cfr_plus_18_oens_followups/main_20260929/normal/` on the VM. The incomplete interval after minute 435 was discarded. The live O/E/S/N process and its dashboard were stopped.
 
-At the minute-360 audit, among visited information sets, equal-weight mean TV was 0.01336 for O→E, 0.00201 for E→S, 0.00682 for S→N, and 0.00609 for E→N. On that audit, the sampled targets were close to exact, while fitting moved the policy partway back toward the old policy; the fitted policy nevertheless remained closer to E than O was. This is a one-update observation. It does not show that the regret network is the cause of the longer-term plateau, nor that the next live update will match the cloned audit.
+![The normalized neural average levels off around 0.02–0.03 while its 300-minute tabular-regret fork improves; one-step audit distances fluctuate without a clear match to the average-policy curve.](../figures/experiment_cfr_plus_18_oens_final.png)
 
-### Continuation in progress
+The left panel shows **exact** exploitability on a log scale. The tabular curve starts from the neural checkpoint at minute 300, so its horizontal coordinate is source training plus fork training; it is a separate intervention, not the continuation's earlier history. The right panel shows total variation (TV) between one-step policies at visited information sets. Smaller distance means two policies agree more closely *locally*; it is not an exploitability estimate.
 
-The same seed-31 trainer was resumed from its 360-minute checkpoint toward 720 **total measured training minutes**. At the latest VM check (29 September 2026, 23:13 UTC), it had reached 367.8 total minutes and iteration 8,890; the 375-minute monitor was still ahead. The continuation runs in tmux session `oens_normal_extend`, with dashboard `oens_dashboard` on port 8767. Its run directory is `artifacts/cfr_plus_18_oens_followups/main_20260929/normal`.
-
-This is a continuation of the original trajectory, not a new 360-minute run. Further O/E/S/N audits and exact evaluations will be appended as the continuation reaches each 15-minute boundary.
+The sampled target E→S was usually closer to the exact one-step target than the fitted network S→N was to the sampled target. At minute 435, mean visited-set TV was **0.00157** for O→E, **0.00091** for E→S, **0.00633** for S→N, and **0.00620** for E→N. But these distances changed sharply between audits without a correspondingly clear change in the average-policy curve. At minute 345, for example, S→N jumped to **0.03108** while the average policy made one of its best observations (**0.02073**). We could see fitting discrepancies, but could not turn the O/E/S/N measurements into a reliable diagnostic of the plateau or a rule for choosing a better update. The average policy also reflects many previous updates, whereas the audit clones only one next update. The full records are in [the archived monitor data](../data/cfr_plus_18_oens_monitors_20260930.jsonl).
 
 ## Why the exact-G rescue was retired
 
@@ -40,7 +38,7 @@ An earlier rescue fork started from the seed-17 neural checkpoint at iteration 4
 
 The run was also prohibitively slow: median iteration time was 51.23 seconds, of which 49.14 seconds was in the regret-training phase containing the exact dense calculation, versus 2.10 seconds for traversal and 0.05 seconds for strategy fitting. It generated only 142 additional CFR+ iterations in two hours. With no same-checkpoint ordinary continuation, the result did not isolate whether exact `g` helps. It is best treated as an expensive, inconclusive pilot, not evidence that exact values cannot help. We stopped pursuing it and moved to a more direct test of the regret representation.
 
-## Active follow-up: replace the regret networks with a tabular regret state
+## Follow-up: replace the regret networks with a tabular regret state
 
 The current fork starts from the seed-31 O/E/S/N run's 300-minute checkpoint, at iteration 7,417. The source average policy's exact exploitability was 0.02224. The fork keeps the neural strategy/average-policy network and its replay state, but replaces the regret networks with a lazy tabular store:
 
@@ -51,15 +49,15 @@ The current fork starts from the seed-31 O/E/S/N run's 300-minute checkpoint, at
 
 This is **not exact tabular CFR+** and does not use exact `g` or exact reach. It keeps sampled conditional updates and the neural average. It asks whether removing repeated regret-network fitting and prediction drift helps the late trajectory when regrets are stored explicitly. If it improves, that implicates some part of the regret-network approximation/fitting loop, but it will not distinguish those components by itself. If it does not, the remaining causes include sampled updates, the normalized `1/t` scale, coverage, and the learned average.
 
-The fork is configured for 600 additional measured minutes, with exact average-policy evaluation and a resumable checkpoint every 15 minutes. At the 120-minute evaluation it had reached iteration 19,781 and exact average exploitability 0.00584, down from 0.02224 at the source checkpoint. The latest training log at the VM check had advanced to 131.7 minutes and iteration 20,987; its next exact evaluation/checkpoint was due at 135 minutes. Recent iterations took about 0.6 seconds, with roughly 0.53 seconds in traversal, 0.01 seconds in the tabular regret update and 0.05 seconds in strategy fitting. This is a strong early result, but it is one continuation, not yet evidence about the full ten-hour curve or the specific reason it improved.
+The fork is configured for 600 additional measured minutes, with exact average-policy evaluation and a resumable checkpoint every 15 minutes. In the results available for this writeup, it reached **0.00517 at 180 fork minutes** (iteration 25,911) and **0.00677 at 210 minutes** (iteration 28,915), versus **0.02224 at the source checkpoint**. The local copy of its evaluation data covers the first 210 minutes; the fork itself was left running on the VM. Recent iterations took about 0.6 seconds, with roughly 0.53 seconds in traversal, 0.01 seconds in the tabular regret update and 0.05 seconds in strategy fitting. The [saved evaluation series](../data/cfr_plus_18_tabular_regret_fork_evaluations_20260930.jsonl) and left-hand plot show a large improvement despite fluctuations.
 
 The fork runs in tmux session `cfr18_tabular_fork`, with its average-policy curve overlaid on the cumulative dashboard on port 8765. Its VM directory is `artifacts/cfr_plus_18_tabular_regret_forks/oens_0300m`. The source checkpoint is preserved separately in that directory.
 
 ## How to read the combined evidence
 
-- The minute-360 O/E/S/N audit found that, on visited sets, this sampled update was close to the exact-`g` target, and network fitting did not erase the entire update. That weakens the simple story that sampled `g` or one-step fitting error alone explains the neural plateau.
+- The O/E/S/N audits did not identify a local distance that tracked the average-policy plateau. Small E→S distances suggest sampling error was often smaller than fitting error *at visited sets*, but this alone does not locate the cause of long-run exploitability.
 - The exact-G rescue produced too few iterations and no lasting improvement, so it was not a useful long-run test.
-- The tabular-regret fork is more informative about the regret representation and is currently improving quickly. Because it retains sampled traversal and neural averaging, its success would show that a full neural regret model is not necessary for this late-stage continuation; it would not establish that the other approximations are harmless at larger game sizes.
+- The tabular-regret fork is more informative about the regret representation. Its large gain while retaining sampled traversal and neural averaging implicates some part of the neural-regret update loop. It does not isolate limited fit steps from function-class limits, extrapolation to unvisited information sets, or repeated prediction drift. The fork also stays in normalized units, so its result does not directly measure the best cumulative neural recipe.
 - Compare fork and source at both iteration and measured time, and remember their policies diverge after the fork. The source checkpoint is the starting point, not a concurrent control.
 
 ## Files and run records

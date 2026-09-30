@@ -228,10 +228,9 @@ class GPUDeepCFRPlusTraverser:
         features: torch.Tensor,
         legal_mask: torch.Tensor,
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        model = self.trainer.regret_nets[actor]
         with torch.inference_mode():
             with self.trainer._autocast():
-                values = self.trainer._forward(model, features)
+                values = self.trainer.regret_values_tensor(actor, features)
             values = values.float()
             positive = torch.relu(values) * legal_mask
             totals = positive.sum(dim=1, keepdim=True)
@@ -542,9 +541,6 @@ class GPUDeepCFRPlusTraverser:
             "edge_chunks": 0,
             "row_splits": 0,
         }
-        iteration = max(float(self.trainer.iteration), 1.0)
-        previous_scale = (iteration - 1.0) / iteration
-        instant_scale = 1.0 / iteration
         live_budget = self.trainer.traversal_live_row_budget
 
         def update_peak(rows: int) -> None:
@@ -644,11 +640,7 @@ class GPUDeepCFRPlusTraverser:
                         path_probability.index_select(0, parent_rows),
                     )
                     values[continues] = child_values
-                iteration_weight = (
-                    1.0
-                    if self.trainer.strategy_weighting == "uniform"
-                    else float(self.trainer.iteration)
-                )
+                iteration_weight = self.trainer._strategy_record_weight()
                 strategy_accumulator.append(
                     features,
                     strategy,
@@ -742,18 +734,9 @@ class GPUDeepCFRPlusTraverser:
 
             node_values = (strategy * action_values).sum(dim=1)
             instant_regret = (action_values - node_values[:, None]) * legal_mask
-            old_scaled = torch.relu(regret_values) * legal_mask
-            if self.trainer.regret_accumulation_mode == "cumulative":
-                prior = old_scaled if iteration > 1 else torch.zeros_like(old_scaled)
-                raw_targets = prior + instant_regret
-            else:
-                raw_targets = (
-                    previous_scale * old_scaled + instant_scale * instant_regret
-                )
-            targets = (
-                raw_targets if self.trainer.regret_target_mode == "aggregate_then_clip"
-                else torch.relu(raw_targets)
-            ) * legal_mask
+            targets = self.trainer.make_regret_record(
+                regret_values, instant_regret, legal_mask
+            )
             weights = path_probability.clamp_min(1e-12).reciprocal()
             regret_accumulator.append(
                 features,
@@ -1094,10 +1077,6 @@ class GPUDeepCFRPlusTraverser:
         regret_targets: List[torch.Tensor] = []
         regret_masks: List[torch.Tensor] = []
         regret_weights: List[torch.Tensor] = []
-        iteration = max(float(self.trainer.iteration), 1.0)
-        previous_scale = (iteration - 1.0) / iteration
-        instant_scale = 1.0 / iteration
-
         for layer in reversed(layers):
             backup_start = None
             backup_end = None
@@ -1155,18 +1134,9 @@ class GPUDeepCFRPlusTraverser:
 
             node_values = (strategy * action_values).sum(dim=1)
             instant_regret = (action_values - node_values[:, None]) * legal_mask
-            old_scaled = torch.relu(layer["regret_values"]) * legal_mask
-            if self.trainer.regret_accumulation_mode == "cumulative":
-                prior = old_scaled if iteration > 1 else torch.zeros_like(old_scaled)
-                raw_targets = prior + instant_regret
-            else:
-                raw_targets = (
-                    previous_scale * old_scaled + instant_scale * instant_regret
-                )
-            targets = (
-                raw_targets if self.trainer.regret_target_mode == "aggregate_then_clip"
-                else torch.relu(raw_targets)
-            ) * legal_mask
+            targets = self.trainer.make_regret_record(
+                layer["regret_values"], instant_regret, legal_mask
+            )
             regret_features.append(layer["features"])
             regret_targets.append(targets)
             regret_masks.append(legal_mask)
@@ -1220,11 +1190,7 @@ class GPUDeepCFRPlusTraverser:
             ).clamp_min(1e-12).reciprocal()
             strategy_count = int(features.shape[0])
             actor_pid = 1 - traverser
-            iteration_weight = (
-                1.0
-                if self.trainer.strategy_weighting == "uniform"
-                else float(self.trainer.iteration)
-            )
+            iteration_weight = self.trainer._strategy_record_weight()
             if commit_records:
                 self.trainer._add_device_records(
                     self.trainer.strategy_buffers[actor_pid],
