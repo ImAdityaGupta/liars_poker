@@ -1,0 +1,40 @@
+{
+  "source": "/root/liars_poker/artifacts/cfr_plus_18_batched_bridge_controls/main_20260930/exact4096/latest_checkpoint.pt",
+  "source_iteration": 31538,
+  "source_exact_average_exploitability": 0.001005141776837748,
+  "recipe": [
+    0.001,
+    1e-05,
+    16384,
+    "cosine",
+    "cross_entropy"
+  ],
+  "arms": [
+    [
+      "O4",
+      17031,
+      "warm",
+      5000
+    ],
+    [
+      "O4_seed17032",
+      17032,
+      "warm",
+      5000
+    ],
+    [
+      "O4_seed17033",
+      17033,
+      "warm",
+      5000
+    ],
+    [
+      "F40k",
+      17031,
+      "fresh",
+      40000
+    ]
+  ],
+  "harness": "scripts/run_cfr_plus_18_average_fit_optimizer_experiment.py:fit_one_arm",
+  "created_utc": "2026-10-02T12:29:48Z"
+}

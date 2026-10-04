@@ -113,6 +113,7 @@ def last_jsonl(path: Path) -> dict | None:
 
 def target_minutes(root: Path, arms: list[dict]) -> float:
     target = float(json.loads((root / "parallel_manifest.json").read_text())["minutes_per_arm"])
+    target = max(target, *(float(arm.get("target_minutes", 0)) for arm in arms))
     for arm in arms:
         for event in read_jsonl(root / arm["name"] / "resume_events.jsonl"):
             target = max(target, float(event.get("target_hours_per_arm", 0)) * 60.0)
@@ -300,6 +301,10 @@ def plot_rows(root: Path, arms: list[dict], rows: list[dict], *, exact: bool,
                for mode, offset in (("clip_each_record", 0),
                                     ("aggregate_then_clip", 1),
                                     ("clip_on_read", 2))}
+    def arm_colour(arm: dict) -> str:
+        return arm.get("color") or colours.get(
+            (arm["traversals"], arm["mode"]), palette[arms.index(arm) % len(palette)]
+        )
     styles = {17: ("-", "o"), 23: ("--", "s")}
     fig, axes = plt.subplots(1, max(1, len(budgets)),
                              figsize=(7 * max(1, len(budgets)), 5.4),
@@ -322,7 +327,7 @@ def plot_rows(root: Path, arms: list[dict], rows: list[dict], *, exact: bool,
         if not sub:
             continue
         line, marker = styles.get(arm["seed"], (":", "^"))
-        colour = arm.get("color", colours[(arm["traversals"], arm["mode"])])
+        colour = arm_colour(arm)
         if exact:
             for axis, x in zip(axes, x_values):
                 axis.plot(x, values, color=colour, linestyle=line, marker=marker,
@@ -347,7 +352,7 @@ def plot_rows(root: Path, arms: list[dict], rows: list[dict], *, exact: bool,
             axis.grid(True, alpha=0.22)
         axes[0].set_ylabel("CFR+ iteration")
     colour_handles = [Line2D(
-        [0], [0], color=arm.get("color", colours[(arm["traversals"], arm["mode"])]),
+        [0], [0], color=arm_colour(arm),
         linewidth=2.5,
         label=arm.get("label", f"{arm['traversals']:,} · "
                                f"{'clip each' if arm['mode'] == 'clip_each_record' else 'aggregate first'}"),

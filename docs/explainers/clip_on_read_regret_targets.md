@@ -1,6 +1,8 @@
 # Clip on read: unclipped regret targets for neural CFR+
 
-**Status: implemented in the trainer; one 18-claim CPU control is running, and CUDA smoke has not run.** This note explains the idea and its assumptions. It builds on [from exact CFR+ to neural CFR+](neural_cfr_plus_from_exact.md) and the [neural CFR+ code map](neural_cfr_plus_code_map.md). The motivating comparison, with a worked loss example, is in the [regret fit-steps sweep](../experiments/2026-09-30_00-55-10_18_claim_regret_fit_steps_sweep.md).
+**Status: implemented in the trainer; one 18-claim CPU control is running, and CUDA smoke has not run.** This note explains the idea and its assumptions. It builds on [from exact CFR+ to neural CFR+](neural_cfr_plus_from_exact.md) and the [neural CFR+ code map](neural_cfr_plus_code_map.md). The motivating comparison, with a worked loss example, is in the [regret fit-steps sweep](../experiments/18_claim/2026-09-30_00-55-10_18_claim_regret_fit_steps_sweep.md).
+
+*Update (30 September 2026): at 18 claims, clip on read was 1.2–1.4× more exploitable than `aggregate_then_clip`. See [aggregate-then-clip, clip on read, and the hybrid](aggregation_and_clip_on_read.md) for why repeated information sets favour aggregation, when clip on read should help, and the hybrid that combines them.*
 
 ## 1. The idea
 
@@ -27,7 +29,7 @@ Squared-error regression converges to the mean of its targets. If the network ca
 1. **Singletons.** Grouping merges only identical feature rows within one iteration. An information set visited once gets `max(0, old + G_1)`: one noisy sample clipped, i.e. the old per-record bias. Clip on read keeps that sample's negative evidence. The network can average it with similar information sets through generalisation *before* any clipping. About half of visited 18-claim information sets have fewer than one expected visit per update even at 4,096 roots. At 69 claims almost every visit is a singleton.
 2. **No grouping pass.** `aggregate_then_clip` runs `torch.unique` over the whole regret buffer each player update. That is why it is guarded to CPU, or to CUDA for the 18-claim spec only. At 69 claims, the grouping memory is prohibitive. Clip on read has no such step, so it works on any device and spec.
 3. **It is how VR-DeepDCFR+ fits regrets.** [Their code](https://github.com/rpSebastian/DeepPDCFR) regresses `d_t·max(0, R_prev) + advantage` with plain MSE and clips only when computing strategies.
-4. **A step towards DCFR.** Discounted CFR keeps *signed* regrets. A neural DCFR would need unclipped values. Here, a negative prediction is not carried forward as negative regret because `old` is clipped before every increment. DCFR would also require discount factors and a different averaging rule; see the separate [discounting experiment](../experiments/2026-09-30_00-55-09_18_claim_tabular_discounting.md).
+4. **A step towards DCFR.** Discounted CFR keeps *signed* regrets. A neural DCFR would need unclipped values. Here, a negative prediction is not carried forward as negative regret because `old` is clipped before every increment. DCFR would also require discount factors and a different averaging rule; see the separate [discounting experiment](../experiments/18_claim/2026-09-30_00-55-09_18_claim_tabular_discounting.md).
 
 ## 3. The loss must become plain squared error
 
@@ -101,4 +103,4 @@ The last number says how much of the buffer is in the regime where clip on read 
 
 ## 7. First experiment
 
-Run one from-scratch cumulative conditional `clip_on_read` arm with plain MSE, 4,096 roots and seed 17 on CPU. Compare its exact average-policy exploitability to the historical cumulative conditional 4,096-root run on the same port 8765 dashboard. The [experiment note](../experiments/2026-09-30_10-37-00_18_claim_clip_on_read.md) records settings and limitations. This is a practical recipe comparison: the old arm also differs in positive-target loss weighting, and it ran earlier under different machine load. The tabular discounting experiment remains a separate, unimplemented proposal: clip on read still clips the *previous* prediction, and neither discounts old regrets nor changes average-policy weighting.
+Run one from-scratch cumulative conditional `clip_on_read` arm with plain MSE, 4,096 roots and seed 17 on CPU. Compare its exact average-policy exploitability to the historical cumulative conditional 4,096-root run on the same port 8765 dashboard. The [experiment note](../experiments/18_claim/2026-09-30_10-37-00_18_claim_clip_on_read_and_aggregation_mse.md) records settings and limitations. This is a practical recipe comparison: the old arm also differs in positive-target loss weighting, and it ran earlier under different machine load. The tabular discounting experiment remains a separate, unimplemented proposal: clip on read still clips the *previous* prediction, and neither discounts old regrets nor changes average-policy weighting.

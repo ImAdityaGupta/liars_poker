@@ -1,0 +1,32 @@
+{
+  "checkpoint": "/root/liars_poker/artifacts/cfr_plus_18_offline_average_study/exact4096_0030m_checkpoint.pt",
+  "iteration": 908,
+  "measured_training_min": 30.01885853386484,
+  "buffer_sizes": [
+    2000000,
+    2000000
+  ],
+  "buffer_seen": [
+    110819091,
+    415605029
+  ],
+  "seed": 17030,
+  "batch_size": 1024,
+  "milestones": [
+    6,
+    12,
+    24,
+    48,
+    96,
+    192,
+    384,
+    768,
+    1536,
+    3072,
+    5000
+  ],
+  "variants": [
+    "warm",
+    "fresh"
+  ]
+}

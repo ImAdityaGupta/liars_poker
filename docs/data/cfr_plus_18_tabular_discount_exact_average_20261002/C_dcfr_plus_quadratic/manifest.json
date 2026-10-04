@@ -1,0 +1,16 @@
+{
+  "arm": "C_dcfr_plus_quadratic",
+  "update_rule": "dcfr_plus",
+  "strategy_weighting": "quadratic",
+  "average_weight_power": 2,
+  "seed": 17,
+  "traversals_per_player": 4096,
+  "monitor_minutes": 15,
+  "checkpoint_minutes": 15,
+  "regret_units": "cumulative conditional advantage; no /t",
+  "sampled_reach": "one conditional-mean update if visited; none if unvisited",
+  "average_policy": "exact own-reach-weighted tabular average",
+  "neural_regret": false,
+  "neural_strategy": false,
+  "created_utc": "2026-10-02T01:14:42.004465+00:00"
+}

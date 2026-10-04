@@ -6,7 +6,7 @@ This note explains one idea from [VR-DeepDCFR+](https://arxiv.org/abs/2511.08174
 
 The answer is a *baseline*: a guess of each action's value, used so that only the guess's *error* is sampled. Surprisingly, the guess is allowed to see information the player cannot see, such as the opponent's cards, without making the estimate biased or leaking that information into play.
 
-For our own traversal, see the [neural CFR+ code map](neural_cfr_plus_code_map.md). For what we have measured about sampled targets, see [sampled regret targets](../experiments/2026-09-27_23-28-05_cfr_plus_sampled_targets_cpu.md).
+For our own traversal, see the [neural CFR+ code map](neural_cfr_plus_code_map.md). For what we have measured about sampled targets, see [sampled regret targets](../experiments/18_claim/2026-09-27_23-28-05_cfr_plus_sampled_targets_cpu.md).
 
 ## 1. The problem: one sample per node
 
@@ -98,7 +98,7 @@ None of this affects correctness. A poorly fitted Q gives noisier advantages, no
 | Advantages for all actions from one path | Exploration of the traverser's own actions is still needed, because sampling probabilities enter the correction |
 | Lower variance, which also lowers the bias from clipping a noisy estimate at zero | The variance reduction is only as good as Q; early in training Q is poor |
 
-The last "buys" item links to our [clip-order findings](../experiments/2026-09-28_13-29-00_18_claim_target_sampling_factorial.md). Clipping a noisy quantity at zero biases it upwards by roughly the noise scale. Reducing variance at the source reduces that bias even where no aggregation is possible, such as information sets visited once per iteration.
+The last "buys" item links to our [clip-order findings](../experiments/18_claim/2026-09-28_13-29-00_18_claim_target_sampling_factorial.md). Clipping a noisy quantity at zero biases it upwards by roughly the noise scale. Reducing variance at the source reduces that bias even where no aggregation is possible, such as information sets visited once per iteration.
 
 ## 8. Where this fits in our code
 

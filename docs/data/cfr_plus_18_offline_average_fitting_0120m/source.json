@@ -1,0 +1,14 @@
+{
+  "checkpoint": "/root/liars_poker/artifacts/cfr_plus_18_offline_average_study/exact4096_0120m_checkpoint.pt",
+  "iteration": 3988,
+  "measured_training_min": 120.00940607665883,
+  "strategy_buffer_sizes": [
+    2000000,
+    2000000
+  ],
+  "strategy_buffer_seen": [
+    455877583,
+    1817154360
+  ],
+  "evaluation_threads": 4
+}

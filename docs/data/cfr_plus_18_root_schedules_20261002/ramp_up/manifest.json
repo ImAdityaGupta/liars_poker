@@ -1,0 +1,13 @@
+{
+  "arm": "ramp_up",
+  "seed": 17,
+  "target_hours": 9.0,
+  "average_kind": "exact",
+  "evaluation_interval_min": 15,
+  "regret_representation": "tabular",
+  "use_regret_network": false,
+  "use_strategy_network": false,
+  "root_schedule": "ramp_up",
+  "schedule_clock": "measured_training_time",
+  "created_utc": "2026-10-02T00:08:59.887928+00:00"
+}

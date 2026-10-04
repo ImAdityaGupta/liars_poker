@@ -141,6 +141,42 @@ def sampled_target(trainer: DeepCFRPlusTrainer, solver: CFRPlusDense,
     return sampled, visits, n, loss
 
 
+def independent_fit_errors(checkpoint: Path, fitted: DeepCFRPlusTrainer,
+                           player: int, roots: int) -> dict:
+    """Score the fitted model on its update rows and a second frozen-policy traversal."""
+    baseline = DeepCFRPlusTrainer.load_checkpoint(checkpoint, device="cpu")
+    baseline.iteration += 1
+    baseline.rng.seed(baseline.seed + 911_003 + baseline.iteration)
+    torch.manual_seed(baseline.seed + 911_003 + baseline.iteration)
+    held = baseline.regret_buffers[player]
+    held.clear()
+    traverser = GPUDeepCFRPlusTraverser(baseline)
+    for start in range(0, roots, baseline.traversal_batch_size):
+        traverser.run_traversals(player, min(baseline.traversal_batch_size, roots - start))
+    if held.size != held.seen:
+        raise RuntimeError("Held-out traversal overflowed its regret buffer")
+    baseline._aggregate_regret_targets(held)
+
+    def mse(buffer) -> float:
+        if not buffer.size:
+            return float("nan")
+        rng = np.random.default_rng(17031 + fitted.iteration + player)
+        indices = torch.as_tensor(rng.choice(buffer.size,
+                                  min(8192, buffer.size), replace=False), dtype=torch.long)
+        with torch.inference_mode():
+            x = torch.as_tensor(buffer.features[:buffer.size]).index_select(0, indices)
+            y = torch.as_tensor(buffer.targets[:buffer.size]).index_select(0, indices)
+            mask = torch.as_tensor(buffer.legal_masks[:buffer.size]).index_select(0, indices)
+            weight = torch.as_tensor(buffer.weights[:buffer.size]).index_select(0, indices)
+            pred = fitted.regret_nets[player](x)
+            row = (((pred - y).square() * mask).sum(dim=1)
+                   / mask.sum(dim=1).clamp_min(1))
+            return float((row * weight).sum() / weight.sum().clamp_min(1e-12))
+
+    return {"training_mse": mse(fitted.regret_buffers[player]),
+            "held_out_mse": mse(held), "held_out_records": held.size}
+
+
 def regret_match(values: np.ndarray, mask: np.ndarray) -> np.ndarray:
     positive = np.maximum(values, 0.0) * mask
     totals = positive.sum(axis=1, keepdims=True)
@@ -279,6 +315,8 @@ def main() -> None:
     parser.add_argument("--threads", type=int, default=2)
     parser.add_argument("--save-infoset-metrics", action="store_true",
                         help="Store per-infoset reach, visits, TV, KL and regret error in compressed NPZ")
+    parser.add_argument("--held-out", action="store_true",
+                        help="Run an independent frozen-policy traversal for fit error")
     args = parser.parse_args()
     if args.roots <= 0 or not 1 <= args.threads <= 4:
         parser.error("roots must be positive and threads must be 1–4")
@@ -313,6 +351,8 @@ def main() -> None:
     del g, qg
     print("sampling and fitting one player update", flush=True)
     sampled, visits, n_records, loss = sampled_target(trainer, solver, old, args.player, args.roots)
+    held_out = (independent_fit_errors(args.checkpoint, trainer, args.player, args.roots)
+                if args.held_out else {})
     fitted = network_table(trainer, solver, args.player)
     tables = {"old": old, "exact_g": exact_g, "exact_qg": exact_qg,
               "sampled": sampled, "fitted": fitted}
@@ -332,6 +372,7 @@ def main() -> None:
                "accumulation_mode": trainer.regret_accumulation_mode,
                "sampled_records": n_records, "visited_infosets": int((visits > 0).sum()),
                "regret_fit_loss": loss, "elapsed_s": time.perf_counter() - start,
+               **held_out,
                "available_ram_gib_after": available_ram_gib(),
                "disk_free_gib_after": shutil.disk_usage(args.output_dir).free / 1024**3}
     write_json(args.output_dir / "summary.json", summary)

@@ -1,0 +1,20 @@
+{
+  "arm": "N",
+  "target_source": "bootstrap",
+  "roots_per_player": 4096,
+  "seed": 17,
+  "regret_target_mode": "aggregate_then_clip",
+  "regret_accumulation_mode": "cumulative",
+  "regret_increment_reach_mode": "none",
+  "regret_train_steps": 24,
+  "regret_batch_size": 1024,
+  "regret_buffer_capacity": 4000000,
+  "regret_hidden_sizes": [
+    512,
+    512
+  ],
+  "traversal_backend": "gpu_native",
+  "traversal_batch_size": 512,
+  "averaging": "exact own-reach linear average, GPU recurrence",
+  "created_utc": 1790950086.67791
+}

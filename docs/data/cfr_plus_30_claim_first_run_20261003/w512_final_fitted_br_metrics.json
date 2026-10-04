@@ -1,0 +1,47 @@
+{
+  "run_type": "approximate_best_response",
+  "method": "action_conditioned_fitted_return",
+  "spec": "{\"claim_kinds\": [\"RankHigh\", \"Pair\", \"TwoPair\", \"Trips\", \"Quads\"], \"hand_size\": 3, \"ranks\": 5, \"suit_symmetry\": true, \"suits\": 4}",
+  "minutes": 5.0,
+  "iterations": null,
+  "trainer_kwargs": {
+    "state_hidden_sizes": [
+      512,
+      512
+    ],
+    "action_hidden_sizes": [
+      128,
+      128
+    ],
+    "embedding_dim": 256,
+    "device": "cuda",
+    "replay_capacity": 1000000,
+    "batch_size": 4096,
+    "learning_rate": 0.001,
+    "train_steps": 100,
+    "warmup_transitions": 20000,
+    "epsilon_start": 1.0,
+    "epsilon_end": 0.05,
+    "epsilon_decay_decisions": 500000,
+    "rollouts_per_action": 1,
+    "fused_optimizer": true,
+    "seed": 17
+  },
+  "episodes_per_role": 4096,
+  "rollout_batch_size": 1024,
+  "exact_evaluation": false,
+  "iterations_completed": 349,
+  "measured_training_s": 300.5933768823743,
+  "final_evaluation": {
+    "iteration": 349,
+    "measured_training_s": 300.5933768823743,
+    "p_first": 0.500485,
+    "p_second": 0.496515,
+    "exploitability_estimate": -0.0030000000000001137,
+    "p_first_lcb": 0.4982936661426284,
+    "p_second_lcb": 0.4943237945939425,
+    "exploitability_lower_bound": -0.007382539263429133,
+    "episodes_per_role": 200000,
+    "z": 1.96
+  }
+}

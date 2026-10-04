@@ -1,0 +1,1016 @@
+[
+  {
+    "ci95": [
+      -0.01044654290220655,
+      -0.001965956139838977
+    ],
+    "difference_left_minus_right": -0.006206249521022764,
+    "half_width_95": 0.004240293381183787,
+    "left": "w512_0060m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_0060m_o4",
+    "standard_error": 0.0021634149903998912
+  },
+  {
+    "ci95": [
+      -0.028033374122007973,
+      -0.01759660816713838
+    ],
+    "difference_left_minus_right": -0.022814991144573176,
+    "half_width_95": 0.005218382977434795,
+    "left": "w512_0060m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "june_aggressive_moderate_40_0060m",
+    "standard_error": 0.0026624402946095896
+  },
+  {
+    "ci95": [
+      -0.03517901975285199,
+      -0.024631085158667222
+    ],
+    "difference_left_minus_right": -0.029905052455759605,
+    "half_width_95": 0.005273967297092382,
+    "left": "w512_0060m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "june_normal_late_drop_constant_0060m",
+    "standard_error": 0.0026907996413736645
+  },
+  {
+    "ci95": [
+      -0.027837567450308624,
+      -0.017614090820597735
+    ],
+    "difference_left_minus_right": -0.02272582913545318,
+    "half_width_95": 0.005111738314855444,
+    "left": "w512_0060m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "june_smooth_cosine_1e3_to_1e4_0060m",
+    "standard_error": 0.0026080297524772676
+  },
+  {
+    "ci95": [
+      -0.04073377825779266,
+      -0.029800040480846154
+    ],
+    "difference_left_minus_right": -0.03526690936931941,
+    "half_width_95": 0.005466868888473255,
+    "left": "w512_0060m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "june_very_aggressive_20_40_0060m",
+    "standard_error": 0.00278921882064962
+  },
+  {
+    "ci95": [
+      -0.021809514683297622,
+      -0.011407968563803194
+    ],
+    "difference_left_minus_right": -0.01660874162355041,
+    "half_width_95": 0.005200773059747215,
+    "left": "w2048_0060m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "june_aggressive_moderate_40_0060m",
+    "standard_error": 0.002653455642728171
+  },
+  {
+    "ci95": [
+      -0.028990610935407293,
+      -0.01840699493406639
+    ],
+    "difference_left_minus_right": -0.02369880293473684,
+    "half_width_95": 0.0052918080006704536,
+    "left": "w2048_0060m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "june_normal_late_drop_constant_0060m",
+    "standard_error": 0.0026999020411583945
+  },
+  {
+    "ci95": [
+      -0.021688443778176983,
+      -0.01135071545068385
+    ],
+    "difference_left_minus_right": -0.016519579614430416,
+    "half_width_95": 0.005168864163746565,
+    "left": "w2048_0060m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "june_smooth_cosine_1e3_to_1e4_0060m",
+    "standard_error": 0.0026371755937482475
+  },
+  {
+    "ci95": [
+      -0.034583607216723815,
+      -0.02353771247986946
+    ],
+    "difference_left_minus_right": -0.029060659848296637,
+    "half_width_95": 0.00552294736842718,
+    "left": "w2048_0060m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "june_very_aggressive_20_40_0060m",
+    "standard_error": 0.0028178302900138674
+  },
+  {
+    "ci95": [
+      -0.006720021928114958,
+      0.003357220269795059
+    ],
+    "difference_left_minus_right": -0.0016814008291599497,
+    "half_width_95": 0.005038621098955008,
+    "left": "w512_0120m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_0120m_o4",
+    "standard_error": 0.002570725050487249
+  },
+  {
+    "ci95": [
+      -0.008777039385477938,
+      0.00042875318709841796
+    ],
+    "difference_left_minus_right": -0.0041741430991897605,
+    "half_width_95": 0.0046028962862881785,
+    "left": "w512_0120m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w512_0060m_o4",
+    "standard_error": 0.0023484164725960095
+  },
+  {
+    "ci95": [
+      -0.013088127180239231,
+      -0.0043098564018659155
+    ],
+    "difference_left_minus_right": -0.008698991791052574,
+    "half_width_95": 0.004389135389186658,
+    "left": "w2048_0120m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_0060m_o4",
+    "standard_error": 0.002239354790401356
+  },
+  {
+    "ci95": [
+      -0.006991027497962045,
+      0.004191090465908539
+    ],
+    "difference_left_minus_right": -0.0013999685160267534,
+    "half_width_95": 0.005591058981935292,
+    "left": "w512_0180m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_0180m_o4",
+    "standard_error": 0.002852581113232292
+  },
+  {
+    "ci95": [
+      -0.005878580172463792,
+      0.0012013184180512592
+    ],
+    "difference_left_minus_right": -0.0023386308772062664,
+    "half_width_95": 0.0035399492952575256,
+    "left": "w512_0180m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w512_0120m_o4",
+    "standard_error": 0.0018060965792130233
+  },
+  {
+    "ci95": [
+      -0.0069505087779852745,
+      0.0017103823973063509
+    ],
+    "difference_left_minus_right": -0.002620063190339462,
+    "half_width_95": 0.004330445587645813,
+    "left": "w2048_0180m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_0120m_o4",
+    "standard_error": 0.0022094110141050063
+  },
+  {
+    "ci95": [
+      -0.0037402744232818467,
+      0.007605750718774566
+    ],
+    "difference_left_minus_right": 0.0019327381477463597,
+    "half_width_95": 0.005673012571028206,
+    "left": "w512_0240m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_0240m_o4",
+    "standard_error": 0.002894394168891942
+  },
+  {
+    "ci95": [
+      -0.003160406199224931,
+      0.0050458263125375425
+    ],
+    "difference_left_minus_right": 0.0009427100566563057,
+    "half_width_95": 0.004103116255881237,
+    "left": "w512_0240m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w512_0180m_o4",
+    "standard_error": 0.0020934266611638964
+  },
+  {
+    "ci95": [
+      -0.00635373673138318,
+      0.0015737435171495656
+    ],
+    "difference_left_minus_right": -0.002389996607116807,
+    "half_width_95": 0.003963740124266373,
+    "left": "w2048_0240m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_0180m_o4",
+    "standard_error": 0.0020223163899318226
+  },
+  {
+    "ci95": [
+      -0.003340950952097866,
+      0.007682458883169497
+    ],
+    "difference_left_minus_right": 0.002170753965535816,
+    "half_width_95": 0.005511704917633682,
+    "left": "w512_0300m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_0300m_o4",
+    "standard_error": 0.00281209434573147
+  },
+  {
+    "ci95": [
+      -0.006498965816956543,
+      0.002840751887211012
+    ],
+    "difference_left_minus_right": -0.0018291069648727655,
+    "half_width_95": 0.0046698588520837775,
+    "left": "w512_0300m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w512_0240m_o4",
+    "standard_error": 0.0023825810469815193
+  },
+  {
+    "ci95": [
+      -0.005291289058950899,
+      0.0011570434936264543
+    ],
+    "difference_left_minus_right": -0.002067122782662222,
+    "half_width_95": 0.0032241662762886765,
+    "left": "w2048_0300m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_0240m_o4",
+    "standard_error": 0.001644982794024835
+  },
+  {
+    "ci95": [
+      -0.004089322835413811,
+      0.006283666997071725
+    ],
+    "difference_left_minus_right": 0.0010971720808289568,
+    "half_width_95": 0.005186494916242768,
+    "left": "w512_0360m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_0360m_o4",
+    "standard_error": 0.0026461708756340655
+  },
+  {
+    "ci95": [
+      -0.004895669497987929,
+      0.001498696598376312
+    ],
+    "difference_left_minus_right": -0.0016984864498058084,
+    "half_width_95": 0.0031971830481821203,
+    "left": "w512_0360m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w512_0300m_o4",
+    "standard_error": 0.0016312158409092451
+  },
+  {
+    "ci95": [
+      -0.003705449750229734,
+      0.0024556406200318343
+    ],
+    "difference_left_minus_right": -0.0006249045650989497,
+    "half_width_95": 0.003080545185130784,
+    "left": "w2048_0360m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_0300m_o4",
+    "standard_error": 0.001571706727107543
+  },
+  {
+    "ci95": [
+      -0.0030345365308466375,
+      0.006620764668736242
+    ],
+    "difference_left_minus_right": 0.001793114068944802,
+    "half_width_95": 0.00482765059979144,
+    "left": "w512_0420m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_0420m_o4",
+    "standard_error": 0.002463087040709918
+  },
+  {
+    "ci95": [
+      -0.0033530997600118113,
+      0.003844889600872094
+    ],
+    "difference_left_minus_right": 0.00024589492043014126,
+    "half_width_95": 0.0035989946804419527,
+    "left": "w512_0420m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w512_0360m_o4",
+    "standard_error": 0.0018362217757356902
+  },
+  {
+    "ci95": [
+      -0.003888908928467337,
+      0.002988814793095931
+    ],
+    "difference_left_minus_right": -0.00045004706768570293,
+    "half_width_95": 0.003438861860781634,
+    "left": "w2048_0420m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_0360m_o4",
+    "standard_error": 0.00175452135754165
+  },
+  {
+    "ci95": [
+      -0.004607548081356647,
+      0.005129846395449436
+    ],
+    "difference_left_minus_right": 0.00026114915704639413,
+    "half_width_95": 0.004868697238403041,
+    "left": "w512_0480m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_0480m_o4",
+    "standard_error": 0.002484029203266858
+  },
+  {
+    "ci95": [
+      -0.002552482182551142,
+      0.0031253810477590584
+    ],
+    "difference_left_minus_right": 0.0002864494326039583,
+    "half_width_95": 0.0028389316151551003,
+    "left": "w512_0480m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w512_0420m_o4",
+    "standard_error": 0.0014484344975281124
+  },
+  {
+    "ci95": [
+      -0.0010969399571615455,
+      0.004733768646166278
+    ],
+    "difference_left_minus_right": 0.001818414344502366,
+    "half_width_95": 0.0029153543016639115,
+    "left": "w2048_0480m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_0420m_o4",
+    "standard_error": 0.0014874256641142405
+  },
+  {
+    "ci95": [
+      -0.0028405651991955634,
+      0.0068821684761081565
+    ],
+    "difference_left_minus_right": 0.0020208016384562965,
+    "half_width_95": 0.00486136683765186,
+    "left": "w512_0540m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_0540m_o4",
+    "standard_error": 0.002480289202883602
+  },
+  {
+    "ci95": [
+      -0.0037913623709223735,
+      0.002782042361103796
+    ],
+    "difference_left_minus_right": -0.0005046600049092889,
+    "half_width_95": 0.0032867023660130847,
+    "left": "w512_0540m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w512_0480m_o4",
+    "standard_error": 0.0016768889622515739
+  },
+  {
+    "ci95": [
+      -0.004851235891330613,
+      0.00032261091869223175
+    ],
+    "difference_left_minus_right": -0.0022643124863191907,
+    "half_width_95": 0.0025869234050114225,
+    "left": "w2048_0540m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_0480m_o4",
+    "standard_error": 0.0013198588801078687
+  },
+  {
+    "ci95": [
+      -0.005610673992039486,
+      0.003793807315864802
+    ],
+    "difference_left_minus_right": -0.0009084333380873421,
+    "half_width_95": 0.004702240653952144,
+    "left": "w512_0600m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_0600m_o4",
+    "standard_error": 0.0023991023744653795
+  },
+  {
+    "ci95": [
+      -0.002894850071868909,
+      0.0023546519637587366
+    ],
+    "difference_left_minus_right": -0.00027009905405508597,
+    "half_width_95": 0.0026247510178138227,
+    "left": "w512_0600m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w512_0540m_o4",
+    "standard_error": 0.0013391586825580728
+  },
+  {
+    "ci95": [
+      5.00734657514954e-05,
+      0.005268198379225609
+    ],
+    "difference_left_minus_right": 0.0026591359224885525,
+    "half_width_95": 0.002609062456737057,
+    "left": "w2048_0600m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_0540m_o4",
+    "standard_error": 0.0013311543146617639
+  },
+  {
+    "ci95": [
+      -0.003988162096341253,
+      0.0061544858008045385
+    ],
+    "difference_left_minus_right": 0.0010831618522316431,
+    "half_width_95": 0.0050713239485728956,
+    "left": "w512_0660m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_0660m_o4",
+    "standard_error": 0.002587410177843314
+  },
+  {
+    "ci95": [
+      -0.0024949521184278825,
+      0.002988558819537132
+    ],
+    "difference_left_minus_right": 0.00024680335055462453,
+    "half_width_95": 0.002741755468982507,
+    "left": "w512_0660m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w512_0600m_o4",
+    "standard_error": 0.001398854831113524
+  },
+  {
+    "ci95": [
+      -0.004671520446594297,
+      0.0011819367670655757
+    ],
+    "difference_left_minus_right": -0.0017447918397643608,
+    "half_width_95": 0.0029267286068299365,
+    "left": "w2048_0660m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_0600m_o4",
+    "standard_error": 0.001493228881035682
+  },
+  {
+    "ci95": [
+      -0.005844524001313368,
+      0.004315209727691824
+    ],
+    "difference_left_minus_right": -0.0007646571368107719,
+    "half_width_95": 0.005079866864502596,
+    "left": "w512_0720m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_0720m_o4",
+    "standard_error": 0.002591768808419692
+  },
+  {
+    "ci95": [
+      -0.005392512570981524,
+      0.0009255723390416909
+    ],
+    "difference_left_minus_right": -0.0022334701159699164,
+    "half_width_95": 0.0031590424550116073,
+    "left": "w512_0720m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w512_0660m_o4",
+    "standard_error": 0.001611756354597759
+  },
+  {
+    "ci95": [
+      -0.0030038200626094406,
+      0.0022325178087544352
+    ],
+    "difference_left_minus_right": -0.0003856511269275025,
+    "half_width_95": 0.002618168935681938,
+    "left": "w2048_0720m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_0660m_o4",
+    "standard_error": 0.0013358004773887438
+  },
+  {
+    "ci95": [
+      -0.0031232066667238358,
+      0.0073417322993020034
+    ],
+    "difference_left_minus_right": 0.002109262816289084,
+    "half_width_95": 0.00523246948301292,
+    "left": "w512_0780m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_0780m_o4",
+    "standard_error": 0.0026696272872514895
+  },
+  {
+    "ci95": [
+      -0.003833618489981632,
+      0.0019424755393218837
+    ],
+    "difference_left_minus_right": -0.0009455714753298743,
+    "half_width_95": 0.002888047014651758,
+    "left": "w512_0780m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w512_0720m_o4",
+    "standard_error": 0.0014734933748223255
+  },
+  {
+    "ci95": [
+      -0.006849038916892569,
+      -0.0007899439399668908
+    ],
+    "difference_left_minus_right": -0.0038194914284297296,
+    "half_width_95": 0.003029547488462839,
+    "left": "w2048_0780m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_0720m_o4",
+    "standard_error": 0.0015456874941136933
+  },
+  {
+    "ci95": [
+      -0.001876832239387212,
+      0.008996166173305124
+    ],
+    "difference_left_minus_right": 0.0035596669669589556,
+    "half_width_95": 0.005436499206346168,
+    "left": "w512_0840m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_0840m_o4",
+    "standard_error": 0.002773724084870494
+  },
+  {
+    "ci95": [
+      -0.0017660417861682532,
+      0.004508471630484081
+    ],
+    "difference_left_minus_right": 0.0013712149221579138,
+    "half_width_95": 0.003137256708326167,
+    "left": "w512_0840m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w512_0780m_o4",
+    "standard_error": 0.0016006411777174322
+  },
+  {
+    "ci95": [
+      -0.0031433639550616384,
+      0.0029849854980377225
+    ],
+    "difference_left_minus_right": -7.918922851195796e-05,
+    "half_width_95": 0.0030641747265496805,
+    "left": "w2048_0840m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_0780m_o4",
+    "standard_error": 0.0015633544523212656
+  },
+  {
+    "ci95": [
+      -0.0057206734235664535,
+      0.0053681427101562335
+    ],
+    "difference_left_minus_right": -0.00017626535670511038,
+    "half_width_95": 0.0055444080668613435,
+    "left": "w512_0900m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_0900m_o4",
+    "standard_error": 0.002828779625949665
+  },
+  {
+    "ci95": [
+      -0.0034751987897920517,
+      0.0027294822580314843
+    ],
+    "difference_left_minus_right": -0.0003728582658802835,
+    "half_width_95": 0.003102340523911768,
+    "left": "w512_0900m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w512_0840m_o4",
+    "standard_error": 0.0015828267979141673
+  },
+  {
+    "ci95": [
+      0.00035229303140294757,
+      0.0063738550841646174
+    ],
+    "difference_left_minus_right": 0.0033630740577837827,
+    "half_width_95": 0.003010781026380835,
+    "left": "w2048_0900m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_0840m_o4",
+    "standard_error": 0.0015361127685616506
+  },
+  {
+    "ci95": [
+      -0.0017531056893878459,
+      0.00908845377730605
+    ],
+    "difference_left_minus_right": 0.0036676740439591012,
+    "half_width_95": 0.005420779733346947,
+    "left": "w512_0960m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_0960m_o4",
+    "standard_error": 0.002765703945585177
+  },
+  {
+    "ci95": [
+      -0.0020273173375352197,
+      0.003760307697661882
+    ],
+    "difference_left_minus_right": 0.000866495180063331,
+    "half_width_95": 0.0028938125175985508,
+    "left": "w512_0960m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w512_0900m_o4",
+    "standard_error": 0.0014764349579584443
+  },
+  {
+    "ci95": [
+      -0.006028638057096929,
+      7.374961589516659e-05
+    ],
+    "difference_left_minus_right": -0.0029774442206008814,
+    "half_width_95": 0.003051193836496048,
+    "left": "w2048_0960m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_0900m_o4",
+    "standard_error": 0.0015567315492326776
+  },
+  {
+    "ci95": [
+      -0.0024270328247581615,
+      0.00846440584016222
+    ],
+    "difference_left_minus_right": 0.0030186865077020297,
+    "half_width_95": 0.005445719332460191,
+    "left": "w512_1020m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_1020m_o4",
+    "standard_error": 0.0027784282308470363
+  },
+  {
+    "ci95": [
+      -0.002085180869787392,
+      0.0024209668166644037
+    ],
+    "difference_left_minus_right": 0.00016789297343850602,
+    "half_width_95": 0.002253073843225898,
+    "left": "w512_1020m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w512_0960m_o4",
+    "standard_error": 0.0011495274710336214
+  },
+  {
+    "ci95": [
+      -0.002052892925404846,
+      0.003686653944796002
+    ],
+    "difference_left_minus_right": 0.000816880509695578,
+    "half_width_95": 0.002869773435100424,
+    "left": "w2048_1020m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_0960m_o4",
+    "standard_error": 0.0014641701199491959
+  },
+  {
+    "ci95": [
+      -0.00023935586641737894,
+      0.010898044761214453
+    ],
+    "difference_left_minus_right": 0.005329344447398537,
+    "half_width_95": 0.005568700313815916,
+    "left": "w512_1080m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_1080m_o4",
+    "standard_error": 0.0028411736294979163
+  },
+  {
+    "ci95": [
+      -0.0034656054459983824,
+      0.0032918044635981336
+    ],
+    "difference_left_minus_right": -8.690049120012448e-05,
+    "half_width_95": 0.003378704954798258,
+    "left": "w512_1080m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w512_1020m_o4",
+    "standard_error": 0.0017238290585705398
+  },
+  {
+    "ci95": [
+      -0.005147891226891864,
+      0.00035277436509859733
+    ],
+    "difference_left_minus_right": -0.002397558430896633,
+    "half_width_95": 0.0027503327959952305,
+    "left": "w2048_1080m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_1020m_o4",
+    "standard_error": 0.0014032310183649135
+  },
+  {
+    "ci95": [
+      0.0024520260098153963,
+      0.013320950595198723
+    ],
+    "difference_left_minus_right": 0.00788648830250706,
+    "half_width_95": 0.005434462292691664,
+    "left": "w512_1140m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_1140m_o4",
+    "standard_error": 0.0027726848432100327
+  },
+  {
+    "ci95": [
+      -0.0013280025636619648,
+      0.0036811500667723583
+    ],
+    "difference_left_minus_right": 0.0011765737515551968,
+    "half_width_95": 0.0025045763152171615,
+    "left": "w512_1140m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w512_1080m_o4",
+    "standard_error": 0.0012778450587842662
+  },
+  {
+    "ci95": [
+      -0.0037543932640275663,
+      0.0009932530569209171
+    ],
+    "difference_left_minus_right": -0.0013805701035533246,
+    "half_width_95": 0.0023738231604742417,
+    "left": "w2048_1140m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_1080m_o4",
+    "standard_error": 0.0012111342655480824
+  },
+  {
+    "ci95": [
+      0.000708733216611716,
+      0.011941113449811457
+    ],
+    "difference_left_minus_right": 0.0063249233332115865,
+    "half_width_95": 0.0056161901165998705,
+    "left": "w512_1200m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_1200m_o4",
+    "standard_error": 0.0028654031207142197
+  },
+  {
+    "ci95": [
+      -0.003916860079121887,
+      0.002056465811101824
+    ],
+    "difference_left_minus_right": -0.0009301971340100314,
+    "half_width_95": 0.0029866629451118557,
+    "left": "w512_1200m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w512_1140m_o4",
+    "standard_error": 0.0015238076250570693
+  },
+  {
+    "ci95": [
+      -0.002729969792071553,
+      0.003992705462642436
+    ],
+    "difference_left_minus_right": 0.0006313678352854416,
+    "half_width_95": 0.0033613376273569943,
+    "left": "w2048_1200m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_1140m_o4",
+    "standard_error": 0.0017149681772229562
+  },
+  {
+    "ci95": [
+      -0.000860006792431583,
+      0.009923871482758587
+    ],
+    "difference_left_minus_right": 0.004531932345163502,
+    "half_width_95": 0.005391939137595085,
+    "left": "w512_1260m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_1260m_o4",
+    "standard_error": 0.0027509893559158594
+  },
+  {
+    "ci95": [
+      -0.0021168716694447776,
+      0.0031658158451871865
+    ],
+    "difference_left_minus_right": 0.0005244720878712046,
+    "half_width_95": 0.002641343757315982,
+    "left": "w512_1260m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w512_1200m_o4",
+    "standard_error": 0.0013476243659775418
+  },
+  {
+    "ci95": [
+      -0.0005135547870239168,
+      0.005148480938862496
+    ],
+    "difference_left_minus_right": 0.0023174630759192896,
+    "half_width_95": 0.0028310178629432064,
+    "left": "w2048_1260m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_1200m_o4",
+    "standard_error": 0.0014443968688485746
+  },
+  {
+    "ci95": [
+      0.0006099297962512268,
+      0.011064963428432944
+    ],
+    "difference_left_minus_right": 0.0058374466123420855,
+    "half_width_95": 0.005227516816090859,
+    "left": "w512_1320m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_1320m_o4",
+    "standard_error": 0.002667100416372887
+  },
+  {
+    "ci95": [
+      -0.0018917698621525687,
+      0.002960159955254826
+    ],
+    "difference_left_minus_right": 0.0005341950465511287,
+    "half_width_95": 0.0024259649087036974,
+    "left": "w512_1320m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w512_1260m_o4",
+    "standard_error": 0.001237737198318213
+  },
+  {
+    "ci95": [
+      -0.004117505391888129,
+      0.0025748669506332213
+    ],
+    "difference_left_minus_right": -0.000771319220627454,
+    "half_width_95": 0.0033461861712606755,
+    "left": "w2048_1320m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_1260m_o4",
+    "standard_error": 0.0017072378424799364
+  },
+  {
+    "ci95": [
+      0.001298779155321085,
+      0.011677336399869152
+    ],
+    "difference_left_minus_right": 0.006488057777595118,
+    "half_width_95": 0.005189278622274033,
+    "left": "w512_1380m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_1380m_o4",
+    "standard_error": 0.002647591133813282
+  },
+  {
+    "ci95": [
+      -0.0026679915431162323,
+      0.0022108361460914635
+    ],
+    "difference_left_minus_right": -0.00022857769851238456,
+    "half_width_95": 0.002439413844603848,
+    "left": "w512_1380m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w512_1320m_o4",
+    "standard_error": 0.0012445989003080857
+  },
+  {
+    "ci95": [
+      -0.0043194864266898406,
+      0.002561108699159004
+    ],
+    "difference_left_minus_right": -0.0008791888637654181,
+    "half_width_95": 0.003440297562924422,
+    "left": "w2048_1380m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_1320m_o4",
+    "standard_error": 0.0017552538586349093
+  },
+  {
+    "ci95": [
+      0.00014227130710367866,
+      0.010566158203656048
+    ],
+    "difference_left_minus_right": 0.005354214755379863,
+    "half_width_95": 0.0052119434482761845,
+    "left": "w512_1440m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_1440m_o4",
+    "standard_error": 0.002659154820549074
+  },
+  {
+    "ci95": [
+      -0.0014230037521083328,
+      0.0022991177067319584
+    ],
+    "difference_left_minus_right": 0.0004380569773118127,
+    "half_width_95": 0.0018610607294201455,
+    "left": "w512_1440m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w512_1380m_o4",
+    "standard_error": 0.0009495207803164008
+  },
+  {
+    "ci95": [
+      -0.0013939788868857932,
+      0.004537778885939928
+    ],
+    "difference_left_minus_right": 0.0015718999995270673,
+    "half_width_95": 0.0029658788864128606,
+    "left": "w2048_1440m_o4",
+    "paired_games_per_seat": 60900,
+    "paired_sweeps": 1740,
+    "right": "w2048_1380m_o4",
+    "standard_error": 0.0015132035134759493
+  }
+]

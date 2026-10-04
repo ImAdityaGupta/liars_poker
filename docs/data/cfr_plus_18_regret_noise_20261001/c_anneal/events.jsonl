@@ -1,0 +1,4 @@
+{"event": "frozen_snapshot", "iteration": 1736, "measured_training_min": 30.005354062312595, "snapshot": "0030m", "snapshot_s": 2.540345918852836, "utc": "2026-10-01T13:42:08.450049+00:00"}
+{"event": "frozen_snapshot", "iteration": 3506, "measured_training_min": 60.00373815957767, "snapshot": "0060m", "snapshot_s": 3.0266691553406417, "utc": "2026-10-01T14:12:12.303162+00:00"}
+{"event": "frozen_snapshot", "iteration": 5311, "measured_training_min": 90.00728493935118, "snapshot": "0090m", "snapshot_s": 2.6234845276921988, "utc": "2026-10-01T14:42:16.068441+00:00"}
+{"event": "frozen_snapshot", "iteration": 6809, "measured_training_min": 120.01283316611467, "snapshot": "0120m", "snapshot_s": 2.8660809700377285, "utc": "2026-10-01T15:12:20.027931+00:00"}

@@ -1,0 +1,31 @@
+{
+  "label": "06_k4096_o4_0450",
+  "policy_dir": "/root/liars_poker/artifacts/cfr_plus_18_neural_o4_cpu/main_20261001/neural_o4_k4096/policy_snapshots/0450m/average_policy",
+  "method": "M2",
+  "depth": 3,
+  "epsilon": 0.0001,
+  "p_first": 0.5388810992224716,
+  "p_second": 0.464990159543936,
+  "discovered_exploitability": 0.0038712587664075926,
+  "elapsed_s": 11.494374799076468,
+  "seats": [
+    {
+      "seat": 0,
+      "p": 0.5388810992224716,
+      "elapsed_s": 3.457045614719391,
+      "plan_nodes": 73462,
+      "eval_nodes": 411,
+      "search_branches": 508552,
+      "skipped_search_branches": 30392
+    },
+    {
+      "seat": 1,
+      "p": 0.464990159543936,
+      "elapsed_s": 8.037329184357077,
+      "plan_nodes": 289162,
+      "eval_nodes": 2086,
+      "search_branches": 1655449,
+      "skipped_search_branches": 63898
+    }
+  ]
+}

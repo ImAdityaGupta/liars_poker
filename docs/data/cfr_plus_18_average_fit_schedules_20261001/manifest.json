@@ -1,0 +1,80 @@
+{
+  "sources": {
+    "0030m": [
+      "artifacts/cfr_plus_18_offline_average_study/exact4096_0030m_checkpoint.pt",
+      908
+    ],
+    "0045m": [
+      "artifacts/cfr_plus_18_offline_average_study/exact4096_0045m_checkpoint.pt",
+      1424
+    ],
+    "0120m": [
+      "artifacts/cfr_plus_18_offline_average_study/exact4096_0120m_checkpoint.pt",
+      3988
+    ]
+  },
+  "arms": {
+    "W500": [
+      "warm",
+      0.001,
+      1e-05,
+      500
+    ],
+    "W1k": [
+      "warm",
+      0.001,
+      1e-05,
+      1000
+    ],
+    "W2k": [
+      "warm",
+      0.001,
+      1e-05,
+      2000
+    ],
+    "L1k": [
+      "warm",
+      0.0003,
+      1e-06,
+      1000
+    ],
+    "L5k": [
+      "warm",
+      0.0003,
+      1e-06,
+      5000
+    ],
+    "R5k": [
+      "warm_reset",
+      0.001,
+      1e-05,
+      5000
+    ],
+    "R1k_constant": [
+      "warm_reset",
+      0.001,
+      0.001,
+      1000
+    ],
+    "F40k": [
+      "fresh",
+      0.001,
+      1e-05,
+      40000
+    ],
+    "F80k": [
+      "fresh",
+      0.001,
+      1e-05,
+      80000
+    ],
+    "X": [
+      "exact",
+      0.001,
+      1e-05,
+      40000
+    ]
+  },
+  "batch_size": 16384,
+  "loss": "weighted cross entropy"
+}

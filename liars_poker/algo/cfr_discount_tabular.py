@@ -128,6 +128,12 @@ class TabularDiscountTrainer(TabularRegretFork):
         )
         totals = torch.zeros(len(keys), dtype=torch.float64)
         totals.index_add_(0, inverse, torch.ones(n, dtype=torch.float64))
+        if not hasattr(self, "last_visit_stats"):
+            self.last_visit_stats = [{}, {}]
+        self.last_visit_stats[pid] = {
+            "visited_infosets": int(len(keys)),
+            "mean_rows_per_visited_infoset": float(n / len(keys)),
+        }
         sums = torch.zeros((len(keys), self.encoder.action_dim), dtype=torch.float64)
         sums.index_add_(0, inverse, advantages.double())
         increment = (sums / totals.clamp_min(1e-12)[:, None]).float()

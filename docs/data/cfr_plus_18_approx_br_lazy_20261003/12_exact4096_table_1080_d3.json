@@ -1,0 +1,84 @@
+{
+  "label": "12_exact4096_table_1080",
+  "policy_dir": "/root/liars_poker/artifacts/cfr_plus_18_batched_bridge_controls/main_20260930/exact4096/policy_snapshots/1080m/average_policy",
+  "kind": "dense_reference",
+  "depth": 3,
+  "epsilon": 0.0001,
+  "p_first": 0.5377353709857972,
+  "p_second": 0.463259931025831,
+  "discovered_exploitability": 0.0009953020116282296,
+  "dense_p_first": 0.5377353709857972,
+  "dense_p_second": 0.463259931025831,
+  "seat_differences": [
+    0.0,
+    0.0
+  ],
+  "matches_dense": true,
+  "load_s": 3.232805680949241,
+  "elapsed_s": 3.8665641648694873,
+  "network_queries": 0,
+  "network_rows": 0,
+  "network_query_s": 0.0,
+  "cache": {
+    "hits": 138217,
+    "misses": 48015,
+    "maxsize": 100000,
+    "currsize": 48015
+  },
+  "reach_cache": {
+    "hits": 330638,
+    "misses": 109210,
+    "maxsize": 100000,
+    "currsize": 100000
+  },
+  "seats": [
+    {
+      "seat": 0,
+      "p": 0.5377353709857972,
+      "elapsed_s": 1.1063012881204486,
+      "plan_nodes": 17015,
+      "eval_nodes": 209,
+      "search_branches": 193248,
+      "skipped_search_branches": 68668,
+      "network_queries": 0,
+      "network_rows": 0,
+      "network_query_s": 0.0,
+      "policy_cache": {
+        "hits": 44443,
+        "misses": 8095,
+        "maxsize": 100000,
+        "currsize": 8095
+      },
+      "reach_cache": {
+        "hits": 106044,
+        "misses": 18954,
+        "maxsize": 100000,
+        "currsize": 18954
+      }
+    },
+    {
+      "seat": 1,
+      "p": 0.463259931025831,
+      "elapsed_s": 2.7602241174317896,
+      "plan_nodes": 73803,
+      "eval_nodes": 1481,
+      "search_branches": 600689,
+      "skipped_search_branches": 163793,
+      "network_queries": 0,
+      "network_rows": 0,
+      "network_query_s": 0.0,
+      "policy_cache": {
+        "hits": 138217,
+        "misses": 48015,
+        "maxsize": 100000,
+        "currsize": 48015
+      },
+      "reach_cache": {
+        "hits": 330638,
+        "misses": 109210,
+        "maxsize": 100000,
+        "currsize": 100000
+      }
+    }
+  ]
+}

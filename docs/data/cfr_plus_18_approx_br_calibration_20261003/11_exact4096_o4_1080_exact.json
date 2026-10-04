@@ -1,0 +1,8 @@
+{
+  "label": "11_exact4096_o4_1080",
+  "policy_dir": "/root/liars_poker/artifacts/cfr_plus_18_average_fit_long_run_check/main_20261002/1080m/O4/warm_05000",
+  "p_first": 0.537819225248823,
+  "p_second": 0.4634043918240834,
+  "exploitability": 0.0012236170729063023,
+  "elapsed_s": 18.712523519061506
+}

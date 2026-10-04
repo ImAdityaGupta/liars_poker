@@ -1,0 +1,47 @@
+[train] c_low 0m iter=1 iter_s=3.831 fit=0.325/0.048s
+[train] c_low 5m iter=323 iter_s=2.153 fit=0.116/0.026s
+[train] c_low 10m iter=536 iter_s=0.744 fit=0.092/0.022s
+[train] c_low 15m iter=732 iter_s=2.076 fit=0.124/0.020s
+[train] c_low 20m iter=1017 iter_s=0.780 fit=0.103/0.022s
+[train] c_low 25m iter=1355 iter_s=1.030 fit=0.107/0.024s
+[train] c_low 30m iter=1719 iter_s=1.205 fit=0.097/0.019s
+[snapshot] c_low 0030m iter=1719
+[train] c_low 35m iter=2031 iter_s=0.772 fit=0.105/0.023s
+[train] c_low 40m iter=2396 iter_s=0.707 fit=0.083/0.016s
+[train] c_low 45m iter=2641 iter_s=0.761 fit=0.090/0.020s
+[train] c_low 50m iter=2860 iter_s=2.058 fit=0.124/0.020s
+[train] c_low 55m iter=3106 iter_s=0.853 fit=0.090/0.020s
+[train] c_low 60m iter=3456 iter_s=0.624 fit=0.084/0.016s
+[audit queued] c_low 2000 at iter=3456
+[snapshot] c_low 0060m iter=3456
+[train] c_low 65m iter=3721 iter_s=0.718 fit=0.098/0.021s
+[train] c_low 70m iter=4118 iter_s=0.737 fit=0.105/0.024s
+[train] c_low 75m iter=4499 iter_s=2.072 fit=0.116/0.022s
+[train] c_low 80m iter=4807 iter_s=1.881 fit=0.133/0.022s
+[train] c_low 85m iter=5028 iter_s=1.983 fit=0.130/0.023s
+[train] c_low 90m iter=5225 iter_s=0.463 fit=0.080/0.018s
+[snapshot] c_low 0090m iter=5225
+[train] c_low 95m iter=5491 iter_s=0.852 fit=0.101/0.024s
+[train] c_low 100m iter=5844 iter_s=0.806 fit=0.089/0.018s
+[train] c_low 105m iter=6122 iter_s=1.920 fit=0.127/0.024s
+[train] c_low 110m iter=6305 iter_s=1.952 fit=0.132/0.024s
+[train] c_low 115m iter=6540 iter_s=1.903 fit=0.113/0.022s
+[train] c_low 120m iter=6744 iter_s=1.756 fit=0.109/0.018s
+[audit queued] c_low 6000 at iter=6744
+[snapshot] c_low 0120m iter=6744
+[train] c_low 125m iter=6887 iter_s=1.928 fit=0.124/0.024s
+[train] c_low 130m iter=7128 iter_s=0.675 fit=0.086/0.019s
+[train] c_low 135m iter=7560 iter_s=0.677 fit=0.096/0.020s
+[train] c_low 140m iter=7984 iter_s=0.717 fit=0.106/0.026s
+[train] c_low 145m iter=8417 iter_s=0.676 fit=0.082/0.020s
+[train] c_low 150m iter=8847 iter_s=0.476 fit=0.078/0.017s
+Traceback (most recent call last):
+  File "/root/liars_poker_20261001/scripts/run_cfr_plus_18_neural_o4_cpu.py", line 500, in <module>
+    main()
+  File "/root/liars_poker_20261001/scripts/run_cfr_plus_18_neural_o4_cpu.py", line 492, in main
+    run_train(args)
+  File "/root/liars_poker_20261001/scripts/run_cfr_plus_18_neural_o4_cpu.py", line 316, in run_train
+    checkpoint(trainer, ckpt, progress)
+  File "/root/liars_poker_20261001/scripts/run_cfr_plus_18_neural_o4_cpu.py", line 72, in checkpoint
+    raise OSError(f"Insufficient disk space to checkpoint {path}")
+OSError: Insufficient disk space to checkpoint /root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/latest_checkpoint.pt

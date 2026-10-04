@@ -4,7 +4,7 @@ This guide is meant to answer a specific question: **what, exactly, did we repla
 
 Start with [the runnable orientation notebook](../../notebooks/sep_2026/repo_reorientation.ipynb) if the game rules or artifacts are unfamiliar. For an entry point into the implementation, see the [neural CFR+ code map](neural_cfr_plus_code_map.md). The most relevant implementation files are [the game and rules](../../liars_poker/env.py), [exact dense CFR+](../../liars_poker/algo/cfr_plus_dense.py), [the neural trainer](../../liars_poker/algo/deep_cfr_plus.py), and [GPU traversal](../../liars_poker/algo/neural_cfr_plus_gpu.py).
 
-CPU experiments carried out after this guide are recorded in [sampled regret targets](../experiments/2026-09-27_23-28-05_cfr_plus_sampled_targets_cpu.md), [the exact shadow ledger](../experiments/2026-09-27_23-58-30_cfr_plus_shadow_neural_cpu.md), [the neural clip-order intervention](../experiments/2026-09-28_01-04-50_cfr_plus_neural_clip_order_cpu.md), [its longer run](../experiments/2026-09-28_01-17-33_cfr_plus_neural_clip_order_long_cpu.md), and [the depth target audit](../experiments/2026-09-28_01-47-35_cfr_plus_neural_depth_target_audit_cpu.md). Each note states the question, possible outcomes, measured results, and limits.
+CPU experiments carried out after this guide are recorded in [sampled regret targets](../experiments/18_claim/2026-09-27_23-28-05_cfr_plus_sampled_targets_cpu.md), [the exact shadow ledger](../experiments/18_claim/2026-09-27_23-58-30_cfr_plus_shadow_neural_cpu.md), [the neural clip-order intervention](../experiments/18_claim/2026-09-28_01-04-50_cfr_plus_neural_clip_order_cpu.md), [its longer run](../experiments/18_claim/2026-09-28_01-17-33_cfr_plus_neural_clip_order_long_cpu.md), and [the depth target audit](../experiments/18_claim/2026-09-28_01-47-35_cfr_plus_neural_depth_target_audit_cpu.md). Each note states the question, possible outcomes, measured results, and limits.
 
 ### How to read this guide
 
@@ -339,7 +339,7 @@ and puts that common target back on each visit before fitting. It does not
 create an exact expectation from two samples, keep an exact regret ledger, or
 change the network architecture. The CPU experiments found a substantial
 exact-exploitability improvement from this change on the 18-claim game;
-[the longer factorial](../experiments/2026-09-28_13-29-00_18_claim_target_sampling_factorial.md)
+[the longer factorial](../experiments/18_claim/2026-09-28_13-29-00_18_claim_target_sampling_factorial.md)
 is the most direct follow-up. The toy example explains the direction of the
 bias, not the full measured effect. In particular, if the old scaled regret
 is already positive and far from zero, clipping may not change either sample;
@@ -424,7 +424,7 @@ For a fair comparison, keep separate records of **training minutes,
 iterations, root deals, sampled claim edges, regret records, fit steps,
 and peak memory**. Comparing only iteration count favors expensive updates;
 comparing only record count can hide correlation among records. The
-[18-claim target/traversal experiment](../experiments/2026-09-28_13-29-00_18_claim_target_sampling_factorial.md)
+[18-claim target/traversal experiment](../experiments/18_claim/2026-09-28_13-29-00_18_claim_target_sampling_factorial.md)
 illustrates this: 4,096 traversals often produce stronger progress *per
 iteration*, but complete far fewer iterations within the same time.
 

@@ -1,0 +1,47 @@
+[train] c0 0m iter=1 iter_s=3.570 fit=0.338/0.052s
+[train] c0 5m iter=331 iter_s=2.096 fit=0.137/0.023s
+[train] c0 10m iter=548 iter_s=0.725 fit=0.085/0.019s
+[train] c0 15m iter=748 iter_s=2.071 fit=0.112/0.019s
+[train] c0 20m iter=1025 iter_s=0.744 fit=0.104/0.021s
+[train] c0 25m iter=1361 iter_s=0.994 fit=0.093/0.026s
+[train] c0 30m iter=1730 iter_s=1.393 fit=0.099/0.017s
+[snapshot] c0 0030m iter=1730
+[train] c0 35m iter=2044 iter_s=1.213 fit=0.087/0.019s
+[train] c0 40m iter=2419 iter_s=0.685 fit=0.082/0.017s
+[train] c0 45m iter=2668 iter_s=0.704 fit=0.084/0.017s
+[train] c0 50m iter=2889 iter_s=2.010 fit=0.132/0.024s
+[train] c0 55m iter=3139 iter_s=0.860 fit=0.100/0.019s
+[train] c0 60m iter=3495 iter_s=0.802 fit=0.084/0.019s
+[audit queued] c0 2000 at iter=3495
+[snapshot] c0 0060m iter=3495
+[train] c0 65m iter=3764 iter_s=0.744 fit=0.104/0.023s
+[train] c0 70m iter=4165 iter_s=0.716 fit=0.101/0.028s
+[train] c0 75m iter=4553 iter_s=1.910 fit=0.113/0.020s
+[train] c0 80m iter=4870 iter_s=1.805 fit=0.123/0.023s
+[train] c0 85m iter=5098 iter_s=1.843 fit=0.124/0.019s
+[train] c0 90m iter=5304 iter_s=0.649 fit=0.085/0.019s
+[snapshot] c0 0090m iter=5304
+[train] c0 95m iter=5581 iter_s=0.815 fit=0.104/0.019s
+[train] c0 100m iter=5933 iter_s=0.823 fit=0.103/0.023s
+[train] c0 105m iter=6215 iter_s=1.853 fit=0.122/0.022s
+[train] c0 110m iter=6400 iter_s=1.976 fit=0.120/0.023s
+[train] c0 115m iter=6636 iter_s=1.849 fit=0.114/0.020s
+[train] c0 120m iter=6844 iter_s=1.670 fit=0.108/0.018s
+[audit queued] c0 6000 at iter=6844
+[snapshot] c0 0120m iter=6844
+[train] c0 125m iter=6991 iter_s=1.966 fit=0.130/0.022s
+[train] c0 130m iter=7236 iter_s=0.657 fit=0.090/0.020s
+[train] c0 135m iter=7675 iter_s=0.702 fit=0.081/0.018s
+[train] c0 140m iter=8104 iter_s=0.699 fit=0.113/0.022s
+[train] c0 145m iter=8537 iter_s=0.688 fit=0.081/0.017s
+[train] c0 150m iter=8972 iter_s=0.685 fit=0.087/0.020s
+Traceback (most recent call last):
+  File "/root/liars_poker_20261001/scripts/run_cfr_plus_18_neural_o4_cpu.py", line 500, in <module>
+    main()
+  File "/root/liars_poker_20261001/scripts/run_cfr_plus_18_neural_o4_cpu.py", line 492, in main
+    run_train(args)
+  File "/root/liars_poker_20261001/scripts/run_cfr_plus_18_neural_o4_cpu.py", line 316, in run_train
+    checkpoint(trainer, ckpt, progress)
+  File "/root/liars_poker_20261001/scripts/run_cfr_plus_18_neural_o4_cpu.py", line 72, in checkpoint
+    raise OSError(f"Insufficient disk space to checkpoint {path}")
+OSError: Insufficient disk space to checkpoint /root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/latest_checkpoint.pt

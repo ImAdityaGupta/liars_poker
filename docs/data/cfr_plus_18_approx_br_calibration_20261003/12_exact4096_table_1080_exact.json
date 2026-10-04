@@ -1,0 +1,8 @@
+{
+  "label": "12_exact4096_table_1080",
+  "policy_dir": "/root/liars_poker/artifacts/cfr_plus_18_batched_bridge_controls/main_20260930/exact4096/policy_snapshots/1080m/average_policy",
+  "p_first": 0.5377395439535396,
+  "p_second": 0.46326559782329807,
+  "exploitability": 0.001005141776837748,
+  "elapsed_s": 18.995208935812116
+}

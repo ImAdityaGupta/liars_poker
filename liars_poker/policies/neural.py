@@ -225,17 +225,19 @@ class NeuralPolicy(Policy):
 
 
 def compile_neural_to_dense(
-    policy: NeuralPolicy,
+    policy: Policy,
     *,
     batch_size: int = 16_384,
 ):
-    """Compile a neural strategy to a dense policy in batched infoset blocks.
+    """Compile a neural policy to dense form in batched infoset blocks.
 
     ``batch_size`` is the approximate maximum number of (history, hand)
-    infosets passed through a network at once.
+    infosets passed through a network at once. Regret networks use clipped
+    regret matching; strategy networks use a masked softmax.
     """
 
     from .tabular_dense import DenseTabularPolicy
+    from .neural_regret import NeuralRegretMatchingPolicy
 
     dense = DenseTabularPolicy(policy.spec)
     hands = dense.hands
@@ -270,8 +272,20 @@ def compile_neural_to_dense(
                 x = torch.from_numpy(features.reshape(-1, input_dim)).to(policy.device)
                 logits = model(x).reshape(len(hids), n_hands, action_dim)
                 legal_mask = torch.from_numpy(dense.legal_mask[hids]).to(policy.device)
-                logits = logits.masked_fill(~legal_mask[:, None, :], -torch.inf)
-                dense.S[hids] = torch.softmax(logits, dim=2).cpu().numpy()
+                if isinstance(policy, NeuralRegretMatchingPolicy):
+                    positive = logits.clamp_min(0).masked_fill(~legal_mask[:, None, :], 0)
+                    totals = positive.sum(dim=2, keepdim=True)
+                    uniform = legal_mask.float()
+                    uniform /= uniform.sum(dim=1, keepdim=True).clamp_min(1)
+                    probs = torch.where(
+                        totals > 0,
+                        positive / totals.clamp_min(torch.finfo(positive.dtype).tiny),
+                        uniform[:, None, :],
+                    )
+                else:
+                    logits = logits.masked_fill(~legal_mask[:, None, :], -torch.inf)
+                    probs = torch.softmax(logits, dim=2)
+                dense.S[hids] = probs.cpu().numpy()
 
     dense.recompute_likelihoods()
     return dense

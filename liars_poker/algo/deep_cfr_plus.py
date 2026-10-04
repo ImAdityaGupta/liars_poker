@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from contextlib import nullcontext
+import math
 import random
 import time
 from pathlib import Path
@@ -31,6 +32,11 @@ _CUDA_AGGREGATE_SPEC = GameSpec(
     claim_kinds=("RankHigh", "Pair", "TwoPair", "Trips"),
     suit_symmetry=True,
 )
+_CUDA_AGGREGATE_30_SPEC = GameSpec(
+    ranks=5, suits=4, hand_size=3,
+    claim_kinds=("RankHigh", "Pair", "TwoPair", "Trips", "Quads"),
+    suit_symmetry=True,
+)
 
 
 class RecentBuffer:
@@ -47,6 +53,7 @@ class RecentBuffer:
         self.size = 0
         self.seen = 0
         self.cursor = 0
+        self.require_no_overwrite = False
 
     def add(
         self,
@@ -57,6 +64,8 @@ class RecentBuffer:
         rng: random.Random | None = None,
     ) -> None:
         _ = rng
+        if self.require_no_overwrite and self.seen >= self.capacity:
+            raise OverflowError("Regret buffer cannot hold all rows from this iteration")
         idx = self.cursor
         self.features[idx] = features
         self.targets[idx] = targets
@@ -82,6 +91,8 @@ class RecentBuffer:
         n = int(features.shape[0])
         if n == 0:
             return
+        if self.require_no_overwrite and self.seen + n > self.capacity:
+            raise OverflowError("Regret buffer cannot hold all rows from this iteration")
 
         weights_arr = (
             np.full(n, float(weights), dtype=np.float32)
@@ -188,6 +199,7 @@ class DeviceRecentBuffer:
         self.size = 0
         self.seen = 0
         self.cursor = 0
+        self.require_no_overwrite = False
 
     def add(
         self,
@@ -220,6 +232,8 @@ class DeviceRecentBuffer:
         n = int(features.shape[0])
         if n == 0:
             return
+        if self.require_no_overwrite and self.seen + n > self.capacity:
+            raise OverflowError("Regret buffer cannot hold all rows from this iteration")
 
         if torch.is_tensor(weights):
             weights_t = weights.to(self.device, dtype=torch.float32)
@@ -338,8 +352,13 @@ class DeepCFRPlusTrainer:
         strategy_buffer_capacity: int = 100_000,
         learning_rate: float = 1e-3,
         batch_size: int = 256,
+        regret_batch_size: int | None = None,
+        regret_fit_schedule: str = "constant",
+        regret_fit_learning_rate: float | None = None,
         regret_train_steps: int = 100,
         strategy_train_steps: int = 50,
+        use_regret_network: bool = True,
+        use_strategy_network: bool = True,
         strategy_weighting: str = "linear",
         regret_positive_weight: float = 0.5,
         regret_target_mode: str = "clip_each_record",
@@ -398,8 +417,20 @@ class DeepCFRPlusTrainer:
 
         self.learning_rate = float(learning_rate)
         self.batch_size = int(batch_size)
+        self.regret_batch_size = int(batch_size if regret_batch_size is None else regret_batch_size)
+        self.regret_fit_schedule = regret_fit_schedule
+        self.regret_fit_learning_rate = (None if regret_fit_learning_rate is None
+                                         else float(regret_fit_learning_rate))
+        if self.regret_batch_size <= 0 or regret_fit_schedule not in {"constant", "cosine"}:
+            raise ValueError("Invalid regret fitting batch size or schedule")
+        if self.regret_fit_learning_rate is not None and self.regret_fit_learning_rate <= 0:
+            raise ValueError("Regret fitting learning rate must be positive")
+        if self.regret_fit_schedule == "cosine" and self.regret_fit_learning_rate is None:
+            raise ValueError("A cosine regret fit requires regret_fit_learning_rate")
         self.regret_train_steps = int(regret_train_steps)
         self.strategy_train_steps = int(strategy_train_steps)
+        self.use_regret_network = bool(use_regret_network)
+        self.use_strategy_network = bool(use_strategy_network)
         if strategy_weighting not in {"linear", "uniform", "quadratic"}:
             raise ValueError("strategy_weighting must be uniform, linear, or quadratic.")
         self.strategy_weighting = strategy_weighting
@@ -582,30 +613,37 @@ class DeepCFRPlusTrainer:
         except TypeError:
             self._grad_scaler = torch.cuda.amp.GradScaler(enabled=scaler_enabled)
 
-        self.regret_nets = [
-            NeuralMLP(
-                self.encoder.input_dim,
-                self.encoder.action_dim,
-                self.regret_hidden_sizes,
-            ).to(self.device)
-            for _ in range(2)
-        ]
-        self.regret_reader = NetworkRegretReader(self.regret_nets, self._forward)
-        self.strategy_nets = [
-            NeuralMLP(
-                self.encoder.input_dim,
-                self.encoder.action_dim,
-                self.strategy_hidden_sizes,
-            ).to(self.device)
-            for _ in range(2)
-        ]
+        self.regret_nets = (
+            [
+                NeuralMLP(
+                    self.encoder.input_dim,
+                    self.encoder.action_dim,
+                    self.regret_hidden_sizes,
+                ).to(self.device)
+                for _ in range(2)
+            ]
+            if self.use_regret_network else []
+        )
+        self.regret_reader = (
+            NetworkRegretReader(self.regret_nets, self._forward)
+            if self.use_regret_network else None
+        )
+        self.strategy_nets = (
+            [
+                NeuralMLP(
+                    self.encoder.input_dim,
+                    self.encoder.action_dim,
+                    self.strategy_hidden_sizes,
+                ).to(self.device)
+                for _ in range(2)
+            ]
+            if self.use_strategy_network else []
+        )
         self.regret_optimizers = [
-            self._make_optimizer(model)
-            for model in self.regret_nets
+            self._make_optimizer(model) for model in self.regret_nets
         ]
         self.strategy_optimizers = [
-            self._make_optimizer(model)
-            for model in self.strategy_nets
+            self._make_optimizer(model) for model in self.strategy_nets
         ]
 
         recent_cls = DeviceRecentBuffer if self.device_replay else RecentBuffer
@@ -621,15 +659,23 @@ class DeepCFRPlusTrainer:
             )
             for _ in range(2)
         ]
-        self.strategy_buffers = [
-            reservoir_cls(
-                strategy_buffer_capacity,
-                self.encoder.input_dim,
-                self.encoder.action_dim,
-                *reservoir_args,
-            )
-            for _ in range(2)
-        ]
+        for buffer in self.regret_buffers:
+            buffer.require_no_overwrite = self.regret_target_mode in {
+                "aggregate_then_clip", "aggregate_then_clip_on_read"
+            }
+        self.strategy_buffer_capacity = int(strategy_buffer_capacity)
+        self.strategy_buffers = (
+            [
+                reservoir_cls(
+                    strategy_buffer_capacity,
+                    self.encoder.input_dim,
+                    self.encoder.action_dim,
+                    *reservoir_args,
+                )
+                for _ in range(2)
+            ]
+            if self.use_strategy_network else []
+        )
         self.regret_validation_buffers = [
             recent_cls(
                 validation_buffer_capacity,
@@ -639,31 +685,38 @@ class DeepCFRPlusTrainer:
             )
             for _ in range(2)
         ]
-        self.strategy_validation_buffers = [
-            reservoir_cls(
-                validation_buffer_capacity,
-                self.encoder.input_dim,
-                self.encoder.action_dim,
-                *reservoir_args,
-            )
-            for _ in range(2)
-        ]
+        self.strategy_validation_buffers = (
+            [
+                reservoir_cls(
+                    validation_buffer_capacity,
+                    self.encoder.input_dim,
+                    self.encoder.action_dim,
+                    *reservoir_args,
+                )
+                for _ in range(2)
+            ]
+            if self.use_strategy_network else []
+        )
 
     def _validate_regret_target_mode(self, mode: str, positive_weight: float) -> None:
-        if mode not in {"clip_each_record", "aggregate_then_clip", "clip_on_read"}:
+        if mode not in {
+            "clip_each_record", "aggregate_then_clip", "clip_on_read",
+            "aggregate_then_clip_on_read",
+        }:
             raise ValueError("Unknown regret_target_mode.")
-        if mode == "clip_on_read" and positive_weight != 0.0:
-            raise ValueError("clip_on_read requires regret_positive_weight=0 (plain MSE).")
+        if mode in {"clip_on_read", "aggregate_then_clip_on_read"} and positive_weight != 0.0:
+            raise ValueError(f"{mode} requires regret_positive_weight=0 (plain MSE).")
         cuda_aggregate_supported = (
-            self.device.type == "cuda" and self.spec == _CUDA_AGGREGATE_SPEC
+            self.device.type == "cuda"
+            and self.spec in {_CUDA_AGGREGATE_SPEC, _CUDA_AGGREGATE_30_SPEC}
         )
-        if mode == "aggregate_then_clip" and (
+        if mode in {"aggregate_then_clip", "aggregate_then_clip_on_read"} and (
             self.traversal_backend != "gpu_native"
             or (self.device.type != "cpu" and not cuda_aggregate_supported)
         ):
             raise ValueError(
                 "aggregate_then_clip requires gpu_native traversal on CPU "
-                "or CUDA with the 18-claim reference spec."
+                "or CUDA with a validated 18- or 30-claim spec."
             )
         if self.regret_increment_reach_mode in {"visit_fraction", "visit_count"} and (
             mode != "aggregate_then_clip" or self.validation_fraction != 0.0
@@ -675,7 +728,7 @@ class DeepCFRPlusTrainer:
                 and self.regret_accumulation_mode != "cumulative"):
             raise ValueError("visit_count requires cumulative regret accumulation.")
         if self.regret_accumulation_mode == "cumulative" and mode not in {
-            "aggregate_then_clip", "clip_on_read"
+            "aggregate_then_clip", "clip_on_read", "aggregate_then_clip_on_read"
         }:
             raise ValueError("cumulative regrets require aggregate_then_clip or clip_on_read.")
 
@@ -685,6 +738,10 @@ class DeepCFRPlusTrainer:
         self._validate_regret_target_mode(mode, weight)
         self.regret_target_mode = mode
         self.regret_positive_weight = weight
+        for buffer in self.regret_buffers:
+            buffer.require_no_overwrite = mode in {
+                "aggregate_then_clip", "aggregate_then_clip_on_read"
+            }
 
     def _make_optimizer(self, model: NeuralMLP) -> torch.optim.Optimizer:
         kwargs = {"lr": self.learning_rate}
@@ -718,18 +775,26 @@ class DeepCFRPlusTrainer:
 
     @property
     def regret_net_p1(self) -> NeuralMLP:
+        if not self.use_regret_network:
+            raise RuntimeError("This trainer has no neural regret network")
         return self.regret_nets[0]
 
     @property
     def regret_net_p2(self) -> NeuralMLP:
+        if not self.use_regret_network:
+            raise RuntimeError("This trainer has no neural regret network")
         return self.regret_nets[1]
 
     @property
     def strategy_net_p1(self) -> NeuralMLP:
+        if not self.use_strategy_network:
+            raise RuntimeError("This trainer has no neural strategy network")
         return self.strategy_nets[0]
 
     @property
     def strategy_net_p2(self) -> NeuralMLP:
+        if not self.use_strategy_network:
+            raise RuntimeError("This trainer has no neural strategy network")
         return self.strategy_nets[1]
 
     @staticmethod
@@ -796,6 +861,8 @@ class DeepCFRPlusTrainer:
 
     def regret_values_tensor(self, pid: int, features: torch.Tensor) -> torch.Tensor:
         """Read current raw regrets from the active network or table source."""
+        if self.regret_reader is None:
+            raise RuntimeError("No regret reader is active")
         return self.regret_reader.read(pid, features)
 
     def current_policy_dense(self, *, batch_size: int = 16_384) -> DenseTabularPolicy:
@@ -916,6 +983,8 @@ class DeepCFRPlusTrainer:
         strategy: np.ndarray,
         legal_mask: np.ndarray,
     ) -> None:
+        if not self.use_strategy_network:
+            return
         weight = self._strategy_record_weight()
         if isinstance(self.strategy_buffers[pid], DeviceReservoirBuffer):
             features = torch.as_tensor(features, device=self.device)
@@ -1083,7 +1152,7 @@ class DeepCFRPlusTrainer:
         return self._traverse(history + (action,), p1_hand, p2_hand, traverser)
 
     def _train_regret(self, pid: int, traversals_per_player: int) -> float:
-        if self.regret_target_mode == "aggregate_then_clip":
+        if self.regret_target_mode in {"aggregate_then_clip", "aggregate_then_clip_on_read"}:
             reach_weighted = self.regret_increment_reach_mode in {"visit_fraction", "visit_count"}
             self._aggregate_regret_targets(
                 self.regret_buffers[pid],
@@ -1092,9 +1161,13 @@ class DeepCFRPlusTrainer:
                 roots=traversals_per_player if reach_weighted else None,
                 accumulation_mode=self.regret_accumulation_mode,
                 reach_mode=self.regret_increment_reach_mode,
+                clip_result=self.regret_target_mode == "aggregate_then_clip",
             )
             if not reach_weighted:
-                self._aggregate_regret_targets(self.regret_validation_buffers[pid])
+                self._aggregate_regret_targets(
+                    self.regret_validation_buffers[pid],
+                    clip_result=self.regret_target_mode == "aggregate_then_clip",
+                )
         return self._train_model(
             self.regret_nets[pid],
             self.regret_optimizers[pid],
@@ -1112,6 +1185,7 @@ class DeepCFRPlusTrainer:
         roots: int | None = None,
         accumulation_mode: str = "normalized",
         reach_mode: str = "visit_fraction",
+        clip_result: bool = True,
     ) -> None:
         """Mean raw updates per infoset; optionally scale fresh regret by visits or visits/K.
 
@@ -1120,6 +1194,7 @@ class DeepCFRPlusTrainer:
         """
         n = buffer.size
         if not n:
+            buffer.last_group_count = 0
             return
         if roots is not None and (roots <= 0 or buffer.seen != n or model is None):
             raise ValueError("visit-based updates require all records from this iteration")
@@ -1129,6 +1204,7 @@ class DeepCFRPlusTrainer:
             buffer.features[:n], dim=0, return_inverse=True
         )
         groups = int(inverse.max().item()) + 1
+        buffer.last_group_count = groups
         weights = buffer.weights[:n].double()
         totals = torch.zeros(groups, dtype=torch.float64, device=buffer.device)
         totals.index_add_(0, inverse, weights)
@@ -1160,10 +1236,12 @@ class DeepCFRPlusTrainer:
                 previous_scale = (iteration - 1.0) / iteration
                 fresh = grouped_raw - previous_scale * old
                 grouped_raw = previous_scale * old + visit_multiplier[:, None] * fresh
-        grouped = torch.relu(grouped_raw)
+        grouped = torch.relu(grouped_raw) if clip_result else grouped_raw
         buffer.targets[:n] = grouped.index_select(0, inverse).float() * buffer.legal_masks[:n]
 
     def _train_strategy(self, pid: int) -> float:
+        if not self.use_strategy_network:
+            return 0.0
         return self._train_model(
             self.strategy_nets[pid],
             self.strategy_optimizers[pid],
@@ -1186,8 +1264,16 @@ class DeepCFRPlusTrainer:
 
         model.train()
         total_loss = torch.zeros((), dtype=torch.float32, device=self.device)
-        for _ in range(steps):
-            features, targets, masks, weights = buffer.sample(self.batch_size, self.rng)
+        for step in range(steps):
+            if not strategy_loss and self.regret_fit_learning_rate is not None:
+                lr = self.regret_fit_learning_rate
+                if self.regret_fit_schedule == "cosine":
+                    fraction = step / max(steps - 1, 1)
+                    lr = 1e-4 + 0.5 * (lr - 1e-4) * (1 + math.cos(math.pi * fraction))
+                for group in optimizer.param_groups:
+                    group["lr"] = lr
+            sample_size = self.batch_size if strategy_loss else self.regret_batch_size
+            features, targets, masks, weights = buffer.sample(sample_size, self.rng)
             if torch.is_tensor(features):
                 x = features
                 y = targets
@@ -1293,8 +1379,9 @@ class DeepCFRPlusTrainer:
             }
 
     def validation_metrics(self, *, max_records: int = 2048) -> Dict[str, object]:
-        return {
-            "regret": [
+        result: Dict[str, object] = {"regret": [], "strategy": []}
+        if self.use_regret_network:
+            result["regret"] = [
                 self._validation_metrics_for(
                     self.regret_nets[pid],
                     self.regret_validation_buffers[pid],
@@ -1302,8 +1389,9 @@ class DeepCFRPlusTrainer:
                     max_records=max_records,
                 )
                 for pid in (0, 1)
-            ],
-            "strategy": [
+            ]
+        if self.use_strategy_network:
+            result["strategy"] = [
                 self._validation_metrics_for(
                     self.strategy_nets[pid],
                     self.strategy_validation_buffers[pid],
@@ -1311,12 +1399,15 @@ class DeepCFRPlusTrainer:
                     max_records=max_records,
                 )
                 for pid in (0, 1)
-            ],
-        }
+            ]
+        return result
 
     def run_iteration(self, *, traversals_per_player: int = 100) -> Dict[str, object]:
         self.iteration += 1
-        strategy_seen_before = [buffer.seen for buffer in self.strategy_buffers]
+        strategy_seen_before = (
+            [buffer.seen for buffer in self.strategy_buffers]
+            if self.use_strategy_network else []
+        )
 
         traversal_s = 0.0
         regret_training_s = 0.0
@@ -1378,12 +1469,18 @@ class DeepCFRPlusTrainer:
             regret_training_s += time.perf_counter() - start
 
         start = time.perf_counter()
-        strategy_losses = [self._train_strategy(pid) for pid in (0, 1)]
+        strategy_losses = (
+            [self._train_strategy(pid) for pid in (0, 1)]
+            if self.use_strategy_network else []
+        )
         self._synchronize()
         strategy_training_s = time.perf_counter() - start
 
         regret_seen = [buffer.seen for buffer in self.regret_buffers]
-        strategy_seen = [buffer.seen for buffer in self.strategy_buffers]
+        strategy_seen = (
+            [buffer.seen for buffer in self.strategy_buffers]
+            if self.use_strategy_network else []
+        )
         full_edges = action_sampling_totals["full_claim_edges"]
         sampled_edges = action_sampling_totals["sampled_claim_edges"]
         weight_sum = action_sampling_totals["regret_weight_sum"]
@@ -1413,6 +1510,8 @@ class DeepCFRPlusTrainer:
             "regret_records_seen": regret_seen,
             "strategy_records_seen": strategy_seen,
             "new_regret_records": list(regret_seen),
+            "visited_infosets": [getattr(buffer, "last_group_count", None)
+                                 for buffer in self.regret_buffers],
             "new_strategy_records": [
                 after - before for before, after in zip(strategy_seen_before, strategy_seen)
             ],
@@ -1425,6 +1524,8 @@ class DeepCFRPlusTrainer:
         }
 
     def average_policy(self) -> NeuralPolicy:
+        if not self.use_strategy_network:
+            raise RuntimeError("This trainer has no neural average-policy network")
         policy = NeuralPolicy(
             self.spec,
             hidden_sizes=self.strategy_hidden_sizes,
@@ -1435,7 +1536,7 @@ class DeepCFRPlusTrainer:
         return policy.eval()
 
     def checkpoint_dict(self) -> Dict[str, object]:
-        return {
+        state = {
             "version": self.CHECKPOINT_VERSION,
             "spec": _spec_to_dict(self.spec),
             "config": {
@@ -1443,11 +1544,19 @@ class DeepCFRPlusTrainer:
                 "strategy_hidden_sizes": self.strategy_hidden_sizes,
                 "seed": self.seed,
                 "regret_buffer_capacity": self.regret_buffers[0].capacity,
-                "strategy_buffer_capacity": self.strategy_buffers[0].capacity,
+                "strategy_buffer_capacity": (
+                    self.strategy_buffers[0].capacity
+                    if self.use_strategy_network else 0
+                ),
                 "learning_rate": self.learning_rate,
                 "batch_size": self.batch_size,
+                "regret_batch_size": self.regret_batch_size,
+                "regret_fit_schedule": self.regret_fit_schedule,
+                "regret_fit_learning_rate": self.regret_fit_learning_rate,
                 "regret_train_steps": self.regret_train_steps,
                 "strategy_train_steps": self.strategy_train_steps,
+                "use_regret_network": self.use_regret_network,
+                "use_strategy_network": self.use_strategy_network,
                 "strategy_weighting": self.strategy_weighting,
                 "regret_positive_weight": self.regret_positive_weight,
                 "regret_target_mode": self.regret_target_mode,
@@ -1474,15 +1583,7 @@ class DeepCFRPlusTrainer:
                 "compile_models": self.compile_models,
             },
             "iteration": self.iteration,
-            "regret_nets": [model.state_dict() for model in self.regret_nets],
-            "strategy_nets": [model.state_dict() for model in self.strategy_nets],
-            "regret_optimizers": [opt.state_dict() for opt in self.regret_optimizers],
-            "strategy_optimizers": [opt.state_dict() for opt in self.strategy_optimizers],
             "grad_scaler": self._grad_scaler.state_dict(),
-            "strategy_buffers": [buffer.state_dict() for buffer in self.strategy_buffers],
-            "strategy_validation_buffers": [
-                buffer.state_dict() for buffer in self.strategy_validation_buffers
-            ],
             "random_state": self.rng.getstate(),
             "validation_random_state": self.validation_rng.getstate(),
             "torch_random_state": torch.get_rng_state(),
@@ -1490,6 +1591,17 @@ class DeepCFRPlusTrainer:
                 torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None
             ),
         }
+        if self.use_regret_network:
+            state["regret_nets"] = [model.state_dict() for model in self.regret_nets]
+            state["regret_optimizers"] = [opt.state_dict() for opt in self.regret_optimizers]
+        if self.use_strategy_network:
+            state["strategy_nets"] = [model.state_dict() for model in self.strategy_nets]
+            state["strategy_optimizers"] = [opt.state_dict() for opt in self.strategy_optimizers]
+            state["strategy_buffers"] = [buffer.state_dict() for buffer in self.strategy_buffers]
+            state["strategy_validation_buffers"] = [
+                buffer.state_dict() for buffer in self.strategy_validation_buffers
+            ]
+        return state
 
     def save_checkpoint(self, path: str | Path) -> None:
         path = Path(path)
@@ -1503,7 +1615,10 @@ class DeepCFRPlusTrainer:
         *,
         device: str | torch.device = "cpu",
     ) -> "DeepCFRPlusTrainer":
-        state = torch.load(path, map_location=device, weights_only=False)
+        # Keep the serialized replay on CPU while constructing device buffers.
+        # Loading a large checkpoint directly onto CUDA temporarily duplicates
+        # the reservoir and can OOM before the old allocation is released.
+        state = torch.load(path, map_location="cpu", weights_only=False)
         config = dict(state["config"])
         if (
             "regret_hidden_sizes" not in config
@@ -1534,41 +1649,57 @@ class DeepCFRPlusTrainer:
         config.setdefault("fused_optimizer", None)
         config.setdefault("amp_dtype", None)
         config.setdefault("compile_models", False)
+        config.setdefault("use_regret_network", True)
+        config.setdefault("use_strategy_network", True)
         trainer = cls(_spec_from_dict(state["spec"]), device=device, **config)
         trainer.iteration = int(state["iteration"])
 
-        for model, model_state in zip(trainer.regret_nets, state["regret_nets"]):
-            model.load_state_dict(model_state)
-            model.eval()
-        for model, model_state in zip(trainer.strategy_nets, state["strategy_nets"]):
-            model.load_state_dict(model_state)
-            model.eval()
-        for optimizer, optimizer_state in zip(trainer.regret_optimizers, state["regret_optimizers"]):
-            optimizer.load_state_dict(optimizer_state)
-        for optimizer, optimizer_state in zip(
-            trainer.strategy_optimizers,
-            state["strategy_optimizers"],
-        ):
-            optimizer.load_state_dict(optimizer_state)
+        if trainer.use_regret_network:
+            for model, model_state in zip(trainer.regret_nets, state["regret_nets"]):
+                model.load_state_dict(model_state)
+                model.eval()
+            for optimizer, optimizer_state in zip(trainer.regret_optimizers, state["regret_optimizers"]):
+                optimizer.load_state_dict(optimizer_state)
+        if trainer.use_strategy_network:
+            for model, model_state in zip(trainer.strategy_nets, state["strategy_nets"]):
+                model.load_state_dict(model_state)
+                model.eval()
+            for optimizer, optimizer_state in zip(
+                trainer.strategy_optimizers,
+                state["strategy_optimizers"],
+            ):
+                optimizer.load_state_dict(optimizer_state)
         if "grad_scaler" in state:
             trainer._grad_scaler.load_state_dict(state["grad_scaler"])
 
-        def restore_reservoir(buffer_state):
-            if trainer.device_replay:
-                return DeviceReservoirBuffer.from_state_dict(
-                    buffer_state,
-                    device=trainer.device,
-                )
-            return ReservoirBuffer.from_state_dict(buffer_state)
+        if trainer.use_strategy_network:
+            def restore_into(existing, saved):
+                if int(saved["capacity"]) != existing.capacity:
+                    raise ValueError("Reservoir capacity differs from checkpoint")
+                size = int(saved["size"])
+                if trainer.device_replay:
+                    # The constructor has already allocated the full GPU buffer.
+                    # Copy into it directly, in chunks: constructing a second
+                    # buffer or staging all saved rows on CUDA doubles peak use.
+                    for name in ("features", "targets", "legal_masks", "weights"):
+                        destination = getattr(existing, name)
+                        source = saved[name]
+                        for start in range(0, size, 131_072):
+                            end = min(start + 131_072, size)
+                            destination[start:end].copy_(source[start:end])
+                    existing.size = size
+                    existing.seen = int(saved["seen"])
+                    return existing
+                return ReservoirBuffer.from_state_dict(saved)
 
-        trainer.strategy_buffers = [
-            restore_reservoir(buffer_state)
-            for buffer_state in state["strategy_buffers"]
-        ]
-        if "strategy_validation_buffers" in state:
+            trainer.strategy_buffers = [
+                restore_into(existing, saved) for existing, saved in
+                zip(trainer.strategy_buffers, state["strategy_buffers"])
+            ]
             trainer.strategy_validation_buffers = [
-                restore_reservoir(buffer_state)
-                for buffer_state in state["strategy_validation_buffers"]
+                restore_into(existing, saved) for existing, saved in
+                zip(trainer.strategy_validation_buffers,
+                    state.get("strategy_validation_buffers", []))
             ]
         trainer.rng.setstate(state["random_state"])
         if "validation_random_state" in state:

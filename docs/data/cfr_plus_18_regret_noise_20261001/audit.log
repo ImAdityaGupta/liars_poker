@@ -1,0 +1,1421 @@
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_anneal 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_low 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c0 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 2000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+usage: audit_cfr_plus_18_late_update.py [-h] --checkpoint CHECKPOINT
+                                        --output-dir OUTPUT_DIR
+                                        [--player {0,1}] [--roots ROOTS]
+                                        [--threads THREADS]
+                                        [--save-infoset-metrics] [--held-out]
+audit_cfr_plus_18_late_update.py: error: insufficient VM RAM or disk headroom for the isolated audit
+[audit retry] c_batch 6000: Command '['/root/liars_poker_20261001/.venv/bin/python', '/root/liars_poker_20261001/scripts/audit_cfr_plus_18_late_update.py', '--checkpoint', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/6000/input.pt', '--output-dir', '/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/6000/player1', '--player', '0', '--roots', '4096', '--threads', '2', '--held-out']' returned non-zero exit status 2.
+loading /root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/input.pt
+building exact reference
+sampling and fitting one player update
+summarizing all legal infosets
+{
+  "checkpoint": "/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/input.pt",
+  "checkpoint_sha256": "f149ff38068d1e199439597a78f9d17b0ff25d8a63deba5824870008ae78c500",
+  "utc": "2026-10-01T16:47:58.392206+00:00",
+  "player": 0,
+  "source_iteration": 3506,
+  "audited_iteration": 3507,
+  "roots": 4096,
+  "target_mode": "aggregate_then_clip",
+  "accumulation_mode": "cumulative",
+  "sampled_records": 52215,
+  "visited_infosets": 3802,
+  "regret_fit_loss": 0.002233435632660985,
+  "elapsed_s": 64.64970628870651,
+  "training_mse": 0.001644294010475278,
+  "held_out_mse": 0.0030007290188223124,
+  "held_out_records": 51807,
+  "available_ram_gib_after": 105.60008239746094,
+  "disk_free_gib_after": 10.513504028320312
+}
+loading /root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/input.pt
+building exact reference
+sampling and fitting one player update
+summarizing all legal infosets
+{
+  "checkpoint": "/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/2000/input.pt",
+  "checkpoint_sha256": "f149ff38068d1e199439597a78f9d17b0ff25d8a63deba5824870008ae78c500",
+  "utc": "2026-10-01T16:48:58.840879+00:00",
+  "player": 1,
+  "source_iteration": 3506,
+  "audited_iteration": 3507,
+  "roots": 4096,
+  "target_mode": "aggregate_then_clip",
+  "accumulation_mode": "cumulative",
+  "sampled_records": 10788,
+  "visited_infosets": 829,
+  "regret_fit_loss": 0.004667906556278467,
+  "elapsed_s": 56.73283694498241,
+  "training_mse": 0.0033449307084083557,
+  "held_out_mse": 0.007124293129891157,
+  "held_out_records": 10685,
+  "available_ram_gib_after": 106.09394836425781,
+  "disk_free_gib_after": 10.51333999633789
+}
+[audit done] c_anneal 2000
+loading /root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/6000/input.pt
+building exact reference
+sampling and fitting one player update
+summarizing all legal infosets
+{
+  "checkpoint": "/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/6000/input.pt",
+  "checkpoint_sha256": "99bd99105d0e6e23d21a9e725fba0ab8008b4eae8d132e5ed3206504526dffb1",
+  "utc": "2026-10-01T16:50:07.034053+00:00",
+  "player": 0,
+  "source_iteration": 6809,
+  "audited_iteration": 6810,
+  "roots": 4096,
+  "target_mode": "aggregate_then_clip",
+  "accumulation_mode": "cumulative",
+  "sampled_records": 51405,
+  "visited_infosets": 3261,
+  "regret_fit_loss": 0.0018730409210547805,
+  "elapsed_s": 64.2480467571877,
+  "training_mse": 0.001525819068774581,
+  "held_out_mse": 0.003481706604361534,
+  "held_out_records": 51332,
+  "available_ram_gib_after": 105.83313751220703,
+  "disk_free_gib_after": 11.21792221069336
+}
+loading /root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/6000/input.pt
+building exact reference
+sampling and fitting one player update
+summarizing all legal infosets
+{
+  "checkpoint": "/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_anneal/audits/6000/input.pt",
+  "checkpoint_sha256": "99bd99105d0e6e23d21a9e725fba0ab8008b4eae8d132e5ed3206504526dffb1",
+  "utc": "2026-10-01T16:51:07.055342+00:00",
+  "player": 1,
+  "source_iteration": 6809,
+  "audited_iteration": 6810,
+  "roots": 4096,
+  "target_mode": "aggregate_then_clip",
+  "accumulation_mode": "cumulative",
+  "sampled_records": 10560,
+  "visited_infosets": 707,
+  "regret_fit_loss": 0.00416188919916749,
+  "elapsed_s": 56.080500456970185,
+  "training_mse": 0.0031682976987212896,
+  "held_out_mse": 0.0053529320284724236,
+  "held_out_records": 10504,
+  "available_ram_gib_after": 105.89057159423828,
+  "disk_free_gib_after": 11.217708587646484
+}
+[audit done] c_anneal 6000
+loading /root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/input.pt
+building exact reference
+sampling and fitting one player update
+summarizing all legal infosets
+{
+  "checkpoint": "/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/input.pt",
+  "checkpoint_sha256": "e24143cba693623c648283aa58394c92485eb34e15f0554536cbce4463fb94c3",
+  "utc": "2026-10-01T16:52:11.322391+00:00",
+  "player": 0,
+  "source_iteration": 3456,
+  "audited_iteration": 3457,
+  "roots": 4096,
+  "target_mode": "aggregate_then_clip",
+  "accumulation_mode": "cumulative",
+  "sampled_records": 52539,
+  "visited_infosets": 4935,
+  "regret_fit_loss": 0.002529568737372756,
+  "elapsed_s": 60.30810578400269,
+  "training_mse": 0.0022535636089742184,
+  "held_out_mse": 0.0030261988285928965,
+  "held_out_records": 52108,
+  "available_ram_gib_after": 107.40860366821289,
+  "disk_free_gib_after": 12.620113372802734
+}
+loading /root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/input.pt
+building exact reference
+sampling and fitting one player update
+summarizing all legal infosets
+{
+  "checkpoint": "/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/2000/input.pt",
+  "checkpoint_sha256": "e24143cba693623c648283aa58394c92485eb34e15f0554536cbce4463fb94c3",
+  "utc": "2026-10-01T16:53:07.736239+00:00",
+  "player": 1,
+  "source_iteration": 3456,
+  "audited_iteration": 3457,
+  "roots": 4096,
+  "target_mode": "aggregate_then_clip",
+  "accumulation_mode": "cumulative",
+  "sampled_records": 10914,
+  "visited_infosets": 903,
+  "regret_fit_loss": 0.004585160408169031,
+  "elapsed_s": 53.01366414874792,
+  "training_mse": 0.0035979871172457933,
+  "held_out_mse": 0.006072623189538717,
+  "held_out_records": 10854,
+  "available_ram_gib_after": 107.36046981811523,
+  "disk_free_gib_after": 12.619922637939453
+}
+[audit done] c_low 2000
+loading /root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/6000/input.pt
+building exact reference
+sampling and fitting one player update
+summarizing all legal infosets
+{
+  "checkpoint": "/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/6000/input.pt",
+  "checkpoint_sha256": "4d1bc53f9b167477926dd56a51377ef1433d7f698c560e9b9124a09a94f47125",
+  "utc": "2026-10-01T16:54:12.050606+00:00",
+  "player": 0,
+  "source_iteration": 6744,
+  "audited_iteration": 6745,
+  "roots": 4096,
+  "target_mode": "aggregate_then_clip",
+  "accumulation_mode": "cumulative",
+  "sampled_records": 52344,
+  "visited_infosets": 4017,
+  "regret_fit_loss": 0.0023912042379379272,
+  "elapsed_s": 60.881872883066535,
+  "training_mse": 0.001806224463507533,
+  "held_out_mse": 0.0034237089566886425,
+  "held_out_records": 52333,
+  "available_ram_gib_after": 105.27349853515625,
+  "disk_free_gib_after": 12.625587463378906
+}
+loading /root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/6000/input.pt
+building exact reference
+sampling and fitting one player update
+summarizing all legal infosets
+{
+  "checkpoint": "/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_low/audits/6000/input.pt",
+  "checkpoint_sha256": "4d1bc53f9b167477926dd56a51377ef1433d7f698c560e9b9124a09a94f47125",
+  "utc": "2026-10-01T16:55:12.980596+00:00",
+  "player": 1,
+  "source_iteration": 6744,
+  "audited_iteration": 6745,
+  "roots": 4096,
+  "target_mode": "aggregate_then_clip",
+  "accumulation_mode": "cumulative",
+  "sampled_records": 10731,
+  "visited_infosets": 764,
+  "regret_fit_loss": 0.004805375821888447,
+  "elapsed_s": 56.980157270561904,
+  "training_mse": 0.004061274230480194,
+  "held_out_mse": 0.006909832824021578,
+  "held_out_records": 10725,
+  "available_ram_gib_after": 107.01655578613281,
+  "disk_free_gib_after": 13.323238372802734
+}
+[audit done] c_low 6000
+loading /root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/input.pt
+building exact reference
+sampling and fitting one player update
+summarizing all legal infosets
+{
+  "checkpoint": "/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/input.pt",
+  "checkpoint_sha256": "8e7c1f2a6fc5dbb2ae87bdb9279e9e0c56beb3fa734ca259f79a32e290b88798",
+  "utc": "2026-10-01T16:56:15.899534+00:00",
+  "player": 0,
+  "source_iteration": 3495,
+  "audited_iteration": 3496,
+  "roots": 4096,
+  "target_mode": "aggregate_then_clip",
+  "accumulation_mode": "cumulative",
+  "sampled_records": 51661,
+  "visited_infosets": 3639,
+  "regret_fit_loss": 0.002187569858506322,
+  "elapsed_s": 59.47341216634959,
+  "training_mse": 0.0018597490852698684,
+  "held_out_mse": 0.003333992324769497,
+  "held_out_records": 51340,
+  "available_ram_gib_after": 107.67006301879883,
+  "disk_free_gib_after": 14.027809143066406
+}
+loading /root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/input.pt
+building exact reference
+sampling and fitting one player update
+summarizing all legal infosets
+{
+  "checkpoint": "/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/2000/input.pt",
+  "checkpoint_sha256": "8e7c1f2a6fc5dbb2ae87bdb9279e9e0c56beb3fa734ca259f79a32e290b88798",
+  "utc": "2026-10-01T16:57:11.194129+00:00",
+  "player": 1,
+  "source_iteration": 3495,
+  "audited_iteration": 3496,
+  "roots": 4096,
+  "target_mode": "aggregate_then_clip",
+  "accumulation_mode": "cumulative",
+  "sampled_records": 10491,
+  "visited_infosets": 589,
+  "regret_fit_loss": 0.0025771616492420435,
+  "elapsed_s": 52.009566546883434,
+  "training_mse": 0.0021910392679274082,
+  "held_out_mse": 0.004887114278972149,
+  "held_out_records": 10690,
+  "available_ram_gib_after": 107.35874557495117,
+  "disk_free_gib_after": 14.027633666992188
+}
+[audit done] c0 2000
+loading /root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/6000/input.pt
+building exact reference
+sampling and fitting one player update
+summarizing all legal infosets
+{
+  "checkpoint": "/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/6000/input.pt",
+  "checkpoint_sha256": "bc56129b0e2fd4ce4b3e5a6525f22654023128b591fbad6d258599c58e4b089e",
+  "utc": "2026-10-01T16:58:17.712475+00:00",
+  "player": 0,
+  "source_iteration": 6844,
+  "audited_iteration": 6845,
+  "roots": 4096,
+  "target_mode": "aggregate_then_clip",
+  "accumulation_mode": "cumulative",
+  "sampled_records": 52715,
+  "visited_infosets": 4350,
+  "regret_fit_loss": 0.002055457793176174,
+  "elapsed_s": 63.0751571781002,
+  "training_mse": 0.0018372826743870974,
+  "held_out_mse": 0.003875292371958494,
+  "held_out_records": 52985,
+  "available_ram_gib_after": 105.24163436889648,
+  "disk_free_gib_after": 14.033302307128906
+}
+loading /root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/6000/input.pt
+building exact reference
+sampling and fitting one player update
+summarizing all legal infosets
+{
+  "checkpoint": "/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c0/audits/6000/input.pt",
+  "checkpoint_sha256": "bc56129b0e2fd4ce4b3e5a6525f22654023128b591fbad6d258599c58e4b089e",
+  "utc": "2026-10-01T16:59:20.329918+00:00",
+  "player": 1,
+  "source_iteration": 6844,
+  "audited_iteration": 6845,
+  "roots": 4096,
+  "target_mode": "aggregate_then_clip",
+  "accumulation_mode": "cumulative",
+  "sampled_records": 10759,
+  "visited_infosets": 685,
+  "regret_fit_loss": 0.0035005819518119097,
+  "elapsed_s": 58.57369072595611,
+  "training_mse": 0.0029753483831882477,
+  "held_out_mse": 0.007088831625878811,
+  "held_out_records": 10784,
+  "available_ram_gib_after": 106.03755950927734,
+  "disk_free_gib_after": 14.033008575439453
+}
+[audit done] c0 6000
+loading /root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/input.pt
+building exact reference
+sampling and fitting one player update
+summarizing all legal infosets
+{
+  "checkpoint": "/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/input.pt",
+  "checkpoint_sha256": "72e5e9aeca5943705c40ac2d80221e02b64e82d62d0672ca2ff190426352b6b8",
+  "utc": "2026-10-01T17:00:33.107814+00:00",
+  "player": 0,
+  "source_iteration": 3466,
+  "audited_iteration": 3467,
+  "roots": 4096,
+  "target_mode": "aggregate_then_clip",
+  "accumulation_mode": "cumulative",
+  "sampled_records": 53103,
+  "visited_infosets": 4147,
+  "regret_fit_loss": 0.0016001457115635276,
+  "elapsed_s": 69.02211292693391,
+  "training_mse": 0.0009230549330823123,
+  "held_out_mse": 0.0036381634417921305,
+  "held_out_records": 52809,
+  "available_ram_gib_after": 106.12764739990234,
+  "disk_free_gib_after": 17.53101348876953
+}
+loading /root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/input.pt
+building exact reference
+sampling and fitting one player update
+summarizing all legal infosets
+{
+  "checkpoint": "/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/input.pt",
+  "checkpoint_sha256": "72e5e9aeca5943705c40ac2d80221e02b64e82d62d0672ca2ff190426352b6b8",
+  "utc": "2026-10-01T17:01:35.907101+00:00",
+  "player": 1,
+  "source_iteration": 3466,
+  "audited_iteration": 3467,
+  "roots": 4096,
+  "target_mode": "aggregate_then_clip",
+  "accumulation_mode": "cumulative",
+  "sampled_records": 10576,
+  "visited_infosets": 685,
+  "regret_fit_loss": 0.0036693476140499115,
+  "elapsed_s": 58.95924024283886,
+  "training_mse": 0.002542458474636078,
+  "held_out_mse": 0.006153879687190056,
+  "held_out_records": 10474,
+  "available_ram_gib_after": 105.67571640014648,
+  "disk_free_gib_after": 17.530899047851562
+}
+[audit done] c_batch 2000
+loading /root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/6000/input.pt
+building exact reference
+sampling and fitting one player update
+summarizing all legal infosets
+{
+  "checkpoint": "/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/6000/input.pt",
+  "checkpoint_sha256": "e2f1e8cabe87f8f5cca0e4d047bcf68a6296f87147495fac2a8fda450f9e6f1a",
+  "utc": "2026-10-01T17:02:48.205862+00:00",
+  "player": 0,
+  "source_iteration": 6677,
+  "audited_iteration": 6678,
+  "roots": 4096,
+  "target_mode": "aggregate_then_clip",
+  "accumulation_mode": "cumulative",
+  "sampled_records": 51442,
+  "visited_infosets": 3540,
+  "regret_fit_loss": 0.0017081545665860176,
+  "elapsed_s": 68.31051004584879,
+  "training_mse": 0.0011257525766268373,
+  "held_out_mse": 0.0035087629221379757,
+  "held_out_records": 51690,
+  "available_ram_gib_after": 105.47560119628906,
+  "disk_free_gib_after": 18.234466552734375
+}
+loading /root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/6000/input.pt
+building exact reference
+sampling and fitting one player update
+summarizing all legal infosets
+{
+  "checkpoint": "/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/6000/input.pt",
+  "checkpoint_sha256": "e2f1e8cabe87f8f5cca0e4d047bcf68a6296f87147495fac2a8fda450f9e6f1a",
+  "utc": "2026-10-01T17:03:51.394072+00:00",
+  "player": 1,
+  "source_iteration": 6677,
+  "audited_iteration": 6678,
+  "roots": 4096,
+  "target_mode": "aggregate_then_clip",
+  "accumulation_mode": "cumulative",
+  "sampled_records": 10492,
+  "visited_infosets": 558,
+  "regret_fit_loss": 0.0030269373673945665,
+  "elapsed_s": 59.19369759969413,
+  "training_mse": 0.0021214354783296585,
+  "held_out_mse": 0.004196050111204386,
+  "held_out_records": 10491,
+  "available_ram_gib_after": 105.54607391357422,
+  "disk_free_gib_after": 18.23430633544922
+}
+[audit done] c_batch 6000

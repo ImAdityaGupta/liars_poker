@@ -250,7 +250,7 @@ The first clean comparison on the 18-claim game is:
 ```
 
 Use `K = 1,024` root traversals per player per iteration first, matching one
-arm of the [330-minute 18-claim experiment](../experiments/2026-09-28_13-29-00_18_claim_target_sampling_factorial.md), then check `K = 4,096`.
+arm of the [330-minute 18-claim experiment](../experiments/18_claim/2026-09-28_13-29-00_18_claim_target_sampling_factorial.md), then check `K = 4,096`.
 Fully expand traverser actions until the reach/value comparison is understood.
 Keep aggregate-then-clip versus clip-each and traverser-action sampling as
 later, separately named switches. Compare frozen-policy target estimates

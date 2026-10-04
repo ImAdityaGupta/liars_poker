@@ -1,0 +1,8 @@
+{
+  "status": "target_reached",
+  "iteration": 22507,
+  "measured_training_min": 1140.0082991121415,
+  "target_training_hours": 19.0,
+  "cumulative_roots_per_player": 191725632,
+  "updated_utc": "2026-10-02T23:06:06.271932+00:00"
+}

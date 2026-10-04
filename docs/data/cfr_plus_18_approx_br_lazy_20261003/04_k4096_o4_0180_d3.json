@@ -1,0 +1,84 @@
+{
+  "label": "04_k4096_o4_0180",
+  "policy_dir": "/root/liars_poker/artifacts/cfr_plus_18_neural_o4_cpu/main_20261001/neural_o4_k4096/policy_snapshots/0180m/average_policy",
+  "kind": "lazy_neural",
+  "depth": 3,
+  "epsilon": 0.0001,
+  "p_first": 0.5398062237562845,
+  "p_second": 0.46617930301419225,
+  "discovered_exploitability": 0.005985526770476701,
+  "dense_p_first": 0.5398062234408787,
+  "dense_p_second": 0.4661793087592464,
+  "seat_differences": [
+    3.1540581257871736e-10,
+    -5.745054154626672e-09
+  ],
+  "matches_dense": true,
+  "load_s": 0.014724592212587595,
+  "elapsed_s": 33.48910371400416,
+  "network_queries": 111813,
+  "network_rows": 1118130,
+  "network_query_s": 18.991629891097546,
+  "cache": {
+    "hits": 844290,
+    "misses": 111813,
+    "maxsize": 100000,
+    "currsize": 100000
+  },
+  "reach_cache": {
+    "hits": 1682951,
+    "misses": 581445,
+    "maxsize": 100000,
+    "currsize": 100000
+  },
+  "seats": [
+    {
+      "seat": 0,
+      "p": 0.5398062237562845,
+      "elapsed_s": 11.249110404402018,
+      "plan_nodes": 83441,
+      "eval_nodes": 452,
+      "search_branches": 539858,
+      "skipped_search_branches": 2045,
+      "network_queries": 40262,
+      "network_rows": 402620,
+      "network_query_s": 6.878809198271483,
+      "policy_cache": {
+        "hits": 204685,
+        "misses": 40262,
+        "maxsize": 100000,
+        "currsize": 40262
+      },
+      "reach_cache": {
+        "hits": 538716,
+        "misses": 99787,
+        "maxsize": 100000,
+        "currsize": 99787
+      }
+    },
+    {
+      "seat": 1,
+      "p": 0.46617930301419225,
+      "elapsed_s": 22.239960139617324,
+      "plan_nodes": 302172,
+      "eval_nodes": 2055,
+      "search_branches": 1683407,
+      "skipped_search_branches": 4554,
+      "network_queries": 111813,
+      "network_rows": 1118130,
+      "network_query_s": 18.991629891097546,
+      "policy_cache": {
+        "hits": 844290,
+        "misses": 111813,
+        "maxsize": 100000,
+        "currsize": 100000
+      },
+      "reach_cache": {
+        "hits": 1682951,
+        "misses": 581445,
+        "maxsize": 100000,
+        "currsize": 100000
+      }
+    }
+  ]
+}

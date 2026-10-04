@@ -63,15 +63,27 @@ def append_jsonl(path: Path, value: dict) -> None:
         out.flush()
 
 
-def make_trainer(arm: str) -> TabularDiscountTrainer:
+def make_trainer(arm: str, *,
+                 trainer_type: type[TabularDiscountTrainer] = TabularDiscountTrainer,
+                 use_neural_regret: bool = True,
+                 use_neural_strategy: bool = True,
+                 average_weight_power: int | None = None,
+                 ) -> TabularDiscountTrainer:
     rule, weighting = ARMS[arm]
-    trainer = TabularDiscountTrainer(
+    trainer_kwargs = {}
+    if average_weight_power is not None:
+        trainer_kwargs["average_weight_power"] = average_weight_power
+    trainer = trainer_type(
         SPEC, device="cpu", seed=SEED, update_rule=rule,
-        regret_hidden_sizes=(512, 512), strategy_hidden_sizes=(256, 256),
+        regret_hidden_sizes=((512, 512) if use_neural_regret else ()),
+        strategy_hidden_sizes=((256, 256) if use_neural_strategy else ()),
         learning_rate=1e-3, batch_size=1024,
         regret_buffer_capacity=4_000_000,
-        strategy_buffer_capacity=2_000_000,
-        regret_train_steps=0, strategy_train_steps=6,
+        strategy_buffer_capacity=(2_000_000 if use_neural_strategy else 0),
+        regret_train_steps=0,
+        strategy_train_steps=(6 if use_neural_strategy else 0),
+        use_regret_network=use_neural_regret,
+        use_strategy_network=use_neural_strategy,
         strategy_weighting=weighting,
         regret_target_mode="aggregate_then_clip",
         regret_increment_reach_mode="none",
@@ -79,6 +91,7 @@ def make_trainer(arm: str) -> TabularDiscountTrainer:
         traversal_backend="gpu_native", traversal_batch_size=512,
         device_replay=True, fused_optimizer=False,
         validation_fraction=0.0,
+        **trainer_kwargs,
     )
     trainer.activate_regret_table()
     return trainer
@@ -86,7 +99,9 @@ def make_trainer(arm: str) -> TabularDiscountTrainer:
 
 def save_progress(trainer: TabularDiscountTrainer, run_dir: Path,
                   measured_s: float, next_monitor_s: float,
-                  pending_evaluation: str | None = None) -> None:
+                  pending_evaluation: str | None = None, *,
+                  next_snapshot_s: float | None = None,
+                  pending_snapshot: str | None = None) -> None:
     checkpoint = run_dir / "latest_checkpoint.pt"
     old_size = checkpoint.stat().st_size if checkpoint.exists() else 0
     if shutil.disk_usage(run_dir).free < old_size + 2 * 1024**3:
@@ -98,6 +113,9 @@ def save_progress(trainer: TabularDiscountTrainer, run_dir: Path,
         "pending_evaluation": pending_evaluation,
         "updated_utc": utc(),
     }
+    if next_snapshot_s is not None:
+        progress["next_snapshot_s"] = next_snapshot_s
+        progress["pending_snapshot"] = pending_snapshot
     # The progress cursor and trainer state are one atomic commit. state.json
     # is a convenient view only; a restart reads the checkpoint's cursor.
     payload = trainer.checkpoint_dict()
@@ -135,7 +153,9 @@ def plot_comparison(root: Path) -> None:
             ax.grid(alpha=0.25)
     axes[1].legend(fontsize=7, ncol=2)
     fig.tight_layout()
-    tmp = root / "comparison.tmp.png"
+    # Independent arms may evaluate at the same time. Give each writer its
+    # own temporary file, then atomically replace the shared final image.
+    tmp = root / f"comparison.{os.getpid()}.tmp.png"
     fig.savefig(tmp, dpi=160)
     plt.close(fig)
     os.replace(tmp, root / "comparison.png")

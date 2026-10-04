@@ -1,0 +1,21 @@
+{
+  "arm": "c_low",
+  "average_refit": "O4: warm Adam, cosine 1e-3 to 1e-5, batch 16384, weighted CE, 5000 steps per player",
+  "created_utc": "2026-10-01T13:12:04.843063+00:00",
+  "regret_accumulation_mode": "cumulative",
+  "regret_batch_size": 1024,
+  "regret_buffer_capacity": 4000000,
+  "regret_fit_learning_rate": 0.0003,
+  "regret_fit_schedule": "constant",
+  "regret_increment_reach_mode": "none",
+  "regret_positive_weight": 0.0,
+  "regret_target_mode": "aggregate_then_clip",
+  "regret_train_steps": 24,
+  "roots_per_player": 4096,
+  "seed": 17,
+  "snapshot_minutes": 30.0,
+  "strategy_buffer_capacity": 2000000,
+  "strategy_train_steps": 6,
+  "traversal_backend": "gpu_native on CUDA",
+  "traversal_batch_size": 512
+}

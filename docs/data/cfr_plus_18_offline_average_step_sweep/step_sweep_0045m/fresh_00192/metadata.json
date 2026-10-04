@@ -1,0 +1,41 @@
+{
+  "format_version": 1,
+  "root": {
+    "children": [],
+    "data": {
+      "hidden_sizes": [
+        256,
+        256
+      ],
+      "kind": "NeuralPolicy",
+      "spec": {
+        "claim_kinds": [
+          "RankHigh",
+          "Pair",
+          "TwoPair",
+          "Trips"
+        ],
+        "hand_size": 2,
+        "ranks": 4,
+        "suit_symmetry": true,
+        "suits": 4
+      },
+      "version": 1
+    },
+    "kind": "NeuralPolicy",
+    "prefix": "",
+    "version": 1
+  },
+  "spec": {
+    "claim_kinds": [
+      "RankHigh",
+      "Pair",
+      "TwoPair",
+      "Trips"
+    ],
+    "hand_size": 2,
+    "ranks": 4,
+    "suit_symmetry": true,
+    "suits": 4
+  }
+}

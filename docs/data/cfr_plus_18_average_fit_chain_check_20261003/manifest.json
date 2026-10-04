@@ -1,0 +1,40 @@
+{
+  "start": {
+    "17031": "/root/liars_poker/artifacts/cfr_plus_18_average_fit_optimizer/main_20261001/0030m/O4_cosine_b16384_ce/resume_state.pt",
+    "17032": "/root/liars_poker/artifacts/cfr_plus_18_average_fit_optimizer/main_20261001/0030m/O4_cosine_b16384_ce_seed17032/resume_state.pt"
+  },
+  "links": [
+    [
+      "0045m",
+      "/root/liars_poker/artifacts/cfr_plus_18_offline_average_study/exact4096_0045m_checkpoint.pt"
+    ],
+    [
+      "0120m",
+      "/root/liars_poker/artifacts/cfr_plus_18_offline_average_study/exact4096_0120m_checkpoint.pt"
+    ],
+    [
+      "1080m",
+      "/root/liars_poker/artifacts/cfr_plus_18_batched_bridge_controls/main_20260930/exact4096/latest_checkpoint.pt"
+    ]
+  ],
+  "recipes": {
+    "CH_hi_2k": [
+      0.001,
+      1e-05,
+      2000
+    ],
+    "CH_lo_2k": [
+      0.0001,
+      1e-06,
+      2000
+    ],
+    "CH_hi_5k": [
+      0.001,
+      1e-05,
+      5000
+    ]
+  },
+  "batch": 16384,
+  "loss": "weighted cross entropy",
+  "created_utc": "2026-10-03T02:29:06Z"
+}

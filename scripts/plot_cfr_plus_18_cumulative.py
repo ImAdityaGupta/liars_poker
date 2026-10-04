@@ -92,7 +92,21 @@ print(out)
 
 # Current continuation graph: preserve the completed N/K failures while
 # extending the conditional curve and adding the separate N-weighted follow-up.
-live = rows(DATA / "cfr_plus_18_cumulative_live_20260929.jsonl")
+live = []
+for arm_name, eval_file, event_file in (
+    ("conditional4096", "cfr_plus_18_cumulative_conditional4096_extension_20260929.jsonl",
+     "cfr_plus_18_cumulative_conditional4096_extension_events_20260929.jsonl"),
+    ("n4096", "cfr_plus_18_cumulative_visit_count_n4096_20260929.jsonl",
+     "cfr_plus_18_cumulative_visit_count_n4096_events_20260929.jsonl"),
+):
+    evaluations = rows(DATA / eval_file)
+    iterations = {int(event["label"][:-1]): int(event["iteration"])
+                  for event in rows(DATA / event_file)
+                  if event.get("event") == "policy_snapshot"}
+    for row in evaluations:
+        minute = int(row["snapshot_min"])
+        if minute in iterations:
+            live.append({**row, "arm": arm_name, "iteration": iterations[minute]})
 fig, axes = plt.subplots(1, 2, figsize=(14, 5.8), layout="constrained")
 series = [
     ("nk1024", "Cumulative N/K, 1,024 roots", "#007f5f", "archive"),

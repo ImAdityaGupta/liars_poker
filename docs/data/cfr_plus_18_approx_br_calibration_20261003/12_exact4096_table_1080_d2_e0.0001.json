@@ -1,0 +1,31 @@
+{
+  "label": "12_exact4096_table_1080",
+  "policy_dir": "/root/liars_poker/artifacts/cfr_plus_18_batched_bridge_controls/main_20260930/exact4096/policy_snapshots/1080m/average_policy",
+  "method": "M2",
+  "depth": 2,
+  "epsilon": 0.0001,
+  "p_first": 0.5377353709857972,
+  "p_second": 0.4632595553426493,
+  "discovered_exploitability": 0.0009949263284463328,
+  "elapsed_s": 1.0032669785432518,
+  "seats": [
+    {
+      "seat": 0,
+      "p": 0.5377353709857972,
+      "elapsed_s": 0.23346189968287945,
+      "plan_nodes": 2870,
+      "eval_nodes": 209,
+      "search_branches": 47337,
+      "skipped_search_branches": 19281
+    },
+    {
+      "seat": 1,
+      "p": 0.4632595553426493,
+      "elapsed_s": 0.7698050788603723,
+      "plan_nodes": 14620,
+      "eval_nodes": 1405,
+      "search_branches": 191115,
+      "skipped_search_branches": 70933
+    }
+  ]
+}

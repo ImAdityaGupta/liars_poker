@@ -39,7 +39,14 @@ SPEC = GameSpec(
     suit_symmetry=True,
 )
 
-MODES = ("clip_each_record", "aggregate_then_clip", "clip_on_read")
+MODES = (
+    "clip_each_record", "aggregate_then_clip", "clip_on_read",
+    "aggregate_then_clip_on_read",
+)
+
+
+def positive_weight_for_mode(mode: str) -> float:
+    return 0.0 if mode in {"clip_on_read", "aggregate_then_clip_on_read"} else 0.5
 
 
 def json_default(value):
@@ -77,7 +84,11 @@ def atomic_checkpoint(trainer: DeepCFRPlusTrainer, path: Path) -> None:
 
 def make_trainer(mode: str, seed: int, reach_mode: str = "none",
                  regret_buffer_capacity: int = 500_000,
-                 accumulation_mode: str = "normalized") -> DeepCFRPlusTrainer:
+                 accumulation_mode: str = "normalized",
+                 regret_positive_weight: float | None = None) -> DeepCFRPlusTrainer:
+    positive_weight = (positive_weight_for_mode(mode)
+                       if regret_positive_weight is None
+                       else float(regret_positive_weight))
     return DeepCFRPlusTrainer(
         SPEC,
         device="cpu",
@@ -92,7 +103,7 @@ def make_trainer(mode: str, seed: int, reach_mode: str = "none",
         batch_size=1024,
         regret_train_steps=24,
         strategy_train_steps=6,
-        regret_positive_weight=0.0 if mode == "clip_on_read" else 0.5,
+        regret_positive_weight=positive_weight,
         regret_target_mode=mode,
         regret_increment_reach_mode=reach_mode,
         regret_accumulation_mode=accumulation_mode,
@@ -119,7 +130,8 @@ def run_arm(root: Path, mode: str, seed: int, arm_hours: float,
             snapshot_minutes: float, checkpoint_minutes: float,
             traversals: int, resume: bool, reach_mode: str = "none",
             regret_buffer_capacity: int = 500_000,
-            accumulation_mode: str = "normalized") -> None:
+            accumulation_mode: str = "normalized",
+            regret_positive_weight: float | None = None) -> None:
     arm = root / f"{mode}__seed_{seed}"
     arm.mkdir(parents=True, exist_ok=True)
     training_path = arm / "training.jsonl"
@@ -140,8 +152,11 @@ def run_arm(root: Path, mode: str, seed: int, arm_hours: float,
             print(f"[already complete] {arm.name}: {measured_s / 60:.1f}m", flush=True)
             return
         trainer = DeepCFRPlusTrainer.load_checkpoint(checkpoint_path, device="cpu")
+        expected_positive_weight = (positive_weight_for_mode(mode)
+                                    if regret_positive_weight is None
+                                    else float(regret_positive_weight))
         if (trainer.seed != seed or trainer.regret_target_mode != mode
-                or trainer.regret_positive_weight != (0.0 if mode == "clip_on_read" else 0.5)
+                or trainer.regret_positive_weight != expected_positive_weight
                 or trainer.regret_increment_reach_mode != reach_mode
                 or trainer.regret_accumulation_mode != accumulation_mode
                 or trainer.regret_buffers[0].capacity != regret_buffer_capacity
@@ -160,7 +175,8 @@ def run_arm(root: Path, mode: str, seed: int, arm_hours: float,
         print(f"[resume] {arm.name}: {measured_s / 60:.1f}m iter={trainer.iteration}", flush=True)
     else:
         trainer = make_trainer(
-            mode, seed, reach_mode, regret_buffer_capacity, accumulation_mode
+            mode, seed, reach_mode, regret_buffer_capacity, accumulation_mode,
+            regret_positive_weight,
         )
         atomic_json(manifest_path, {
             "run_type": "cfr_plus_18_target_order_cpu",
@@ -186,15 +202,15 @@ def run_arm(root: Path, mode: str, seed: int, arm_hours: float,
                 "regret_accumulation_mode": accumulation_mode,
             },
         })
-        if mode == "clip_on_read":
-            # A restart before the first timed checkpoint can resume from zero.
-            atomic_checkpoint(trainer, checkpoint_path)
-            atomic_json(state_path, {
-                "status": "running", "mode": mode, "seed": seed,
-                "iteration": trainer.iteration, "measured_training_s": 0.0,
-                "next_snapshot_s": next_snapshot_s,
-                "next_checkpoint_s": next_checkpoint_s,
-            })
+        # Always make a resumable initial state, so interruption before the
+        # first timed checkpoint loses no more than startup overhead.
+        atomic_checkpoint(trainer, checkpoint_path)
+        atomic_json(state_path, {
+            "status": "running", "mode": mode, "seed": seed,
+            "iteration": trainer.iteration, "measured_training_s": 0.0,
+            "next_snapshot_s": next_snapshot_s,
+            "next_checkpoint_s": next_checkpoint_s,
+        })
 
     start = time.perf_counter()
     target_s = arm_hours * 3600.0
@@ -305,6 +321,8 @@ def main() -> None:
     parser.add_argument("--regret-buffer-capacity", type=int, default=500_000)
     parser.add_argument("--regret-accumulation-mode", choices=("normalized", "cumulative"),
                         default="normalized")
+    parser.add_argument("--regret-positive-weight", type=float, default=None,
+                        help="Override the mode's default positive-target MSE weighting")
     parser.add_argument("--torch-threads", type=int, default=0)
     parser.add_argument("--evaluate-after", action="store_true")
     parser.add_argument("--output-root", type=Path)
@@ -316,6 +334,8 @@ def main() -> None:
         raise SystemExit("hours-per-arm, traversals, and regret-buffer-capacity must be positive")
     if args.torch_threads < 0:
         raise SystemExit("torch-threads must be nonnegative")
+    if args.regret_positive_weight is not None and args.regret_positive_weight < 0:
+        raise SystemExit("regret-positive-weight must be nonnegative")
     if args.torch_threads:
         torch.set_num_threads(args.torch_threads)
     selected_modes = [mode.strip() for mode in args.modes.split(",") if mode.strip()]
@@ -379,6 +399,7 @@ def main() -> None:
                 args.traversals, args.resume, args.reach_mode,
                 args.regret_buffer_capacity,
                 args.regret_accumulation_mode,
+                args.regret_positive_weight,
             )
     print("all arms complete", flush=True)
     if args.evaluate_after:

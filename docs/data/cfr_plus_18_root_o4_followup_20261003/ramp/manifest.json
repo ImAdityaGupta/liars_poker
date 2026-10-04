@@ -1,0 +1,13 @@
+{
+  "arm": "ramp",
+  "average_kind": "online_plus_o4",
+  "created_utc": "2026-10-03T03:07:57.280770+00:00",
+  "extended_utc": "2026-10-03T13:28:44.205861+00:00",
+  "fit_steps_per_player": 5000,
+  "regret_representation": "tabular",
+  "reservoir_capacity": 2000000,
+  "schedule": "linear_measured_time",
+  "seed": 17,
+  "snapshot_minutes": 15,
+  "target_hours": 20.0
+}

@@ -113,13 +113,13 @@ CFR. (Worth checking against the papers.)
 | 18- and 69-claim runs improve, bottom out, then worsen | Signal `~1/√t` crosses a constant or growing error; linear averaging then weights late, error-dominated iterates most |
 | A learning-rate drop to `1e-4` helped on 18 claims (≈0.024 → ≈0.014) | Smaller fitting error `ε`: lower floor, later crossing |
 | Optimizer reset alone did not help | It does not change the size of `δ` |
-| [Aggregate-then-clip](../experiments/2026-09-28_01-04-50_cfr_plus_neural_clip_order_cpu.md) helps substantially | Clipping the mean of `n` samples shrinks the clip bias by about `√n` |
-| …but the [18-claim run](../experiments/2026-09-28_13-29-00_18_claim_target_sampling_factorial.md) remains ~10× above tabular CFR+ (≈0.024 vs 0.00197) | Rarely visited, deep information sets have `n ≈ 1`, so no `√n` benefit there; fitting drift (b) is untouched |
+| [Aggregate-then-clip](../experiments/18_claim/2026-09-28_01-04-50_cfr_plus_neural_clip_order_cpu.md) helps substantially | Clipping the mean of `n` samples shrinks the clip bias by about `√n` |
+| …but the [18-claim run](../experiments/18_claim/2026-09-28_13-29-00_18_claim_target_sampling_factorial.md) remains ~10× above tabular CFR+ (≈0.024 vs 0.00197) | Rarely visited, deep information sets have `n ≈ 1`, so no `√n` benefit there; fitting drift (b) is untouched |
 | 4,096 traversals help *per iteration* but not reliably *per minute* | More samples shrink `σ` but not `ε`; each iteration costs more |
 | 4,096 traversals help clip-each little | Per-record clipping does not average its bias away |
 | Tabular sampled CFR+ worked well (June 2026) | A table has no fitting error, and summing per information set avoids the per-record clip |
 | Regret-fit validation error is tiny but the policy is poor | Targets are mostly the network's own output; it can fit itself well while drifting |
-| Neural current play differs from the exact [shadow ledger](../experiments/2026-09-27_23-58-30_cfr_plus_shadow_neural_cpu.md) (root TV ≈ 0.2–0.3) | Accumulated error changes the action ratios |
+| Neural current play differs from the exact [shadow ledger](../experiments/18_claim/2026-09-27_23-58-30_cfr_plus_shadow_neural_cpu.md) (root TV ≈ 0.2–0.3) | Accumulated error changes the action ratios |
 | 6-claim runs had not deteriorated by 800 iterations | `ε` is small relative to the signal on this game; the crossing would come later |
 
 ## 4. What this implies for fixes

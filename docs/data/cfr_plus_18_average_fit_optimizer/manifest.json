@@ -1,0 +1,59 @@
+{
+  "seed": 17030,
+  "sources": {
+    "0030m": [
+      "artifacts/cfr_plus_18_offline_average_study/exact4096_0030m_checkpoint.pt",
+      908
+    ],
+    "0045m": [
+      "artifacts/cfr_plus_18_offline_average_study/exact4096_0045m_checkpoint.pt",
+      1424
+    ],
+    "0120m": [
+      "artifacts/cfr_plus_18_offline_average_study/exact4096_0120m_checkpoint.pt",
+      3988
+    ]
+  },
+  "milestones": [
+    250,
+    500,
+    1000,
+    2000,
+    5000
+  ],
+  "arms": {
+    "O1_cosine_b1024_ce": [
+      0.001,
+      1e-05,
+      1024,
+      "cosine",
+      "cross_entropy"
+    ],
+    "O2_lr1e-4_b1024_ce": [
+      0.0001,
+      0.0001,
+      1024,
+      "constant",
+      "cross_entropy"
+    ],
+    "O3_lr1e-3_b16384_ce": [
+      0.001,
+      0.001,
+      16384,
+      "constant",
+      "cross_entropy"
+    ],
+    "O4_cosine_b16384_ce": [
+      0.001,
+      1e-05,
+      16384,
+      "cosine",
+      "cross_entropy"
+    ]
+  },
+  "status": "complete",
+  "eval_workers": 2,
+  "selected_stage1_optimizer": "O4_cosine_b16384_ce",
+  "selected_final_recipe": "O4_cosine_b16384_ce",
+  "completed_utc": "2026-10-01T01:32:19Z"
+}

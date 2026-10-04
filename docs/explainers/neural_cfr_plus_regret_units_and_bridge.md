@@ -160,5 +160,5 @@ not guarantee neural-network agreement.
 
 See the [tabular bridge runner](../../scripts/run_cfr_plus_18_tabular_bridge.py)
 for the eight implemented arms and the
-[bridge experiment](../experiments/2026-09-29_01-42-50_18_claim_tabular_bridge.md)
+[bridge experiment](../experiments/18_claim/2026-09-29_01-42-50_18_claim_tabular_bridge.md)
 for measured policies.

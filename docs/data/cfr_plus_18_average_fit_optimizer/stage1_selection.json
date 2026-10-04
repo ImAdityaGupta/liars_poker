@@ -1,0 +1,11 @@
+{
+  "rule": "mean of each checkpoint's final three CE evaluations; equal checkpoint weighting",
+  "scores": {
+    "O0_lr1e-3_b1024_ce": 0.022337229767865254,
+    "O1_cosine_b1024_ce": 0.006028459831355211,
+    "O2_lr1e-4_b1024_ce": 0.008523304435705271,
+    "O3_lr1e-3_b16384_ce": 0.009274801593569896,
+    "O4_cosine_b16384_ce": 0.0048297712293241535
+  },
+  "selected_arm": "O4_cosine_b16384_ce"
+}

@@ -1,0 +1,193 @@
+[fit] 1080m/R-visit p1 0/40000 loss=89.779
+[fit] 1080m/R-visit p1 1000/40000 loss=13.023
+[fit] 1080m/R-visit p1 2000/40000 loss=6.7411
+[fit] 1080m/R-visit p1 3000/40000 loss=4.2157
+[fit] 1080m/R-visit p1 4000/40000 loss=2.4381
+[fit] 1080m/R-visit p1 5000/40000 loss=1.9623
+[fit] 1080m/R-visit p1 6000/40000 loss=1.419
+[fit] 1080m/R-visit p1 7000/40000 loss=1.0059
+[fit] 1080m/R-visit p1 8000/40000 loss=0.72237
+[fit] 1080m/R-visit p1 9000/40000 loss=0.50811
+[fit] 1080m/R-visit p1 10000/40000 loss=0.42178
+[fit] 1080m/R-visit p1 11000/40000 loss=0.3361
+[fit] 1080m/R-visit p1 12000/40000 loss=0.26974
+[fit] 1080m/R-visit p1 13000/40000 loss=0.18488
+[fit] 1080m/R-visit p1 14000/40000 loss=0.24262
+[fit] 1080m/R-visit p1 15000/40000 loss=0.1793
+[fit] 1080m/R-visit p1 16000/40000 loss=0.27891
+[fit] 1080m/R-visit p1 17000/40000 loss=0.21837
+[fit] 1080m/R-visit p1 18000/40000 loss=0.24953
+[fit] 1080m/R-visit p1 19000/40000 loss=0.16727
+[fit] 1080m/R-visit p1 20000/40000 loss=0.18183
+[fit] 1080m/R-visit p1 21000/40000 loss=0.061631
+[fit] 1080m/R-visit p1 22000/40000 loss=0.106
+[fit] 1080m/R-visit p1 23000/40000 loss=0.27494
+[fit] 1080m/R-visit p1 24000/40000 loss=0.07923
+[fit] 1080m/R-visit p1 25000/40000 loss=0.099217
+[fit] 1080m/R-visit p1 26000/40000 loss=0.19517
+[fit] 1080m/R-visit p1 27000/40000 loss=0.10918
+[fit] 1080m/R-visit p1 28000/40000 loss=0.088923
+[fit] 1080m/R-visit p1 29000/40000 loss=0.16268
+[fit] 1080m/R-visit p1 30000/40000 loss=0.10525
+[fit] 1080m/R-visit p1 31000/40000 loss=0.082102
+[fit] 1080m/R-visit p1 32000/40000 loss=0.085993
+[fit] 1080m/R-visit p1 33000/40000 loss=0.15878
+[fit] 1080m/R-visit p1 34000/40000 loss=0.1183
+[fit] 1080m/R-visit p1 35000/40000 loss=0.16598
+[fit] 1080m/R-visit p1 36000/40000 loss=0.073479
+[fit] 1080m/R-visit p1 37000/40000 loss=0.15717
+[fit] 1080m/R-visit p1 38000/40000 loss=0.060825
+[fit] 1080m/R-visit p1 39000/40000 loss=0.071303
+[fit] 1080m/R-visit p2 0/40000 loss=67.39
+[fit] 1080m/R-visit p2 1000/40000 loss=2.9456
+[fit] 1080m/R-visit p2 2000/40000 loss=0.67393
+[fit] 1080m/R-visit p2 3000/40000 loss=0.15179
+[fit] 1080m/R-visit p2 4000/40000 loss=0.12724
+[fit] 1080m/R-visit p2 5000/40000 loss=0.045555
+[fit] 1080m/R-visit p2 6000/40000 loss=0.025424
+[fit] 1080m/R-visit p2 7000/40000 loss=0.05042
+[fit] 1080m/R-visit p2 8000/40000 loss=0.013972
+[fit] 1080m/R-visit p2 9000/40000 loss=0.011239
+[fit] 1080m/R-visit p2 10000/40000 loss=0.037301
+[fit] 1080m/R-visit p2 11000/40000 loss=0.038385
+[fit] 1080m/R-visit p2 12000/40000 loss=0.0069794
+[fit] 1080m/R-visit p2 13000/40000 loss=0.022691
+[fit] 1080m/R-visit p2 14000/40000 loss=0.012658
+[fit] 1080m/R-visit p2 15000/40000 loss=0.0065059
+[fit] 1080m/R-visit p2 16000/40000 loss=0.0078185
+[fit] 1080m/R-visit p2 17000/40000 loss=0.0085729
+[fit] 1080m/R-visit p2 18000/40000 loss=0.0075041
+[fit] 1080m/R-visit p2 19000/40000 loss=0.0035958
+[fit] 1080m/R-visit p2 20000/40000 loss=0.0055498
+[fit] 1080m/R-visit p2 21000/40000 loss=0.018323
+[fit] 1080m/R-visit p2 22000/40000 loss=0.0025567
+[fit] 1080m/R-visit p2 23000/40000 loss=0.0034779
+[fit] 1080m/R-visit p2 24000/40000 loss=0.0026013
+[fit] 1080m/R-visit p2 25000/40000 loss=0.0044795
+[fit] 1080m/R-visit p2 26000/40000 loss=0.0025727
+[fit] 1080m/R-visit p2 27000/40000 loss=0.0024287
+[fit] 1080m/R-visit p2 28000/40000 loss=0.016895
+[fit] 1080m/R-visit p2 29000/40000 loss=0.0029875
+[fit] 1080m/R-visit p2 30000/40000 loss=0.002738
+[fit] 1080m/R-visit p2 31000/40000 loss=0.0015111
+[fit] 1080m/R-visit p2 32000/40000 loss=0.0016856
+[fit] 1080m/R-visit p2 33000/40000 loss=0.0024128
+[fit] 1080m/R-visit p2 34000/40000 loss=0.0013737
+[fit] 1080m/R-visit p2 35000/40000 loss=0.0016172
+[fit] 1080m/R-visit p2 36000/40000 loss=0.024122
+[fit] 1080m/R-visit p2 37000/40000 loss=0.022523
+[fit] 1080m/R-visit p2 38000/40000 loss=0.0019839
+[fit] 1080m/R-visit p2 39000/40000 loss=0.0023431
+[done] {"source": "1080m", "arm": "R-visit", "iteration": 31538, "source_exploitability": 0.027232632572456783, "network_exploitability": 0.8875597165962614, "ratio": 32.59177070871744, "tv_uniform": 0.1595577746629715, "tv_reach": 0.37484065626179625, "relative_regret_error_reach": 0.013589515747400041, "tv_by_expected_visit_bin": {"p1_lt_0.1_uniform": 0.15938231348991394, "p1_lt_0.1_reach": 0.3811318528030047, "p1_0.1_1_uniform": 0.16494199633598328, "p1_0.1_1_reach": 0.21252435197345523, "p1_1_10_uniform": 0.20223982632160187, "p1_1_10_reach": 0.16484698426912603, "p1_ge_10_uniform": 0.2521052360534668, "p1_ge_10_reach": 0.26430963550307435, "p2_lt_0.1_uniform": 0.15947631001472473, "p2_lt_0.1_reach": 0.393864268519858, "p2_0.1_1_uniform": 0.1922425478696823, "p2_0.1_1_reach": 0.18766626146244095, "p2_1_10_uniform": 0.24761156737804413, "p2_1_10_reach": 0.32225024123861257, "p2_ge_10_uniform": 0.3321289122104645, "p2_ge_10_reach": 0.28622748276955423}, "steps_per_player": 40000, "batch": 16384, "hidden": [512, 512], "loss_last_by_player": [0.10534095764160156, 0.0016838510055094957], "elapsed_s": 22128.108358751982, "smoke": false}
+[fit] 1080m/R-mix p1 0/40000 loss=47.216
+[fit] 1080m/R-mix p1 1000/40000 loss=9.0097
+[fit] 1080m/R-mix p1 2000/40000 loss=5.7837
+[fit] 1080m/R-mix p1 3000/40000 loss=4.5817
+[fit] 1080m/R-mix p1 4000/40000 loss=2.2399
+[fit] 1080m/R-mix p1 5000/40000 loss=2.4532
+[fit] 1080m/R-mix p1 6000/40000 loss=1.3338
+[fit] 1080m/R-mix p1 7000/40000 loss=0.88761
+[fit] 1080m/R-mix p1 8000/40000 loss=0.99248
+[fit] 1080m/R-mix p1 9000/40000 loss=0.54303
+[fit] 1080m/R-mix p1 10000/40000 loss=0.61196
+[fit] 1080m/R-mix p1 11000/40000 loss=0.41359
+[fit] 1080m/R-mix p1 12000/40000 loss=0.46654
+[fit] 1080m/R-mix p1 13000/40000 loss=0.66426
+[fit] 1080m/R-mix p1 14000/40000 loss=0.28021
+[fit] 1080m/R-mix p1 15000/40000 loss=0.55394
+[fit] 1080m/R-mix p1 16000/40000 loss=0.29521
+[fit] 1080m/R-mix p1 17000/40000 loss=0.39028
+[fit] 1080m/R-mix p1 18000/40000 loss=0.34206
+[fit] 1080m/R-mix p1 19000/40000 loss=0.23464
+[fit] 1080m/R-mix p1 20000/40000 loss=0.24491
+[fit] 1080m/R-mix p1 21000/40000 loss=0.23056
+[fit] 1080m/R-mix p1 22000/40000 loss=0.31823
+[fit] 1080m/R-mix p1 23000/40000 loss=0.39662
+[fit] 1080m/R-mix p1 24000/40000 loss=0.22853
+[fit] 1080m/R-mix p1 25000/40000 loss=0.19205
+[fit] 1080m/R-mix p1 26000/40000 loss=0.16673
+[fit] 1080m/R-mix p1 27000/40000 loss=0.31217
+[fit] 1080m/R-mix p1 28000/40000 loss=0.3216
+[fit] 1080m/R-mix p1 29000/40000 loss=0.36348
+[fit] 1080m/R-mix p1 30000/40000 loss=0.28146
+[fit] 1080m/R-mix p1 31000/40000 loss=0.34072
+[fit] 1080m/R-mix p1 32000/40000 loss=0.27396
+[fit] 1080m/R-mix p1 33000/40000 loss=0.23448
+[fit] 1080m/R-mix p1 34000/40000 loss=0.3762
+[fit] 1080m/R-mix p1 35000/40000 loss=0.12028
+[fit] 1080m/R-mix p1 36000/40000 loss=0.49842
+[fit] 1080m/R-mix p1 37000/40000 loss=0.23405
+[fit] 1080m/R-mix p1 38000/40000 loss=0.13828
+[fit] 1080m/R-mix p1 39000/40000 loss=0.2039
+[fit] 1080m/R-mix p2 0/40000 loss=34.03
+[fit] 1080m/R-mix p2 1000/40000 loss=1.9587
+[fit] 1080m/R-mix p2 2000/40000 loss=0.93363
+[fit] 1080m/R-mix p2 3000/40000 loss=0.14675
+[fit] 1080m/R-mix p2 4000/40000 loss=0.078056
+[fit] 1080m/R-mix p2 5000/40000 loss=0.05285
+[fit] 1080m/R-mix p2 6000/40000 loss=0.061751
+[fit] 1080m/R-mix p2 7000/40000 loss=0.05008
+[fit] 1080m/R-mix p2 8000/40000 loss=0.046496
+[fit] 1080m/R-mix p2 9000/40000 loss=0.052961
+[fit] 1080m/R-mix p2 10000/40000 loss=0.034187
+[fit] 1080m/R-mix p2 11000/40000 loss=0.0325
+[fit] 1080m/R-mix p2 12000/40000 loss=0.045468
+[fit] 1080m/R-mix p2 13000/40000 loss=0.034159
+[fit] 1080m/R-mix p2 14000/40000 loss=0.030019
+[fit] 1080m/R-mix p2 15000/40000 loss=0.030506
+[fit] 1080m/R-mix p2 16000/40000 loss=0.028752
+[fit] 1080m/R-mix p2 17000/40000 loss=0.027756
+[fit] 1080m/R-mix p2 18000/40000 loss=0.04203
+[fit] 1080m/R-mix p2 19000/40000 loss=0.026129
+[fit] 1080m/R-mix p2 20000/40000 loss=0.025526
+[fit] 1080m/R-mix p2 21000/40000 loss=0.030041
+[fit] 1080m/R-mix p2 22000/40000 loss=0.026168
+[fit] 1080m/R-mix p2 23000/40000 loss=0.024534
+[fit] 1080m/R-mix p2 24000/40000 loss=0.022885
+[fit] 1080m/R-mix p2 25000/40000 loss=0.055595
+[fit] 1080m/R-mix p2 26000/40000 loss=0.023683
+[fit] 1080m/R-mix p2 27000/40000 loss=0.022977
+[fit] 1080m/R-mix p2 28000/40000 loss=0.02457
+[fit] 1080m/R-mix p2 29000/40000 loss=0.023549
+[fit] 1080m/R-mix p2 30000/40000 loss=0.022845
+[fit] 1080m/R-mix p2 31000/40000 loss=0.023445
+[fit] 1080m/R-mix p2 32000/40000 loss=0.024053
+[fit] 1080m/R-mix p2 33000/40000 loss=0.022033
+[fit] 1080m/R-mix p2 34000/40000 loss=0.026066
+[fit] 1080m/R-mix p2 35000/40000 loss=0.025011
+[fit] 1080m/R-mix p2 36000/40000 loss=0.022704
+[fit] 1080m/R-mix p2 37000/40000 loss=0.024037
+[fit] 1080m/R-mix p2 38000/40000 loss=0.023099
+[fit] 1080m/R-mix p2 39000/40000 loss=0.023163
+[done] {"source": "1080m", "arm": "R-mix", "iteration": 31538, "source_exploitability": 0.027232632572456783, "network_exploitability": 0.7108412500295063, "ratio": 26.10255354998086, "tv_uniform": 0.11313001811504364, "tv_reach": 0.3231238928367517, "relative_regret_error_reach": 0.015266068008811983, "tv_by_expected_visit_bin": {"p1_lt_0.1_uniform": 0.11231679469347, "p1_lt_0.1_reach": 0.32659199790733795, "p1_0.1_1_uniform": 0.18407094478607178, "p1_0.1_1_reach": 0.21872855746899827, "p1_1_10_uniform": 0.20591582357883453, "p1_1_10_reach": 0.19071215515503448, "p1_ge_10_uniform": 0.2500755488872528, "p1_ge_10_reach": 0.2658921703972522, "p2_lt_0.1_uniform": 0.11297675967216492, "p2_lt_0.1_reach": 0.33399834907137094, "p2_0.1_1_uniform": 0.1971440315246582, "p2_0.1_1_reach": 0.1865911052415653, "p2_1_10_uniform": 0.24810035526752472, "p2_1_10_reach": 0.3222089533569765, "p2_ge_10_uniform": 0.3320572078227997, "p2_ge_10_reach": 0.2861903942229895}, "steps_per_player": 40000, "batch": 16384, "hidden": [512, 512], "loss_last_by_player": [0.19853027164936066, 0.02351010963320732], "elapsed_s": 18925.312906501815, "smoke": false}
+[fit] 1080m/P-visit p1 0/40000 loss=1.5603
+[fit] 1080m/P-visit p1 1000/40000 loss=0.16806
+[fit] 1080m/P-visit p1 2000/40000 loss=0.15823
+[fit] 1080m/P-visit p1 3000/40000 loss=0.16112
+[fit] 1080m/P-visit p1 4000/40000 loss=0.1601
+[fit] 1080m/P-visit p1 5000/40000 loss=0.15958
+[fit] 1080m/P-visit p1 6000/40000 loss=0.15918
+[fit] 1080m/P-visit p1 7000/40000 loss=0.16111
+Traceback (most recent call last):
+  File "/root/liars_poker_20261001/scripts/run_cfr_plus_18_regret_table_distillation.py", line 132, in <module>
+    if __name__=='__main__': main()
+                             ^^^^^^
+  File "/root/liars_poker_20261001/scripts/run_cfr_plus_18_regret_table_distillation.py", line 97, in main
+    pred=net(xx).masked_fill(~mm,-1e9)
+         ^^^^^^^
+  File "/root/liars_poker_20261001/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1778, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/liars_poker_20261001/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1789, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/liars_poker_20261001/liars_poker/policies/neural.py", line 86, in forward
+    return self.net(x)
+           ^^^^^^^^^^^
+  File "/root/liars_poker_20261001/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1778, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/liars_poker_20261001/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1789, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt

@@ -520,14 +520,16 @@ class GPUDeepCFRPlusTraverser:
             flush_size=self.trainer.traversal_record_flush_size,
             commit_records=commit_records,
         )
-        strategy_actor = 1 - traverser
-        strategy_accumulator = _DeviceRecordAccumulator(
-            self.trainer,
-            self.trainer.strategy_buffers[strategy_actor],
-            self.trainer.strategy_validation_buffers[strategy_actor],
-            flush_size=self.trainer.traversal_record_flush_size,
-            commit_records=commit_records,
-        )
+        strategy_accumulator = None
+        if self.trainer.use_strategy_network:
+            strategy_actor = 1 - traverser
+            strategy_accumulator = _DeviceRecordAccumulator(
+                self.trainer,
+                self.trainer.strategy_buffers[strategy_actor],
+                self.trainer.strategy_validation_buffers[strategy_actor],
+                flush_size=self.trainer.traversal_record_flush_size,
+                commit_records=commit_records,
+            )
 
         profile_by_depth: Dict[int, Dict[str, object]] = {}
         stats: Dict[str, float | int] = {
@@ -640,14 +642,15 @@ class GPUDeepCFRPlusTraverser:
                         path_probability.index_select(0, parent_rows),
                     )
                     values[continues] = child_values
-                iteration_weight = self.trainer._strategy_record_weight()
-                strategy_accumulator.append(
-                    features,
-                    strategy,
-                    legal_mask,
-                    path_probability.clamp_min(1e-12).reciprocal()
-                    * iteration_weight,
-                )
+                if strategy_accumulator is not None:
+                    iteration_weight = self.trainer._strategy_record_weight()
+                    strategy_accumulator.append(
+                        features,
+                        strategy,
+                        legal_mask,
+                        path_probability.clamp_min(1e-12).reciprocal()
+                        * iteration_weight,
+                    )
                 if profile:
                     row["opponent_continuations"] = (
                         int(row["opponent_continuations"]) + int(parent_rows.numel())
@@ -787,11 +790,15 @@ class GPUDeepCFRPlusTraverser:
             current_path_probability,
         )
         regret_accumulator.flush()
-        strategy_accumulator.flush()
+        if strategy_accumulator is not None:
+            strategy_accumulator.flush()
 
         result: Dict[str, object] = {
             "regret_records": regret_accumulator.count,
-            "strategy_records": strategy_accumulator.count,
+            "strategy_records": (
+                strategy_accumulator.count
+                if strategy_accumulator is not None else 0
+            ),
             "full_claim_edges": int(stats["full_claim_edges"]),
             "sampled_claim_edges": int(stats["sampled_claim_edges"]),
             "regret_weight_sum": float(stats["regret_weight_sum"]),
@@ -1006,10 +1013,11 @@ class GPUDeepCFRPlusTraverser:
                     profile_by_depth[depth] = profile_row
                 continue
 
-            strategy_features.append(features)
-            strategy_targets.append(strategy)
-            strategy_masks.append(legal_mask)
-            strategy_path_probabilities.append(current_path_probability)
+            if self.trainer.use_strategy_network:
+                strategy_features.append(features)
+                strategy_targets.append(strategy)
+                strategy_masks.append(legal_mask)
+                strategy_path_probabilities.append(current_path_probability)
 
             sampled_cols = torch.multinomial(strategy, 1).squeeze(1)
             continues = sampled_cols > 0

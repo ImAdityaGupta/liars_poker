@@ -1,0 +1,31 @@
+{
+  "label": "11_exact4096_o4_1080",
+  "policy_dir": "/root/liars_poker/artifacts/cfr_plus_18_average_fit_long_run_check/main_20261002/1080m/O4/warm_05000",
+  "method": "M2",
+  "depth": 3,
+  "epsilon": 0.001,
+  "p_first": 0.5378093575268459,
+  "p_second": 0.4634043663000936,
+  "discovered_exploitability": 0.0012137238269394057,
+  "elapsed_s": 2.054286001250148,
+  "seats": [
+    {
+      "seat": 0,
+      "p": 0.5378093575268459,
+      "elapsed_s": 0.7055777939967811,
+      "plan_nodes": 11627,
+      "eval_nodes": 247,
+      "search_branches": 145444,
+      "skipped_search_branches": 67500
+    },
+    {
+      "seat": 1,
+      "p": 0.4634043663000936,
+      "elapsed_s": 1.3487082072533667,
+      "plan_nodes": 31400,
+      "eval_nodes": 1653,
+      "search_branches": 380475,
+      "skipped_search_branches": 191124
+    }
+  ]
+}

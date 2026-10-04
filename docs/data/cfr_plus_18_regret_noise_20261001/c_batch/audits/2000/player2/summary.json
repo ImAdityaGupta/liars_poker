@@ -1,0 +1,20 @@
+{
+  "checkpoint": "/root/liars_poker/artifacts/cfr_plus_18_regret_noise/main_20261001/c_batch/audits/2000/input.pt",
+  "checkpoint_sha256": "72e5e9aeca5943705c40ac2d80221e02b64e82d62d0672ca2ff190426352b6b8",
+  "utc": "2026-10-01T17:01:35.907101+00:00",
+  "player": 1,
+  "source_iteration": 3466,
+  "audited_iteration": 3467,
+  "roots": 4096,
+  "target_mode": "aggregate_then_clip",
+  "accumulation_mode": "cumulative",
+  "sampled_records": 10576,
+  "visited_infosets": 685,
+  "regret_fit_loss": 0.0036693476140499115,
+  "elapsed_s": 58.95924024283886,
+  "training_mse": 0.002542458474636078,
+  "held_out_mse": 0.006153879687190056,
+  "held_out_records": 10474,
+  "available_ram_gib_after": 105.67571640014648,
+  "disk_free_gib_after": 17.530899047851562
+}

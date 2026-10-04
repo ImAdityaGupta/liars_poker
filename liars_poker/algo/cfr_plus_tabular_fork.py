@@ -69,7 +69,10 @@ class TabularRegretFork(DeepCFRPlusTrainer):
             self.regret_table,
             self.table_initialized,
             self._table_indices,
-            seed_from_network=lambda pid, x: self._forward(self.regret_nets[pid], x),
+            seed_from_network=(
+                (lambda pid, x: self._forward(self.regret_nets[pid], x))
+                if self.use_regret_network else None
+            ),
             before_read=self._before_table_read,
         )
 
